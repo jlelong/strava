@@ -6,10 +6,10 @@ Nécessite stravalib, pymysql et un serveur mysql
 
     * une table pour stocker les vélos au format
 
-    id (VARCHAR(45)) l'id défini par Strava, c'est une string
-    name (VARCHAR) non du vélo
-    type (ENUM('road','mtb','cx','tt','any') type de sortie
-    frame_type (INT) code Strava associée au type de sortie
+        * id (VARCHAR(45)) l'id défini par Strava, c'est une string.
+        * name (VARCHAR) le nom du vélo.
+        * type (ENUM('road','mtb','cx','tt','any') type de vélo.
+        * frame_type (INT) code Strava associée au type de vélo.
 
     * une table pour stocker les sorties et toutes les informations
       associées
