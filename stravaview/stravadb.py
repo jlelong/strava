@@ -52,14 +52,14 @@ class Strava:
             print("The table '%s' already exists" % table)
             return
 
-        sql = """CREATE TABLE 'bikes' (
-        'id' varchar(45) NOT NULL,
-        'name' varchar(256) DEFAULT NULL,
-        'type' enum('road','mtb','cx','tt') DEFAULT NULL,
-        'frame_type' int(11) DEFAULT NULL,
-        PRIMARY KEY ('id'),
-        UNIQUE KEY 'strid_UNIQUE' ('id')
-        ) ENGINE=InnoDB DEFAULT CHARSET=utf8;"""
+        sql = """CREATE TABLE %s (
+        id varchar(45) NOT NULL,
+        name varchar(256) DEFAULT NULL,
+        type enum('road','mtb','cx','tt') DEFAULT NULL,
+        frame_type int(11) DEFAULT NULL,
+        PRIMARY KEY (id),
+        UNIQUE KEY strid_UNIQUE (id)
+        ) ENGINE=InnoDB DEFAULT CHARSET=utf8""" % table
         self.cursor.execute(sql)
         self.connection.commit()
 
