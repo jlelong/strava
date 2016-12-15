@@ -18,8 +18,7 @@ class Strava:
         self.config = config
         self.connection = pymysql.connect(host='localhost', user=config['mysql_user'], password=config['mysql_password'], db=config['mysql_base'])
         self.cursor = self.connection.cursor()
-        self.stravaClient = stravalib.Client()
-        self.stravaClient.access_token = config['strava_token']
+        self.stravaClient = stravalib.Client(access_token=config['strava_token'])
 
     def update_bikes(self):
         """
@@ -43,7 +42,7 @@ class Strava:
 
     def create_bikes_table(self):
         """
-        Create the bike table if it does not already exist
+        Create the bikes table if it does not already exist
         """
         # Check if table already exists
         table = self.config['mysql_bikes_table']
@@ -57,6 +56,37 @@ class Strava:
         name varchar(256) DEFAULT NULL,
         type enum('road','mtb','cx','tt') DEFAULT NULL,
         frame_type int(11) DEFAULT NULL,
+        PRIMARY KEY (id),
+        UNIQUE KEY strid_UNIQUE (id)
+        ) ENGINE=InnoDB DEFAULT CHARSET=utf8""" % table
+        self.cursor.execute(sql)
+        self.connection.commit()
+
+    def create_activities_table(self):
+        """
+        Create the activities table if it does not already exist
+        """
+        # Check if table already exists
+        table = self.config['mysql_activities_table']
+        sql = "SHOW TABLES LIKE '%s'" % table
+        if (self.cursor.execute(sql) > 0):
+            print("The table '%s' already exists" % table)
+            return
+
+        sql = """CREATE TABLE %s (
+        id int(11) NOT NULL,
+        name varchar(256) DEFAULT NULL,
+        location varchar(256) DEFAULT NULL,
+        date datetime DEFAULT NULL,
+        distance float DEFAULT 0,
+        elevation float DEFAULT 0,
+        moving_time time DEFAULT NULL,
+        ellapsed_time time DEFAULT NULL,
+        gear_id varchar(45) DEFAuLT NULL,
+        average_speed float DEFAULT NULL,
+        max_heartrate int DEFAULT 0,
+        average_heartrate float DEFAULT 0,
+        suffer_score int DEFAULT 0,
         PRIMARY KEY (id),
         UNIQUE KEY strid_UNIQUE (id)
         ) ENGINE=InnoDB DEFAULT CHARSET=utf8""" % table
