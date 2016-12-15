@@ -6,9 +6,20 @@ import pymysql.cursors
 import pymysql.converters
 
 
+def _escape_string(s):
+    """
+    Escape a string unless is None
+    """
+    if (s is not None):
+        assert(isinstance(s, str))
+        return pymysql.converters.escape_string(s)
+    else:
+        return s
+
+
 class Strava:
     """
-    Create a local Strava instance with its own local database
+    Create a local Strava instance with its own local database containing only the funny rides (no commute).
     """
     FRAME_TYPES = {0: "none", 1: "mtb", 3: "road", 2: "cx", 4: "tt"}
 
@@ -87,7 +98,6 @@ class Strava:
         bikes = self.stravaClient.get_athlete().bikes
         for bike in bikes:
             desc = self.stravaClient.get_gear(bike.id)
-            print("%s, %s, %s" % (desc.name, desc.id, self.FRAME_TYPES[desc.frame_type]))
 
             # Check if the bike already exists
             sql = "select * from %s where id='%s' limit 1" % (table, bike.id)
@@ -114,16 +124,28 @@ class Strava:
         if (activity.type != u'Ride' or activity.commute):
             print("Activity '%s' is not a pleasure ride" % (activity.name))
             return
-        name = pymysql.converters.escape_string(activity.name)
-        distance = "%0.2f" % stravalib.unithelper.kilometers(activity.distance).get_num()
-        elevation = "%0.0f" % stravalib.unithelper.meters(activity.total_elevation_gain).get_num()
+        name = _escape_string(activity.name)
+        if activity.distance is not None:
+            distance = "%0.2f" % stravalib.unithelper.kilometers(activity.distance).get_num()
+        else:
+            distance = 0
+        if activity.total_elevation_gain is not None:
+            elevation = "%0.0f" % stravalib.unithelper.meters(activity.total_elevation_gain).get_num()
+        else:
+            elevation = 0
         date = activity.start_date_local
-        location = activity.location_city
+        location = _escape_string(activity.location_city)
         moving_time = activity.moving_time
         elapsed_time = activity.elapsed_time
-        gear_id = activity.gear_id
-        average_speed = "%0.1f" % stravalib.unithelper.kilometers_per_hour(activity.average_speed).get_num()
-        average_heartrate = "%0.0f" % activity.average_heartrate
+        gear_id = _escape_string(activity.gear_id)
+        if activity.average_speed is not None:
+            average_speed = "%0.1f" % stravalib.unithelper.kilometers_per_hour(activity.average_speed).get_num()
+        else:
+            activity.average_speed = 0
+        if activity.average_heartrate is not None:
+            average_heartrate = "%0.0f" % activity.average_heartrate
+        else:
+            average_heartrate = 0
         max_heartrate = activity.max_heartrate
         suffer_score = activity.suffer_score
 
