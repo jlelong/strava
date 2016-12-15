@@ -7,6 +7,9 @@ import pymysql.converters
 
 
 class Strava:
+    """
+    Create a local Strava instance with its own local database
+    """
     FRAME_TYPES = {0: "none", 1: "mtb", 3: "road", 2: "cx", 4: "tt"}
 
     def __init__(self, config):
@@ -21,6 +24,59 @@ class Strava:
         self.connection = pymysql.connect(host='localhost', user=config['mysql_user'], password=config['mysql_password'], db=config['mysql_base'])
         self.cursor = self.connection.cursor()
         self.stravaClient = stravalib.Client(access_token=config['strava_token'])
+
+    def create_bikes_table(self):
+        """
+        Create the bikes table if it does not already exist
+        """
+        # Check if table already exists
+        table = self.config['mysql_bikes_table']
+        sql = "SHOW TABLES LIKE '%s'" % table
+        if (self.cursor.execute(sql) > 0):
+            print("The table '%s' already exists" % table)
+            return
+
+        sql = """CREATE TABLE %s (
+        id varchar(45) NOT NULL,
+        name varchar(256) DEFAULT NULL,
+        type enum('road','mtb','cx','tt') DEFAULT NULL,
+        frame_type int(11) DEFAULT NULL,
+        PRIMARY KEY (id),
+        UNIQUE KEY strid_UNIQUE (id)
+        ) ENGINE=InnoDB DEFAULT CHARSET=utf8""" % table
+        self.cursor.execute(sql)
+        self.connection.commit()
+
+    def create_activities_table(self):
+        """
+        Create the activities table if it does not already exist
+        """
+        # Check if table already exists
+        table = self.config['mysql_activities_table']
+        sql = "SHOW TABLES LIKE '%s'" % table
+        if (self.cursor.execute(sql) > 0):
+            print("The table '%s' already exists" % table)
+            return
+
+        sql = """CREATE TABLE %s (
+        id int(11) NOT NULL,
+        name varchar(256) DEFAULT NULL,
+        location varchar(256) DEFAULT NULL,
+        date datetime DEFAULT NULL,
+        distance float DEFAULT 0,
+        elevation float DEFAULT 0,
+        moving_time time DEFAULT NULL,
+        elapsed_time time DEFAULT NULL,
+        gear_id varchar(45) DEFAULT NULL,
+        average_speed float DEFAULT NULL,
+        max_heartrate int DEFAULT NULL,
+        average_heartrate float DEFAULT NULL,
+        suffer_score int DEFAULT NULL,
+        PRIMARY KEY (id),
+        UNIQUE KEY strid_UNIQUE (id)
+        ) ENGINE=InnoDB DEFAULT CHARSET=utf8""" % table
+        self.cursor.execute(sql)
+        self.connection.commit()
 
     def update_bikes(self):
         """
@@ -76,59 +132,6 @@ class Strava:
         values ('%s', '%s', '%s', '%s', '%s', '%s', '%s', '%s', '%s', '%s', '%s', '%s', '%s')
         """ % (table, activity.id, name, distance, elevation, date, location, moving_time, elapsed_time,
                gear_id, average_speed, average_heartrate, max_heartrate, suffer_score)
-        self.cursor.execute(sql)
-        self.connection.commit()
-
-    def create_bikes_table(self):
-        """
-        Create the bikes table if it does not already exist
-        """
-        # Check if table already exists
-        table = self.config['mysql_bikes_table']
-        sql = "SHOW TABLES LIKE '%s'" % table
-        if (self.cursor.execute(sql) > 0):
-            print("The table '%s' already exists" % table)
-            return
-
-        sql = """CREATE TABLE %s (
-        id varchar(45) NOT NULL,
-        name varchar(256) DEFAULT NULL,
-        type enum('road','mtb','cx','tt') DEFAULT NULL,
-        frame_type int(11) DEFAULT NULL,
-        PRIMARY KEY (id),
-        UNIQUE KEY strid_UNIQUE (id)
-        ) ENGINE=InnoDB DEFAULT CHARSET=utf8""" % table
-        self.cursor.execute(sql)
-        self.connection.commit()
-
-    def create_activities_table(self):
-        """
-        Create the activities table if it does not already exist
-        """
-        # Check if table already exists
-        table = self.config['mysql_activities_table']
-        sql = "SHOW TABLES LIKE '%s'" % table
-        if (self.cursor.execute(sql) > 0):
-            print("The table '%s' already exists" % table)
-            return
-
-        sql = """CREATE TABLE %s (
-        id int(11) NOT NULL,
-        name varchar(256) DEFAULT NULL,
-        location varchar(256) DEFAULT NULL,
-        date datetime DEFAULT NULL,
-        distance float DEFAULT 0,
-        elevation float DEFAULT 0,
-        moving_time time DEFAULT NULL,
-        elapsed_time time DEFAULT NULL,
-        gear_id varchar(45) DEFAULT NULL,
-        average_speed float DEFAULT NULL,
-        max_heartrate int DEFAULT NULL,
-        average_heartrate float DEFAULT NULL,
-        suffer_score int DEFAULT NULL,
-        PRIMARY KEY (id),
-        UNIQUE KEY strid_UNIQUE (id)
-        ) ENGINE=InnoDB DEFAULT CHARSET=utf8""" % table
         self.cursor.execute(sql)
         self.connection.commit()
 

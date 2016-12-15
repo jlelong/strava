@@ -5,7 +5,12 @@ import sys
 def read_config(inifile):
     """
     Read the content of the init file and return it as dictionnary with keys
-        mysql_user, mysql_password, mysql_base, mysql_bikes_table, mysql_activities_table, strava_token
+    mysql_base: the name of a MYSQL database
+    mysql_bikes_table: the name of a table inside mysql_base to store the different bikes
+    mysql_activities_table: the name of a table inside mysql_base to store the activities
+    mysql_user: a user authorized to access mysql_base
+    mysql_password: the password associated to the user mysql_user
+    strava_token: the access token to access Strava API
     """
     parser = ConfigParser.RawConfigParser()
     parser.read(inifile)
