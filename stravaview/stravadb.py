@@ -157,6 +157,21 @@ class Strava:
         self.cursor.execute(sql)
         self.connection.commit()
 
+    def update_activities(self):
+        """
+        Update the activities table
+        """
+        table = self.config['mysql_activities_table']
+        # Get the most recent activity
+        sql = "select date from %s order by date desc limit 1" % table
+        if (self.cursor.execute(sql) == 0):
+            after = None
+        else:
+            after = self.cursor.fetchone()[0]
+        new_activities = self.stravaClient.get_activities(after=after)
+        for activity in new_activities:
+            self.push_activity(activity)
+
     def close(self):
         self.cursor.close()
         self.connection.close()
