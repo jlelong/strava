@@ -190,7 +190,7 @@ class Strava:
         elevation = row['elevation']
         elapsed_time = row['elapsed_time']
         moving_time = row['moving_time']
-        print ("{0}: {1} | {2} | {3} | {4} | {5} | {6}".format(identifier, name, date, distance, elevation, moving_time, elapsed_time))
+        print ("{0} - {7}: {1} | {2} | {3} | {4} | {5} | {6}".format(identifier, name, date, distance, elevation, moving_time, elapsed_time, row['type']))
 
     def get_activities(self, before=None, after=None, name=None):
         """
@@ -225,7 +225,7 @@ class Strava:
             name_sql = "name LIKE '%%%s%%'" % _escape_string(name)
             conds.append(name_sql)
 
-        sql = "SELECT * FROM %s" % self.config['mysql_activities_table']
+        sql = "SELECT a.*, b.type FROM %s AS a INNER JOIN %s AS b ON a.gear_id = b.id" % (self.config['mysql_activities_table'], self.config['mysql_bikes_table'])
         if len(conds) > 0:
             where = " AND ".join(conds)
             sql = sql + " WHERE " + where
