@@ -1,3 +1,6 @@
+#!/usr/bin/env python
+# -*- coding: utf-8 -*-
+
 from __future__ import print_function
 
 import stravalib.client
@@ -11,7 +14,7 @@ def _escape_string(s):
     Escape a string unless is None
     """
     if (s is not None):
-        assert(isinstance(s, str))
+        assert(isinstance(s, basestring))
         return pymysql.converters.escape_string(s)
     else:
         return s
@@ -32,9 +35,13 @@ class Strava:
         :param config:  a dictionnary as returned by readconfig.read_config
         """
         self.config = config
-        self.connection = pymysql.connect(host='localhost', user=config['mysql_user'], password=config['mysql_password'], db=config['mysql_base'])
-        self.cursor = self.connection.cursor()
+        self.connection = pymysql.connect(host='localhost', user=config['mysql_user'], password=config['mysql_password'], db=config['mysql_base'], charset='utf8')
+        self.cursor = self.connection.cursor(pymysql.cursors.DictCursor)
         self.stravaClient = stravalib.Client(access_token=config['strava_token'])
+
+    def close(self):
+        self.cursor.close()
+        self.connection.close()
 
     def create_bikes_table(self):
         """
@@ -167,11 +174,8 @@ class Strava:
         if (self.cursor.execute(sql) == 0):
             after = None
         else:
-            after = self.cursor.fetchone()[0]
+            after = self.cursor.fetchone()['date']
         new_activities = self.stravaClient.get_activities(after=after)
         for activity in new_activities:
             self.push_activity(activity)
 
-    def close(self):
-        self.cursor.close()
-        self.connection.close()
