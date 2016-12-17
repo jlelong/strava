@@ -179,3 +179,58 @@ class Strava:
         for activity in new_activities:
             self.push_activity(activity)
 
+    def print_row(self, row):
+        """
+        Print a row retrieved from the activities table
+        """
+        name = row['name'].encode('utf-8')
+        identifier = row['id']
+        date = row['date'].date()
+        distance = row['distance']
+        elevation = row['elevation']
+        elapsed_time = row['elapsed_time']
+        moving_time = row['moving_time']
+        print ("{0}: {1} | {2} | {3} | {4} | {5} | {6}".format(identifier, name, date, distance, elevation, moving_time, elapsed_time))
+
+    def get_activities(self, before=None, after=None, name=None):
+        """
+        Get all the activities matching the criterions
+
+        :param before: lower-bound on the date of the activity
+        :type before: str
+
+        :param after: upper-bound on the date of the activity
+        :type after: str
+
+        :param name: a substring of the activity name
+        :type name: str
+
+        :param category: the type of bike used
+        :type category: a string from FRAME_TYPES
+        """
+
+        before_sql = ""
+        after_sql = ""
+        name_sql = ""
+        conds = list()
+        if before is not None:
+            before_sql = "date <= '%s'" % before
+            conds.append(before_sql)
+
+        if after is not None:
+            after_sql = "date >= '%s'" % after
+            conds.append(after_sql)
+
+        if name is not None:
+            name_sql = "name LIKE '%%%s%%'" % _escape_string(name)
+            conds.append(name_sql)
+
+        sql = "SELECT * FROM %s" % self.config['mysql_activities_table']
+        if len(conds) > 0:
+            where = " AND ".join(conds)
+            sql = sql + " WHERE " + where
+        sql = sql + " ORDER BY date DESC"
+        print(sql)
+        self.cursor.execute(sql)
+        for row in self.cursor.fetchall():
+            self.print_row(row)

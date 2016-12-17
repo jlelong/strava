@@ -29,6 +29,7 @@ Nécessite stravalib, pymysql et un serveur mysql
     strava_instance = Strava(config)
     strava_instance.create_bikes_table()
     strava_instance.create_activities_table()
+    strava_instance.close()
     ```
 
 4. Mise à jour des tables locales
@@ -41,4 +42,30 @@ Nécessite stravalib, pymysql et un serveur mysql
     strava_instance = Strava(config)
     strava_instance.update_bikes()
     strava_instance.update_activities()
+    strava_instance.close()
+    ```
+
+5. Requêter la table des activités
+
+    La fonction suivante permet d'effectuer dans la table des activités en
+    spécifiant une plage de dates pour l'activité et une sous-chaîne du nom
+    de l'activité.
+
+    ```
+    stravaview.stravadb.get_activities(before=None, after=None, name=None, category=None)
+    ```
+
+    Les dates `before` et `after` doivent être spécifiées comme des chaînes
+    de caractères sous la forme `'YYY-MM-DD'`.
+
+    Example complet
+
+    ```
+    from readconfig import read_config
+    from stravaview.stravadb import Strava
+
+    config = read_config('setup.ini')
+    strava_instance = Strava(config)
+    strava_instance.get_activities(after='2016-12-01', name='Pellet')
+    strava_instance.close()
     ```
