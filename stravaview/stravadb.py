@@ -107,11 +107,11 @@ class Strava:
             desc = self.stravaClient.get_gear(bike.id)
 
             # Check if the bike already exists
-            sql = "select * from %s where id='%s' limit 1" % (table, bike.id)
+            sql = "SELECT * FROM %s WHERE id='%s' LIMIT 1" % (table, bike.id)
             if (self.cursor.execute(sql) > 0):
                 continue
 
-            sql = "insert into %s (id, name, type, frame_type) values ('%s','%s', '%s', '%d')" % (table, desc.id, desc.name, self.FRAME_TYPES[desc.frame_type], desc.frame_type)
+            sql = "INSERT INTO %s (id, name, type, frame_type) VALUES ('%s','%s', '%s', '%d')" % (table, desc.id, desc.name, self.FRAME_TYPES[desc.frame_type], desc.frame_type)
             self.cursor.execute(sql)
             self.connection.commit()
 
@@ -123,7 +123,7 @@ class Strava:
         """
         table = self.config['mysql_activities_table']
         # Check if activity is already in the table
-        sql = "select * from %s where id='%s' limit 1" % (table, activity.id)
+        sql = "SELECT * FROM %s WHERE id='%s' LIMIT 1" % (table, activity.id)
         if (self.cursor.execute(sql) > 0):
             print("Activity '%s' already exists in table" % (activity.name))
             return
@@ -156,9 +156,9 @@ class Strava:
         max_heartrate = activity.max_heartrate
         suffer_score = activity.suffer_score
 
-        sql = """insert into %s (id, name, distance, elevation, date, location, moving_time, elapsed_time,
+        sql = """INSERT INTO %s (id, name, distance, elevation, date, location, moving_time, elapsed_time,
         gear_id, average_speed, average_heartrate, max_heartrate, suffer_score)
-        values ('%s', '%s', '%s', '%s', '%s', '%s', '%s', '%s', '%s', '%s', '%s', '%s', '%s')
+        VALUES ('%s', '%s', '%s', '%s', '%s', '%s', '%s', '%s', '%s', '%s', '%s', '%s', '%s')
         """ % (table, activity.id, name, distance, elevation, date, location, moving_time, elapsed_time,
                gear_id, average_speed, average_heartrate, max_heartrate, suffer_score)
         self.cursor.execute(sql)
@@ -170,7 +170,7 @@ class Strava:
         """
         table = self.config['mysql_activities_table']
         # Get the most recent activity
-        sql = "select date from %s order by date desc limit 1" % table
+        sql = "SELECT date FROM %s ORDER BY date DESC LIMIT 1" % table
         if (self.cursor.execute(sql) == 0):
             after = None
         else:
