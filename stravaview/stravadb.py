@@ -151,10 +151,14 @@ class Strava:
             activity.average_speed = 0
         if activity.average_heartrate is not None:
             average_heartrate = "%0.0f" % activity.average_heartrate
+            max_heartrate = activity.max_heartrate
         else:
             average_heartrate = 0
-        max_heartrate = activity.max_heartrate
-        suffer_score = activity.suffer_score
+            max_heartrate = 0
+        if activity.suffer_score is not None:
+            suffer_score = activity.suffer_score
+        else:
+            suffer_score = 0
 
         sql = """INSERT INTO %s (id, name, distance, elevation, date, location, moving_time, elapsed_time,
         gear_id, average_speed, average_heartrate, max_heartrate, suffer_score)
