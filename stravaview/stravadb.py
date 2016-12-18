@@ -217,15 +217,15 @@ class Strava:
         name_sql = ""
         conds = list()
         if before is not None:
-            before_sql = "date <= '%s'" % before
+            before_sql = "a.date <= '%s'" % before
             conds.append(before_sql)
 
         if after is not None:
-            after_sql = "date >= '%s'" % after
+            after_sql = "a.date >= '%s'" % after
             conds.append(after_sql)
 
         if name is not None:
-            name_sql = "name LIKE '%%%s%%'" % _escape_string(name)
+            name_sql = "a.name LIKE '%%%s%%'" % _escape_string(name)
             conds.append(name_sql)
 
         if biketype is not None:
