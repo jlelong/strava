@@ -193,7 +193,7 @@ class Strava:
         elevation = row['elevation']
         elapsed_time = row['elapsed_time']
         moving_time = row['moving_time']
-        print ("{0} - {7}: {1} | {2} | {3} | {4} | {5} | {6}".format(identifier, name, date, distance, elevation, moving_time, elapsed_time, row['type']))
+        print ("{7}: {1} | {2} | {3} | {4} | {5} | {6} | https://www.strava.com/activities/{0}".format(identifier, name, date, distance, elevation, moving_time, elapsed_time, row['type']))
 
     def get_activities(self, before=None, after=None, name=None, biketype=None):
         """
