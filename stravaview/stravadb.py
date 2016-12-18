@@ -119,7 +119,7 @@ class Strava:
         """
         Add the activity `activity` to the activities table
 
-        activity: an object of class:`stravalib.model.Activity`
+        :param activity: an object of class:`stravalib.model.Activity`
         """
         table = self.config['mysql_activities_table']
         # Check if activity is already in the table
@@ -182,6 +182,9 @@ class Strava:
     def print_row(self, row):
         """
         Print a row retrieved from the activities table
+
+        :param row: a result from a SQL fetch function
+        :type row: a ditcionnary
         """
         name = row['name'].encode('utf-8')
         identifier = row['id']
@@ -192,21 +195,21 @@ class Strava:
         moving_time = row['moving_time']
         print ("{0} - {7}: {1} | {2} | {3} | {4} | {5} | {6}".format(identifier, name, date, distance, elevation, moving_time, elapsed_time, row['type']))
 
-    def get_activities(self, before=None, after=None, name=None):
+    def get_activities(self, before=None, after=None, name=None, biketype=None):
         """
         Get all the activities matching the criterions
 
         :param before: lower-bound on the date of the activity
-        :type before: str
+        :type before: str or datetime.date or datetime.datetime
 
         :param after: upper-bound on the date of the activity
-        :type after: str
+        :type after: str or datetime.date or datetime.datetime
 
         :param name: a substring of the activity name
         :type name: str
 
         :param category: the type of bike used
-        :type category: a string from FRAME_TYPES
+        :type category: an element from FRAME_TYPES {'mtb', 'road', 'cx', 'tt'}
         """
 
         before_sql = ""
@@ -225,12 +228,20 @@ class Strava:
             name_sql = "name LIKE '%%%s%%'" % _escape_string(name)
             conds.append(name_sql)
 
+        if biketype is not None:
+            if not (biketype in self.FRAME_TYPES.values()):
+                print("{0} is not valid. Use {1}, {2}, {3}, {4}".format(biketype, self.FRAME_TYPES[1], self.FRAME_TYPES[2], self.FRAME_TYPES[3], self.FRAME_TYPES[4]))
+                biketype = None
+            else:
+                biketype_sql = "b.type = '%s'" % biketype
+                conds.append(biketype_sql)
+
         sql = "SELECT a.*, b.type FROM %s AS a INNER JOIN %s AS b ON a.gear_id = b.id" % (self.config['mysql_activities_table'], self.config['mysql_bikes_table'])
         if len(conds) > 0:
             where = " AND ".join(conds)
             sql = sql + " WHERE " + where
         sql = sql + " ORDER BY date DESC"
-        print(sql)
+        print(sql + "\n")
         self.cursor.execute(sql)
         for row in self.cursor.fetchall():
             self.print_row(row)

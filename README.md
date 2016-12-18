@@ -1,4 +1,4 @@
-# strava
+# StravaView
 Interface de consultation des activités vélo de Strava.
 Nécessite stravalib, pymysql et un serveur mysql
 
@@ -52,13 +52,14 @@ Nécessite stravalib, pymysql et un serveur mysql
     de l'activité.
 
     ```
-    stravaview.stravadb.get_activities(before=None, after=None, name=None, category=None)
+    stravaview.stravadb.get_activities(before=None, after=None, name=None, bikeype=None)
     ```
 
-    Les dates `before` et `after` doivent être spécifiées comme des chaînes
-    de caractères sous la forme `'YYY-MM-DD'`.
+    Les dates `before` et `after` peuvent être spécifiées comme des chaînes
+    de caractères sous la forme `'YYY-MM-DD'` ou comme des dates
+    `datetime.date(YYY, MM, DD)` ou même `datetime.datetime`.
 
-    Example complet
+    Example 
 
     ```
     from readconfig import read_config
@@ -66,6 +67,6 @@ Nécessite stravalib, pymysql et un serveur mysql
 
     config = read_config('setup.ini')
     strava_instance = Strava(config)
-    strava_instance.get_activities(after='2016-12-01', name='Pellet')
+    strava_instance.get_activities(after='2016-12-01', name='Pellet', biketype='mtb')
     strava_instance.close()
     ```
