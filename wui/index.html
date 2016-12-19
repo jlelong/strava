@@ -49,6 +49,13 @@
                 <option>100</option>
             </select>
         </div>
+        <div class="col-md-2">Run type:
+            <select ng-model="runType" class="form-control">
+                <option selected value="">Tous</option>
+                <option value="1">VTT</option>
+                <option value="3">Route</option>
+            </select>
+        </div>
         <div class="col-md-3">Filter:
             <input type="text" ng-model="search" ng-change="filter()" placeholder="Filter" class="form-control" />
         </div>
@@ -83,7 +90,7 @@
             </th>
             </thead>
             <tbody>
-                <tr ng-repeat="data in filtered = (list | filter:search | dateRange : dateRange.startDate : dateRange.endDate | orderBy : predicate :reverse) | startFrom:(currentPage-1)*entryLimit | limitTo:entryLimit ">
+                <tr ng-repeat="data in filtered = (list | filter:search | runType : runType | dateRange : dateRange.startDate : dateRange.endDate | orderBy : predicate :reverse) | startFrom:(currentPage-1)*entryLimit | limitTo:entryLimit ">
                     <td><a href="https://www.strava.com/activities/{{data.id}}">{{data.run_name}}</a></td>
                     <td>{{data.location}}</td>
                     <td>{{data.date}}</td>

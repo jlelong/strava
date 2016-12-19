@@ -27,6 +27,20 @@ app.filter('dateRange', function() {
         return retArray;
     }
 });
+app.filter('runType', function() {
+    return function(items, runTypeId) {
+        var retArray = [];
+        if (!runTypeId) {
+            return items;
+        }
+        angular.forEach(items, function(obj){
+            if(obj.run_type_id == runTypeId) {
+                retArray.push(obj); 
+            }
+        });
+        return retArray;
+    }
+});
 app.controller('runsCrtl', function ($scope, $http, $timeout) {
     $http.get('ajax/getRuns.php').success(function(data){
         $scope.list = data;
