@@ -13,21 +13,24 @@ table>thead.totals {
     /* height:800px; */
     overflow-x: auto;
     overflow-y: hidden;
+    border: 2px solid grey;
 }
 
 table.scroll {
     border-style: none;
     border-spacing: 0px;
-    width: 5500px; 
-    border-collapse: collapse;
+/*    width: 5500px; 
+*/    border-collapse: collapse;
 }
 
 table.scroll thead {
 	display: block;
 }	
+table.scroll thead tr {    width: 100%; }
 
 table.scroll tbody {
     display: block;
-    height: 1500px;
+    height: 600px;
     overflow: auto;
+
 }
