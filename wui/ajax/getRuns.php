@@ -13,7 +13,7 @@ if ($db->connect_errno) {
 }
 
 // $query="select distinct c.customerName, c.addressLine1, c.city, c.state, c.postalCode, c.country, c.creditLimit from customers c order by c.customerNumber";
-$query="select r.id,r.name as run_name,r.location,r.date,s.type as run_type, s.frame_type as run_type_id,r.elevation,r.distance,r.moving_time,r.elapsed_time,s.name as spad_name,r.average_speed,r.max_heartrate,r.average_heartrate,r.suffer_score from $ACTIVITIES_TABLE as r left join $BIKES_TABLE as s on s.id = r.gear_id order by r.date";
+$query="SELECT r.id,r.name AS run_name,r.location,DATE(r.date) AS date,s.type as run_type, s.frame_type AS run_type_id,r.elevation,r.distance,r.moving_time,r.elapsed_time,s.name AS spad_name,r.average_speed,r.max_heartrate,r.average_heartrate,r.suffer_score FROM $ACTIVITIES_TABLE AS r LEFT JOIN $BIKES_TABLE AS s ON s.id = r.gear_id ORDER BY r.date DESC";
 $result = $db->query($query) or die($db->error.__LINE__);
 
 $arr = array();
