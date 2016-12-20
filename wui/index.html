@@ -11,41 +11,6 @@
     </style>
     
     <script src="https://code.jquery.com/jquery-2.1.4.min.js"></script>
-
-    
-    <!--<script src="https://cdnjs.cloudflare.com/ajax/libs/angular.js/1.3.20/angular-messages.min.js"></script>-->
-    
-
-    <script type="text/javascript">
-        $(function(){
-        var $table = $('table.scroll');
-        var $bodyCells = $table.find('tbody tr:first').children();
-        var $headerCells = $table.find('thead tr:first').children();
-        alert($bodyCells);
-        var colWidth, headWidth;
-        // Get the tbody columns width array
-        colWidth = $bodyCells.map(function() { return $(this).width(); }).get();
-        headWidth = $headerCells.map(function() { return $(this).width(); }).get();
-
-        // Adjust the width of thead cells when window resizes
-        $(window).resize(function() {
-            // Set the width of thead columns
-            $table.find('thead tr').children().each(function(i, v) {
-                $(v).width(Math.max(headWidth[i],colWidth[i]) + 4);
-            });
-            $table.find('tbody tr').children().each(function(i, v) {
-                $(v).width(Math.max(headWidth[i], colWidth[i]) + 4);
-            }); 
-
-            // Set the table width;
-            $table.width($table.find('thead tr').width() + 5);
-
-            // Set the table body height
-            //$table.find('tbody').height($(window).height() * 0.8);
-            //}).resize(); // Trigger resize handler
-        });
-    </script>
-
     <script src="https://ajax.googleapis.com/ajax/libs/angularjs/1.3.20/angular.min.js"></script>
     <script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.5/js/bootstrap.min.js"></script>
     <script src="js/ui-bootstrap-tpls-0.10.0.min.js"></script>
@@ -71,7 +36,7 @@
 <div ng-controller="runsCrtl">
 <div class="container">
     <div class="row">
-<!--         <div class="col-md-2">PageSize:
+<!-- <div class="col-md-2">PageSize:
             <select ng-model="entryLimit" class="form-control">
                 <option>5</option>
                 <option>10</option>
@@ -111,16 +76,16 @@
                                 <th ng-click="SetSort('run_name');"><div class="c1">Name</div></th>
                                 <th ng-click="SetSort('location');"><div class="c2">Location</div></th>
                                 <th ng-click="SetSort('date');"><div class="c3">Date</div></th>
-                                <th ng-click="SetSort('run_type');" title="{{data.spad_name}}"><div class="c1">Run type</div></th>
-                                <th ng-click="SetSort('distance');"><div class="c1">Km</div></th>
-                                <th ng-click="SetSort('elevation');"><div class="c1">D+</div></th>
-                                <th ng-click="SetSort('moving_time');"><div class="c1">Mt</div></th>
-                                <th ng-click="SetSort('elapsed_time');"><div class="c1">Et</div></th>
-                                <th ng-click="SetSort('average_speed');"><div class="c1">As</div></th>
-                                <th ng-click="SetSort('max_heartrate');"><div class="c1">Mh</div></th>
-                                <th ng-click="SetSort('average_heartrate');"><div class="c1">Ah</div></th>
+                                <th ng-click="SetSort('run_type');">Run Type<div class="c3">Run type</div></th>
+                                <th ng-click="SetSort('distance');"><div class="c4">Km</div></th>
+                                <th ng-click="SetSort('elevation');"><div class="c5">D+</div></th>
+                                <th ng-click="SetSort('moving_time');"><div class="c6">Mt</div></th>
+                                <th ng-click="SetSort('elapsed_time');"><div class="c7">Et</div></th>
+                                <th ng-click="SetSort('average_speed');"><div class="c8">As</div></th>
+                                <th ng-click="SetSort('max_heartrate');"><div class="c9">Mh</div></th>
+                                <th ng-click="SetSort('average_heartrate');"><div class="c10">Ah</div></th>
                                 <!--<th>Suffer_score&nbsp;<a ng-click="sort_by('suffer_score');"><i class="glyphicon glyphicon-sort"></i></a>-->
-                                <th ng-click="SetSort('suffer_score');"><div class="c1">Ss</div></th>
+                                <th ng-click="SetSort('suffer_score');"><div class="c11">Ss</div></th>
                             </tr>
                         </thead>
                         <tbody>
@@ -129,7 +94,7 @@
                                 <td><a href="https://www.strava.com/activities/{{data.id}}">{{data.run_name}}</a></td>
                                 <td>{{data.location}}</td>
                                 <td>{{data.date}}</td>
-                                <td>{{data.run_type}}</td>
+                                <td title="{{data.spad_name}}">{{data.run_type}}</td>
                                 <td>{{data.distance}}</td>
                                 <td>{{data.elevation}}</td>
                                 <td>{{data.moving_time}}</td>
@@ -157,8 +122,5 @@
     </div>
 </div>
 </div>
-<!--<script src="js/angular.min.js"></script>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/moment.js/2.10.6/moment.min.js"></script>-->
-
     </body>
 </html>
