@@ -13,12 +13,43 @@
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/bootstrap-daterangepicker/2.1.13/daterangepicker.min.css" />
     <!-- endbower -->
 
+    <script src="https://code.jquery.com/jquery-2.1.4.min.js"></script>
+
+
+    <script type="text/javascript">
+        $(function(){
+        var $table = $('table.scroll');
+        var $bodyCells = $table.find('tbody tr:first').children();
+        var $headerCells = $table.find('thead tr:first').children();
+        var colWidth, headWidth;
+        // Get the tbody columns width array
+        colWidth = $bodyCells.map(function() { return $(this).width(); }).get();
+        headWidth = $headerCells.map(function() { return $(this).width(); }).get();
+
+        // Adjust the width of thead cells when window resizes
+        $(window).resize(function() {
+            // Set the width of thead columns
+            $table.find('thead tr').children().each(function(i, v) {
+                $(v).width(Math.max(headWidth[i],colWidth[i]) + 4);
+            });
+            $table.find('tbody tr').children().each(function(i, v) {
+                $(v).width(Math.max(headWidth[i], colWidth[i]) + 4);
+            }); 
+
+            // Set the table width;
+            $table.width($table.find('thead tr').width() + 5);
+
+            // Set the table body height
+            $table.find('tbody').height($(window).height() * 0.8);
+            }).resize(); // Trigger resize handler
+        });//]]> 
+    </script>
+
     <title>MyStrava</title>
 </head>
 <body>
 
     <!-- bower:js -->
-    <script src="https://code.jquery.com/jquery-2.1.4.min.js"></script>
     <script src="https://ajax.googleapis.com/ajax/libs/angularjs/1.3.20/angular.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/angular.js/1.3.20/angular-messages.min.js"></script>
     <script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.5/js/bootstrap.min.js"></script>
@@ -30,15 +61,13 @@
 
 <div class="navbar navbar-default" id="navbar">
     <div class="container" id="navbar-container">
+        <h2><a href="#">MyStrava</a></h2>
     </div>
 </div>
 
 
 <div ng-controller="runsCrtl">
 <div class="container">
-<br/>
-<blockquote><h1><a href="#">MyStrava</a></h1></blockquote>
-<br/>
     <div class="row">
         <div class="col-md-2">PageSize:
             <select ng-model="entryLimit" class="form-control">
@@ -70,9 +99,9 @@
     </div>
     <br/>
     <div class="row">
-        <div class="col-md-12" ng-show="filteredItems > 0">
-            <table class="table table-striped table-bordered">
-            <thead>
+        <div id="dbtable" class="col-md-12" ng-show="filteredItems > 0">
+            <table class="table scroll table-striped table-bordered">
+            <thead class="header">
             <th ng-click="SetSort('run_name');">Name</th>
             <th ng-click="SetSort('location');">Location</th>
             <th ng-click="SetSort('date');">Date</th>
@@ -88,6 +117,21 @@
             <!--<th>Suffer_score&nbsp;<a ng-click="sort_by('suffer_score');"><i class="glyphicon glyphicon-sort"></i></a>-->
             <th ng-click="SetSort('suffer_score');">Suffer_score</th>
             </th>
+            </thead>
+            <thead class="totals header">
+                <th></th>
+                <th></th>
+                <th></th>
+                <th></th>
+                <th></th>
+                <th></th>
+                <th></th>
+                <th></th>
+                <th></th>
+                <th></th>
+                <th></th>
+                <th></th>
+                <th></th>
             </thead>
             <tbody>
                 <tr ng-repeat="data in filtered = (list | filter:search | runType : runType | dateRange : dateRange.startDate : dateRange.endDate | orderBy : predicate :reverse) | startFrom:(currentPage-1)*entryLimit | limitTo:entryLimit ">
@@ -125,6 +169,5 @@
 <script src="https://cdnjs.cloudflare.com/ajax/libs/moment.js/2.10.6/moment.min.js"></script>-->
 <script src="js/ui-bootstrap-tpls-0.10.0.min.js"></script>
 <script src="app/app.js"></script>
-
     </body>
 </html>
