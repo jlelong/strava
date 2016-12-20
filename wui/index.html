@@ -101,60 +101,48 @@
     </div>
     <br/>
     <div class="row">
-        <div id="dbtable" class="col-md-12" ng-show="filteredItems > 0">
-            <table class="table col-md-12 scroll table-striped table-bordered">
-                <thead>
-                    <tr>
-                        <th ng-click="SetSort('run_name');" class="col-lg-3">Name</th>
-                        <th ng-click="SetSort('location');">Location</th>
-                        <th ng-click="SetSort('date');">Date</th>
-                        <th ng-click="SetSort('run_type');" title="{{data.spad_name}}">Run type</th>
-                        <th ng-click="SetSort('distance');">Km</th>
-                        <th ng-click="SetSort('elevation');">D+</th>
-                        <th ng-click="SetSort('moving_time');">Mt</th>
-                        <th ng-click="SetSort('elapsed_time');">Et</th>
-                        <th ng-click="SetSort('average_speed');">As</th>
-                        <th ng-click="SetSort('max_heartrate');">Mh</th>
-                        <th ng-click="SetSort('average_heartrate');">Ah</th>
-                        <!--<th>Suffer_score&nbsp;<a ng-click="sort_by('suffer_score');"><i class="glyphicon glyphicon-sort"></i></a>-->
-                        <th ng-click="SetSort('suffer_score');">Ss</th>
-                    </tr>
-                </thead>
-<!--                 <thead class="totals header">
-                    <tr>
-                        <th></th>
-                        <th></th>
-                        <th></th>
-                        <th></th>
-                        <th></th>
-                        <th></th>
-                        <th></th>
-                        <th></th>
-                        <th></th>
-                        <th></th>
-                        <th></th>
-                        <th></th>
-                        <th></th>
-                    </tr>
-                </thead> -->
-                <tbody>
-                    <tr ng-repeat="data in filtered = (list | filter:search | runType : runType | dateRange : dateRange.startDate : dateRange.endDate | orderBy : predicate :reverse) ">
-                        <!-- | startFrom:(currentPage-1)*entryLimit | limitTo:entryLimit  -->
-                        <td class="col-lg-3"><a href="https://www.strava.com/activities/{{data.id}}">{{data.run_name}}</a></td>
-                        <td>{{data.location}}</td>
-                        <td>{{data.date}}</td>
-                        <td>{{data.run_type}}</td>
-                        <td>{{data.distance}}</td>
-                        <td>{{data.elevation}}</td>
-                        <td>{{data.moving_time}}</td>
-                        <td>{{data.elapsed_time}}</td>
-                        <td>{{data.average_speed}}</td>
-                        <td>{{data.max_heartrate}}</td>
-                        <td>{{data.average_heartrate}}</td>
-                        <td>{{data.suffer_score}}</td>
-                    </tr>
-                </tbody>
-            </table>
+        <div class="col-md-12" ng-show="filteredItems > 0">
+            <div class="table-wrapper">
+                <div class="table-container">
+
+                    <table class="table table-striped table-bordered">
+                        <thead>
+                            <tr>
+                                <th ng-click="SetSort('run_name');"><div class="c1">Name</div></th>
+                                <th ng-click="SetSort('location');"><div class="c2">Location</div></th>
+                                <th ng-click="SetSort('date');"><div class="c3">Date</div></th>
+                                <th ng-click="SetSort('run_type');" title="{{data.spad_name}}"><div class="c1">Run type</div></th>
+                                <th ng-click="SetSort('distance');"><div class="c1">Km</div></th>
+                                <th ng-click="SetSort('elevation');"><div class="c1">D+</div></th>
+                                <th ng-click="SetSort('moving_time');"><div class="c1">Mt</div></th>
+                                <th ng-click="SetSort('elapsed_time');"><div class="c1">Et</div></th>
+                                <th ng-click="SetSort('average_speed');"><div class="c1">As</div></th>
+                                <th ng-click="SetSort('max_heartrate');"><div class="c1">Mh</div></th>
+                                <th ng-click="SetSort('average_heartrate');"><div class="c1">Ah</div></th>
+                                <!--<th>Suffer_score&nbsp;<a ng-click="sort_by('suffer_score');"><i class="glyphicon glyphicon-sort"></i></a>-->
+                                <th ng-click="SetSort('suffer_score');"><div class="c1">Ss</div></th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr ng-repeat="data in filtered = (list | filter:search | runType : runType | dateRange : dateRange.startDate : dateRange.endDate | orderBy : predicate :reverse) ">
+                                <!-- | startFrom:(currentPage-1)*entryLimit | limitTo:entryLimit  -->
+                                <td><a href="https://www.strava.com/activities/{{data.id}}">{{data.run_name}}</a></td>
+                                <td>{{data.location}}</td>
+                                <td>{{data.date}}</td>
+                                <td>{{data.run_type}}</td>
+                                <td>{{data.distance}}</td>
+                                <td>{{data.elevation}}</td>
+                                <td>{{data.moving_time}}</td>
+                                <td>{{data.elapsed_time}}</td>
+                                <td>{{data.average_speed}}</td>
+                                <td>{{data.max_heartrate}}</td>
+                                <td>{{data.average_heartrate}}</td>
+                                <td>{{data.suffer_score}}</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
         </div>
         <div class="col-md-12" ng-show="filteredItems == 0">
             <div class="col-md-12">

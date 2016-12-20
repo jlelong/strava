@@ -7,30 +7,140 @@ table>thead.totals {
 	color: rgba(66,66,66,.6);
 }
 
-#dbtable {
-    /*margin-left:5%;
-    margin-right:5%;*/
-    /* height:800px; */
+/*#dbtable {
     overflow-x: auto;
     overflow-y: hidden;
     border: 2px solid grey;
 }
 
 table.scroll {
-    border-style: none;
-    border-spacing: 0px;
-/*    width: 5500px; 
-*/    border-collapse: collapse;
+    #border-style: none;
+    #border-spacing: 0px;
+    #width: 5500px; 
+    #border-collapse: collapse;
+    width: 100%;
 }
+
 
 table.scroll thead {
 	display: block;
-}	
-table.scroll thead tr {    width: 100%; }
+}
+
+#table.scroll thead tr {    width: 100%; }
 
 table.scroll tbody {
     display: block;
     height: 600px;
     overflow: auto;
 
+}*/
+
+.table-wrapper {
+  width: 100%;
+  position: relative;
+  border: 1px solid #CCC;
+  background: rgba(200,200,200,.2);
+  overflow: hidden;
+  border-radius: 4px;
+}
+
+.left {
+  float: left;
+}
+
+
+.table-container {
+  overflow-y: scroll;
+  height: 600px;
+  border-top: 41px solid transparent;
+  border-bottom: 41px solid transparent;
+}
+
+table {
+  border-spacing: 0;
+  border-collapse: collapse;
+  width: 100%;
+  margin-top: -19px;
+}
+
+td + td {
+  border-left: 1px solid #fff;
+}
+
+td, th {
+  border-bottom: 1px solid #fff;
+  background: #efefef;
+  padding: 10px;
+  min-width: 6em;
+}
+
+thead tr th,
+tfoot tr td {
+  height: 0;
+  line-height: 0;
+  margin: 0;
+  padding-top: 0;
+  padding-bottom: 0;
+  color: transparent;
+  border: none;
+  white-space: nowrap;
+}
+
+thead tr th div,
+tfoot tr td div {
+  position: absolute;
+  color: #fff;
+  padding: 10px;
+  margin-left: -10px;
+  line-height: normal;
+  width: 100%;
+  z-index: 2;
+  text-align: left;
+  font-weight: bold;
+}
+
+thead tr th div {
+  /*border-left: 1px solid #000;
+  border-bottom: 1px solid #000;*/
+  border-left: 1px solid rgba(255,255,255,.2);
+}
+
+tfoot tr td div {
+  border-left: 1px solid #000;
+  border-top: 1px solid #000;
+}
+
+.c1, .c2, .c3 {
+    color: rgba(66,66,66,.6);
+}
+.c1, .c2, .c3 {
+    background-color: rgba(200,200,200,.3);
+}
+
+/*tfoot tr td div.c1,
+thead tr th div.c1 {
+  background: violet;
+}
+
+tfoot tr td div.c2,
+thead tr th div.c2 {
+  background: green;
+}
+
+tfoot tr td div.c3,
+thead tr th div.c3 {
+  background: yellow;
+}*/
+
+thead tr th div {
+  top: 0;
+}
+
+tfoot tr td div {
+  bottom: 0;
+}
+
+thead tr th:first-child div,
+tfoot tr td:first-child div {
+  border-left: none;
 }
