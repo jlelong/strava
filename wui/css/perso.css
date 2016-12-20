@@ -66,7 +66,7 @@ td + td {
   border-bottom: 1px solid #fff;
   background: #efefef;
   padding: 10px;
-  min-width: 6em;
+  min-width: 7em;
 }
 
 .table-container > table > thead tr th,
@@ -111,6 +111,15 @@ td + td {
 .c1, .c2, .c3 {
     background-color: rgba(200,200,200,.3);
 }
+
+.c-date, .c-rtype {
+    min-width: 7em;
+}
+
+.c-int {
+    min-width: 4em;
+}
+
 
 /*tfoot tr td div.c1,
 thead tr th div.c1 {
