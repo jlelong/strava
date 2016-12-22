@@ -19,16 +19,16 @@ table>thead.totals {
 
 .table-container {
   overflow-y: scroll;
-  height: 600px;
+  height: 550px;
   border-top: 41px solid transparent;
-  border-bottom: 41px solid transparent;
+  /* border-bottom: 41px solid transparent; */
 }
 
 .table-container > table {
   border-spacing: 0;
   border-collapse: collapse;
   width: 100%;
-  margin-top: -19px;
+  /* margin-top: -19px; */
 }
 
 td + td {
