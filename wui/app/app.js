@@ -1,4 +1,4 @@
-var app = angular.module('MyStrava', ['ui.bootstrap','daterangepicker']);
+var app = angular.module('MyStrava', ['ui.bootstrap']);
 
 app.filter('startFrom', function() {
     return function(input, start) {
