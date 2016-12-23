@@ -1,3 +1,5 @@
+// vim: set sw=4 ts=4 sts=4:
+
 var app = angular.module('MyStrava', ['ui.bootstrap']);
 
 app.filter('startFrom', function() {
@@ -41,6 +43,7 @@ app.filter('runType', function() {
         return retArray;
     }
 });
+
 app.controller('runsCrtl', function ($scope, $http, $timeout) {
     $http.get('ajax/getRuns.php').then(function(response){
         $scope.list = response.data;
@@ -48,6 +51,7 @@ app.controller('runsCrtl', function ($scope, $http, $timeout) {
         $scope.entryLimit = 100; //max no of items to display in a page
         $scope.filteredItems = $scope.list.length; //Initially for no filter  
         $scope.totalItems = $scope.list.length;
+        $scope.update_response = "empty";
     });
     $scope.setPage = function(pageNo) {
         $scope.currentPage = pageNo;
@@ -72,4 +76,10 @@ app.controller('runsCrtl', function ($scope, $http, $timeout) {
           }
         });
     };
+
+    $scope.update = function() {
+        $http.get('ajax/updatelocaldb.py').then(function(response){
+            $scope.update_response = response.data;
+        });
+  };
 });

@@ -1,3 +1,18 @@
+.right {
+    float: right;
+}
+
+.mybutton {
+    cursor: pointer;
+    background-color: #FFF;
+    font-weight: bold;
+    color: #7989D6;
+    border-color:  #7989D6;
+    -moz-border-radius: 8px;
+    -webkit-border-radius: 8px;
+    border-radius: 8px;
+}
+
 .table>thead>tr>th:hover, .table>thead:first-child>tr:first-child>th:hover {
 	background-color: rgba(208,208,208,.35);
 }

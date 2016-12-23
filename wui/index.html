@@ -6,9 +6,6 @@
     <!-- <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/bootstrap&#45;daterangepicker/2.1.13/daterangepicker.min.css" /> -->
     <link href="css/bootstrap.min.css" rel="stylesheet">
     <link href="css/perso.css" rel="stylesheet">
-    <style type="text/css">
-        ul>li, a{cursor: pointer;}
-    </style>
     <script src="js/angular.js"></script>
     
     <!-- <script src="https://code.jquery.com/jquery&#45;2.1.4.min.js"></script> -->
@@ -50,10 +47,13 @@
             <!-- <div class="col&#45;md&#45;3">Range date: -->
             <!--     <input date&#45;range&#45;picker class="form&#45;control date&#45;picker" type="text" placeholder="Date range" ng&#45;model="dateRange" options="{locale: {separator: ' > '}, autoApply: true, autoUpdateInput: true}"/> -->
             <!-- </div> -->
+            <div class="col-md-2 right"><br/>
+                <input type="button" ng-click="update()" Value="Update Local DB" class="form-control mybutton" />
+            </div>
         </div>
         <div class="row">
             <div class="col-md-4">
-                <h5>Filtered {{ filtered.length }} of {{ totalItems}} total runs</h5>
+                <h5>Filtered {{ filtered.length }} of {{ totalItems}} total runs. {{update_response}}</h5>
             </div>
         </div>
         <br/>
