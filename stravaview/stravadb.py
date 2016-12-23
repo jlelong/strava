@@ -7,6 +7,8 @@ import stravalib.client
 import stravalib.unithelper
 import pymysql.cursors
 import pymysql.converters
+import json
+import datetime
 
 
 def _escape_string(s):
@@ -18,6 +20,16 @@ def _escape_string(s):
         return pymysql.converters.escape_string(s)
     else:
         return s
+
+
+class ExtenededEncoder(json.JSONEncoder):
+    """
+    Extend the JSON encoding facilities from datetime objects
+    """
+    def default(self, obj):
+        if isinstance(obj, (datetime.datetime, datetime.date, datetime.timedelta)):
+            return "%s" % obj
+        return json.JSONEncoder.default(self, obj)
 
 
 class Strava:
@@ -188,7 +200,7 @@ class Strava:
         Print a row retrieved from the activities table
 
         :param row: a result from a SQL fetch function
-        :type row: a ditcionnary
+        :type row: a dictionnary
         """
         name = row['name'].encode('utf-8')
         identifier = row['id']
@@ -199,7 +211,7 @@ class Strava:
         moving_time = row['moving_time']
         print ("{7}: {1} | {2} | {3} | {4} | {5} | {6} | https://www.strava.com/activities/{0}".format(identifier, name, date, distance, elevation, moving_time, elapsed_time, row['type']))
 
-    def get_activities(self, before=None, after=None, name=None, biketype=None):
+    def get_activities(self, before=None, after=None, name=None, biketype=None, json_output=False):
         """
         Get all the activities matching the criterions
 
@@ -245,7 +257,10 @@ class Strava:
             where = " AND ".join(conds)
             sql = sql + " WHERE " + where
         sql = sql + " ORDER BY date DESC"
-        print(sql + "\n")
+        # print(sql + "\n")
         self.cursor.execute(sql)
-        for row in self.cursor.fetchall():
-            self.print_row(row)
+        if json_output:
+            return json.dumps(self.cursor.fetchall(), cls=ExtenededEncoder)
+        else:
+            for row in self.cursor.fetchall():
+                self.print_row(row)
