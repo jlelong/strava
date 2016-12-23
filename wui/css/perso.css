@@ -7,33 +7,6 @@ table>thead.totals {
 	color: rgba(66,66,66,.6);
 }
 
-/*#dbtable {
-    overflow-x: auto;
-    overflow-y: hidden;
-    border: 2px solid grey;
-}
-
-table.scroll {
-    #border-style: none;
-    #border-spacing: 0px;
-    #width: 5500px; 
-    #border-collapse: collapse;
-    width: 100%;
-}
-
-
-table.scroll thead {
-	display: block;
-}
-
-#table.scroll thead tr {    width: 100%; }
-
-table.scroll tbody {
-    display: block;
-    height: 600px;
-    overflow: auto;
-
-}*/
 
 .table-wrapper {
   width: 100%;
@@ -46,9 +19,9 @@ table.scroll tbody {
 
 .table-container {
   overflow-y: scroll;
-  height: 600px;
+  height: 550px;
   border-top: 41px solid transparent;
-  border-bottom: 41px solid transparent;
+  /* border-bottom: 41px solid transparent; */
 }
 
 .table-container > table {
