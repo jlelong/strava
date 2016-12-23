@@ -65,10 +65,10 @@
                         <table class="table table-striped table-bordered">
                             <thead>
                                 <tr>
-                                    <th ng-click="SetSort('run_name');"><div class="c1">Name</div></th>
+                                    <th ng-click="SetSort('name');"><div class="c1">Name</div></th>
                                     <th ng-click="SetSort('location');"><div class="c2">Location</div></th>
                                     <th ng-click="SetSort('date');"  class="c-date"><div class="c3">Date</div></th>
-                                    <th ng-click="SetSort('run_type');" class="c-rtype"><div class="c4">Run type</div></th>
+                                    <th ng-click="SetSort('type');" class="c-rtype"><div class="c4">Run type</div></th>
                                     <th ng-click="SetSort('distance');" class="c-int"><div class="c5">Km</div></th>
                                     <th ng-click="SetSort('elevation');" class="c-int"><div class="c6">D+</div></th>
                                     <th ng-click="SetSort('moving_time');"><div class="c7">Mt</div></th>
@@ -83,10 +83,10 @@
                             <tbody>
                                 <!-- <tr ng&#45;repeat="data in filtered = (list | filter:search | runType : runType | dateRange : dateRange.startDate : dateRange.endDate | orderBy : predicate :reverse) "> -->
                                 <tr ng-repeat="data in filtered = (list | filter:search | runType : runType | orderBy : predicate :reverse) ">
-                                    <td><a href="https://www.strava.com/activities/{{data.id}}">{{data.run_name}}</a></td>
+                                    <td><a href="https://www.strava.com/activities/{{data.id}}">{{data.name}}</a></td>
                                     <td>{{data.location}}</td>
                                     <td>{{data.date}}</td>
-                                    <td title="{{data.spad_name}}">{{data.run_type}}</td>
+                                    <td title="{{data.spad_name}}">{{data.type}}</td>
                                     <td>{{data.distance}}</td>
                                     <td>{{data.elevation}}</td>
                                     <td>{{data.moving_time}}</td>

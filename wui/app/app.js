@@ -45,7 +45,7 @@ app.filter('runType', function() {
 });
 
 app.controller('runsCrtl', function ($scope, $http, $timeout) {
-    $http.get('ajax/getRuns.php').then(function(response){
+    $http.get('ajax/getRuns.py').then(function(response){
         $scope.list = response.data;
         $scope.currentPage = 1; //current page
         $scope.entryLimit = 100; //max no of items to display in a page
