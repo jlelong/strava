@@ -100,8 +100,12 @@ td + td {
     background-color: rgba(200,200,200,.3);
 }
 
-.c-date, .c-rtype {
+.c-date {
     min-width: 7em;
+}
+
+.c-rtype {
+    min-width: 4em;
 }
 
 .c-int {
