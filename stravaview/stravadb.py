@@ -204,7 +204,7 @@ class Strava:
         """
         name = row['name'].encode('utf-8')
         identifier = row['id']
-        date = row['date'].date()
+        date = row['date']
         distance = row['distance']
         elevation = row['elevation']
         elapsed_time = row['elapsed_time']
@@ -252,7 +252,7 @@ class Strava:
                 biketype_sql = "b.type = '%s'" % biketype
                 conds.append(biketype_sql)
 
-        sql = "SELECT a.*, b.type FROM %s AS a INNER JOIN %s AS b ON a.gear_id = b.id" % (self.config['mysql_activities_table'], self.config['mysql_bikes_table'])
+        sql = "SELECT a.id, a.name, a.location, DATE(a.date) AS date, a.distance, a.elevation, a.average_speed, a.elapsed_time, a.moving_time, a.suffer_score, a.max_heartrate, a.average_heartrate, b.type FROM %s AS a INNER JOIN %s AS b ON a.gear_id = b.id" % (self.config['mysql_activities_table'], self.config['mysql_bikes_table'])
         if len(conds) > 0:
             where = " AND ".join(conds)
             sql = sql + " WHERE " + where
