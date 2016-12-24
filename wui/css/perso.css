@@ -100,16 +100,27 @@ td + td {
     background-color: rgba(200,200,200,.3);
 }
 
+.c-name {
+    width: 40em;
+}
+
+.c-location {
+    width: 12em;
+}
 .c-date {
-    min-width: 7em;
+    width: 7em;
 }
 
 .c-rtype {
-    min-width: 4em;
+    width: 5em;
+}
+
+.c-time {
+    width: 5em;
 }
 
 .c-int {
-    min-width: 4em;
+    width: 4em;
 }
 
 
