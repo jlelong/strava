@@ -53,7 +53,7 @@ app.filter('runType', function() {
             return items;
         }
         angular.forEach(items, function(obj){
-            if(obj.run_type_id == runTypeId) {
+            if(obj.bike_type == runTypeId) {
                 retArray.push(obj); 
             }
         });

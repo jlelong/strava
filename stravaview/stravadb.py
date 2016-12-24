@@ -209,7 +209,8 @@ class Strava:
         elevation = row['elevation']
         elapsed_time = row['elapsed_time']
         moving_time = row['moving_time']
-        print ("{7}: {1} | {2} | {3} | {4} | {5} | {6} | https://www.strava.com/activities/{0}".format(identifier, name, date, distance, elevation, moving_time, elapsed_time, row['type']))
+        bike_type = row['bike_type']
+        print ("{7}: {1} | {2} | {3} | {4} | {5} | {6} | https://www.strava.com/activities/{0}".format(identifier, name, date, distance, elevation, moving_time, elapsed_time, bike_type))
 
     def get_activities(self, before=None, after=None, name=None, biketype=None, json_output=False):
         """
@@ -252,7 +253,7 @@ class Strava:
                 biketype_sql = "b.type = '%s'" % biketype
                 conds.append(biketype_sql)
 
-        sql = "SELECT a.id, a.name, a.location, DATE(a.date) AS date, a.distance, a.elevation, a.average_speed, a.elapsed_time, a.moving_time, a.suffer_score, a.max_heartrate, a.average_heartrate, b.type FROM %s AS a INNER JOIN %s AS b ON a.gear_id = b.id" % (self.config['mysql_activities_table'], self.config['mysql_bikes_table'])
+        sql = "SELECT a.id, a.name, a.location, DATE(a.date) AS date, a.distance, a.elevation, a.average_speed, a.elapsed_time, a.moving_time, a.suffer_score, a.max_heartrate, a.average_heartrate, b.type AS bike_type, b.name AS bike_name FROM %s AS a INNER JOIN %s AS b ON a.gear_id = b.id" % (self.config['mysql_activities_table'], self.config['mysql_bikes_table'])
         if len(conds) > 0:
             where = " AND ".join(conds)
             sql = sql + " WHERE " + where

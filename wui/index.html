@@ -38,8 +38,8 @@
             <div class="col-md-2">Run type:
                 <select ng-model="runType" class="form-control">
                     <option selected value="">Tous</option>
-                    <option value="1">VTT</option>
-                    <option value="3">Route</option>
+                    <option value="mtb">VTT</option>
+                    <option value="road">Route</option>
                 </select>
             </div>
             <div class="col-md-3">Filter:
@@ -75,7 +75,7 @@
                                     <th ng-click="SetSort('name');" class="c-name"><div class="c1">Name</div></th>
                                     <th ng-click="SetSort('location');" class="c-location"><div class="c2">Location</div></th>
                                     <th ng-click="SetSort('date');"  class="c-date"><div class="c3">Date</div></th>
-                                    <th ng-click="SetSort('type');" class="c-rtype"><div class="c4">Bike</div></th>
+                                    <th ng-click="SetSort('bike_type');" class="c-rtype"><div class="c4">Bike</div></th>
                                     <th ng-click="SetSort('distance');" class="c-int"><div class="c5">Km</div></th>
                                     <th ng-click="SetSort('elevation');" class="c-int"><div class="c6">D+</div></th>
                                     <th ng-click="SetSort('moving_time');" class="c-time"><div class="c7">Time</div></th>
@@ -93,7 +93,7 @@
                                     <td><a href="https://www.strava.com/activities/{{data.id}}">{{data.name}}</a></td>
                                     <td>{{data.location}}</td>
                                     <td>{{data.date}}</td>
-                                    <td title="{{data.spad_name}}">{{data.type}}</td>
+                                    <td title="{{data.bike_name}}">{{data.bike_type}}</td>
                                     <td>{{data.distance}}</td>
                                     <td>{{data.elevation}}</td>
                                     <td title="Total time: {{data.elapsed_time}}">{{data.moving_time}}</td>
