@@ -12,16 +12,33 @@ app.filter('startFrom', function() {
     }
 });
 app.filter('dateRange', function() {
-    return function(items, startDate, endDate) {
+    return function(items, startStr, endStr) {
         var retArray = [];
-
-        if (!startDate && !endDate) {
+        if (!startStr && !endStr) {
             return items;
         }
 
+        var startDate = moment(startStr, ["YYYY", "YYYY-MM", "YYYY-MM-DD"], true);
+        var endDate = moment(endStr, ["YYYY", "YYYY-MM", "YYYY-MM-DD"], true);
+        if (! startDate.isValid()) {
+            startDate = moment("2000-01-01", "YYYY-MM-DD");
+        } 
+        if (! endDate.isValid()) {
+            endDate = moment();
+        } else if (moment(endStr, "YYYY", true).isValid()) {
+            // make the date be YYYY-12-31
+            console.log(endDate);
+            endDate.set({"month": 11, "day": 30});
+            console.log(endDate);
+        } else if (moment(endStr, "YYYY-MM", true).isValid()) {
+            // make the date be the last day of the month
+            endDate.add(1, "months");
+            endDate.subtract(1, "days");
+        }
+
         angular.forEach(items, function(obj){
-            var runDate = obj.date;        
-            if(moment(runDate).isAfter(startDate) && moment(runDate).isBefore(endDate)) {
+            var runDate = moment(obj.date);
+            if(runDate.isSameOrAfter(startDate) && runDate.isSameOrBefore(endDate)) {
                 retArray.push(obj);
             }
         });
