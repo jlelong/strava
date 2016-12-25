@@ -13,6 +13,11 @@
     border-radius: 8px;
 }
 
+.totals {
+    color: #7989D6;
+    font-weight: bold;
+}
+
 .table>thead>tr>th:hover, .table>thead:first-child>tr:first-child>th:hover {
 	background-color: rgba(208,208,208,.35);
 }

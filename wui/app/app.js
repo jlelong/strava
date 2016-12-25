@@ -61,7 +61,20 @@ app.filter('runType', function() {
     }
 });
 
+// Compute the total distance and elevation.
+// To be called on the filtered list
+function totals(items) {
+    var elevation = 0.;
+    var distance = 0.;
+    angular.forEach(items, function(obj){
+        elevation += obj.elevation;
+        distance += obj.distance;
+    });
+    return {'elevation': elevation, 'distance': distance.toFixed(2)};
+}
 
+
+// Query the data base through a Python script.
 function query_data(scope, http) {
     http.get('ajax/getRuns.py').then(function(response){
         scope.list = response.data;
@@ -104,4 +117,5 @@ app.controller('runsCrtl', function ($scope, $http, $timeout) {
             query_data($scope, $http);
         });
     };
+    $scope.totals = totals;
 });
