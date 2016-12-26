@@ -11,6 +11,20 @@ import json
 import datetime
 
 
+def _format_timedelta(t):
+    """
+    Turn a timedelta object into a string representation "hh:mm:ss" with a resolution of one second.
+    """
+    if (t is not None):
+        assert(isinstance(t, datetime.timedelta))
+        seconds = int(t.total_seconds())
+        (hours, mins) = divmod(seconds, 3600)
+        (minutes, seconds) = divmod(mins, 60)
+        return "{0}:{1:02d}:{2:02d}".format(hours, minutes, seconds)
+    else:
+        return ""
+
+
 def _escape_string(s):
     """
     Escape a string unless is None
@@ -27,9 +41,12 @@ class ExtenededEncoder(json.JSONEncoder):
     Extend the JSON encoding facilities from datetime objects
     """
     def default(self, obj):
-        if isinstance(obj, (datetime.datetime, datetime.date, datetime.timedelta)):
+        if isinstance(obj, (datetime.datetime, datetime.date)):
             return "%s" % obj
-        return json.JSONEncoder.default(self, obj)
+        elif isinstance(obj, datetime.timedelta):
+            return _format_timedelta(obj)
+        else:
+            return json.JSONEncoder.default(self, obj)
 
 
 class Strava:
@@ -154,8 +171,8 @@ class Strava:
             elevation = 0
         date = activity.start_date_local
         location = _escape_string(activity.location_city)
-        moving_time = activity.moving_time
-        elapsed_time = activity.elapsed_time
+        moving_time = _format_timedelta(activity.moving_time)
+        elapsed_time = _format_timedelta(activity.elapsed_time)
         gear_id = _escape_string(activity.gear_id)
         if activity.average_speed is not None:
             average_speed = "%0.1f" % stravalib.unithelper.kilometers_per_hour(activity.average_speed).get_num()
