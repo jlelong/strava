@@ -1,3 +1,23 @@
+.right {
+    float: right;
+}
+
+.mybutton {
+    cursor: pointer;
+    background-color: #FFF;
+    font-weight: bold;
+    color: #7989D6;
+    border-color:  #7989D6;
+    -moz-border-radius: 8px;
+    -webkit-border-radius: 8px;
+    border-radius: 8px;
+}
+
+.totals {
+    color: #7989D6;
+    font-weight: bold;
+}
+
 .table>thead>tr>th:hover, .table>thead:first-child>tr:first-child>th:hover {
 	background-color: rgba(208,208,208,.35);
 }
@@ -85,12 +105,27 @@ td + td {
     background-color: rgba(200,200,200,.3);
 }
 
-.c-date, .c-rtype {
-    min-width: 7em;
+.c-name {
+    width: 40em;
+}
+
+.c-location {
+    width: 12em;
+}
+.c-date {
+    width: 7em;
+}
+
+.c-rtype {
+    width: 5em;
+}
+
+.c-time {
+    width: 5em;
 }
 
 .c-int {
-    min-width: 4em;
+    width: 4em;
 }
 
 

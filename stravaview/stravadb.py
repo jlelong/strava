@@ -7,6 +7,22 @@ import stravalib.client
 import stravalib.unithelper
 import pymysql.cursors
 import pymysql.converters
+import json
+import datetime
+
+
+def _format_timedelta(t):
+    """
+    Turn a timedelta object into a string representation "hh:mm:ss" with a resolution of one second.
+    """
+    if (t is not None):
+        assert(isinstance(t, datetime.timedelta))
+        seconds = int(t.total_seconds())
+        (hours, mins) = divmod(seconds, 3600)
+        (minutes, seconds) = divmod(mins, 60)
+        return "{0}:{1:02d}:{2:02d}".format(hours, minutes, seconds)
+    else:
+        return ""
 
 
 def _escape_string(s):
@@ -18,6 +34,19 @@ def _escape_string(s):
         return pymysql.converters.escape_string(s)
     else:
         return s
+
+
+class ExtenededEncoder(json.JSONEncoder):
+    """
+    Extend the JSON encoding facilities from datetime objects
+    """
+    def default(self, obj):
+        if isinstance(obj, (datetime.datetime, datetime.date)):
+            return "%s" % obj
+        elif isinstance(obj, datetime.timedelta):
+            return _format_timedelta(obj)
+        else:
+            return json.JSONEncoder.default(self, obj)
 
 
 class Strava:
@@ -142,8 +171,8 @@ class Strava:
             elevation = 0
         date = activity.start_date_local
         location = _escape_string(activity.location_city)
-        moving_time = activity.moving_time
-        elapsed_time = activity.elapsed_time
+        moving_time = _format_timedelta(activity.moving_time)
+        elapsed_time = _format_timedelta(activity.elapsed_time)
         gear_id = _escape_string(activity.gear_id)
         if activity.average_speed is not None:
             average_speed = "%0.1f" % stravalib.unithelper.kilometers_per_hour(activity.average_speed).get_num()
@@ -188,18 +217,19 @@ class Strava:
         Print a row retrieved from the activities table
 
         :param row: a result from a SQL fetch function
-        :type row: a ditcionnary
+        :type row: a dictionnary
         """
         name = row['name'].encode('utf-8')
         identifier = row['id']
-        date = row['date'].date()
+        date = row['date']
         distance = row['distance']
         elevation = row['elevation']
         elapsed_time = row['elapsed_time']
         moving_time = row['moving_time']
-        print ("{7}: {1} | {2} | {3} | {4} | {5} | {6} | https://www.strava.com/activities/{0}".format(identifier, name, date, distance, elevation, moving_time, elapsed_time, row['type']))
+        bike_type = row['bike_type']
+        print ("{7}: {1} | {2} | {3} | {4} | {5} | {6} | https://www.strava.com/activities/{0}".format(identifier, name, date, distance, elevation, moving_time, elapsed_time, bike_type))
 
-    def get_activities(self, before=None, after=None, name=None, biketype=None):
+    def get_activities(self, before=None, after=None, name=None, biketype=None, json_output=False):
         """
         Get all the activities matching the criterions
 
@@ -240,12 +270,15 @@ class Strava:
                 biketype_sql = "b.type = '%s'" % biketype
                 conds.append(biketype_sql)
 
-        sql = "SELECT a.*, b.type FROM %s AS a INNER JOIN %s AS b ON a.gear_id = b.id" % (self.config['mysql_activities_table'], self.config['mysql_bikes_table'])
+        sql = "SELECT a.id, a.name, a.location, DATE(a.date) AS date, a.distance, a.elevation, a.average_speed, a.elapsed_time, a.moving_time, a.suffer_score, a.max_heartrate, a.average_heartrate, b.type AS bike_type, b.name AS bike_name FROM %s AS a LEFT JOIN %s AS b ON a.gear_id = b.id" % (self.config['mysql_activities_table'], self.config['mysql_bikes_table'])
         if len(conds) > 0:
             where = " AND ".join(conds)
             sql = sql + " WHERE " + where
         sql = sql + " ORDER BY date DESC"
-        print(sql + "\n")
+        # print(sql + "\n")
         self.cursor.execute(sql)
-        for row in self.cursor.fetchall():
-            self.print_row(row)
+        if json_output:
+            return json.dumps(self.cursor.fetchall(), cls=ExtenededEncoder)
+        else:
+            for row in self.cursor.fetchall():
+                self.print_row(row)
