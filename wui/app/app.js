@@ -27,9 +27,7 @@ app.filter('dateRange', function() {
             endDate = moment();
         } else if (moment(endStr, "YYYY", true).isValid()) {
             // make the date be YYYY-12-31
-            console.log(endDate);
             endDate.set({"month": 11, "day": 30});
-            console.log(endDate);
         } else if (moment(endStr, "YYYY-MM", true).isValid()) {
             // make the date be the last day of the month
             endDate.add(1, "months");
@@ -80,6 +78,9 @@ function query_data(scope, http) {
         scope.list = response.data;
         scope.filteredItems = scope.list.length; //Initially for no filter  
         scope.totalItems = scope.list.length;
+        angular.forEach(scope.list, function(obj) {
+            // obj.moving_time = moment.duration(obj.moving_time);
+        });
     });
 }
 
@@ -101,13 +102,24 @@ app.controller('runsCrtl', function ($scope, $http, $timeout) {
     $scope.SetSort = function (objName) {
         $scope.predicate = objName;
         $scope.reverse = !$scope.reverse;
-        angular.forEach($scope.names, function (obj) {
-          for(var i in obj )
-          {
-            if(i == objName && obj[i] != '') 
-              obj[i] =  parseFloat(obj[i]);       
-          }
-        });
+        // angular.forEach($scope.names, function (obj) {
+        //   for(var i in obj )
+        //   {
+        //     if(i == objName && obj[i] != '')
+        //       obj[i] =  parseFloat(obj[i]);
+        //   }
+        // });
+    };
+
+    $scope.sortable = function(predicate) {
+        return function(obj) {
+            if (predicate == 'moving_time') {
+                return moment.duration(obj[predicate]);
+            }
+            else {
+                return obj[predicate];
+            }
+        };
     };
 
     $scope.update = function() {

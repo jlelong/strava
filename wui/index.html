@@ -92,7 +92,7 @@
                             </thead>
                             <tbody>
                                 <!-- <tr ng&#45;repeat="data in filtered = (list | filter:search | runType : runType | dateRange : dateRange.startDate : dateRange.endDate | orderBy : predicate :reverse) "> -->
-                                <tr ng-repeat="data in filtered = (list | filter:search | runType : runType | dateRange : startDate : endDate | orderBy : predicate :reverse) ">
+                                <tr ng-repeat="data in filtered = (list | filter:search | runType : runType | dateRange : startDate : endDate | orderBy : sortable(predicate) :reverse) ">
                                     <td><a href="https://www.strava.com/activities/{{data.id}}">{{data.name}}</a></td>
                                     <td>{{data.location}}</td>
                                     <td>{{data.date}}</td>
