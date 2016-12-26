@@ -1,0 +1,17 @@
+[mysql]
+# The name of the local database 
+base = 
+# A user with read and write access to the above database
+user = 
+# The password associated to the above user
+password = 
+# The following two tables are created within the local database
+# A table to store the list of bikes
+bikes_table = 
+# A table to store all your activities
+activities_table = 
+
+[strava]
+# The Strava token identification to be copied from My `Account/My Apps`
+token = 
+

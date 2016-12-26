@@ -1,9 +1,0 @@
-[mysql]
-base = 
-bikes_table = 
-activities_table = 
-user = 
-password = 
-
-[strava]
-token =  
