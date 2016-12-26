@@ -2,15 +2,6 @@
 
 var app = angular.module('MyStrava', ['ui.bootstrap']);
 
-app.filter('startFrom', function() {
-    return function(input, start) {
-        if(input) {
-            start = +start; //parse to int
-            return input.slice(start);
-        }
-        return [];
-    }
-});
 app.filter('dateRange', function() {
     return function(items, startStr, endStr) {
         var retArray = [];
@@ -70,7 +61,6 @@ function totals(items) {
     });
     return {'elevation': elevation, 'distance': distance.toFixed(2)};
 }
-
 
 // Query the data base through a Python script.
 function query_data(scope, http) {
