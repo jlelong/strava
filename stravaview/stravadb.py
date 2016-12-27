@@ -119,6 +119,8 @@ class Strava:
         max_heartrate int DEFAULT 0,
         average_heartrate float DEFAULT 0,
         suffer_score int DEFAULT 0,
+        description text DEFAULT NULL,
+        commute tinyint(1) DEFAULT 0,
         PRIMARY KEY (id),
         UNIQUE KEY strid_UNIQUE (id)
         ) ENGINE=InnoDB DEFAULT CHARSET=utf8""" % table
@@ -157,8 +159,8 @@ class Strava:
             print("Activity '%s' already exists in table" % (activity.name))
             return
 
-        if (activity.type != u'Ride' or activity.commute):
-            print("Activity '%s' is not a pleasure ride" % (activity.name))
+        if (activity.type != u'Ride'):
+            print("Activity '%s' is not a ride" % (activity.name))
             return
         name = _escape_string(activity.name)
         if activity.distance is not None:
@@ -188,12 +190,14 @@ class Strava:
             suffer_score = activity.suffer_score
         else:
             suffer_score = 0
+        description = _escape_string(activity.description)
+        commute = activity.commute
 
         sql = """INSERT INTO %s (id, name, distance, elevation, date, location, moving_time, elapsed_time,
-        gear_id, average_speed, average_heartrate, max_heartrate, suffer_score)
-        VALUES ('%s', '%s', '%s', '%s', '%s', '%s', '%s', '%s', '%s', '%s', '%s', '%s', '%s')
+        gear_id, average_speed, average_heartrate, max_heartrate, suffer_score, description, commute)
+        VALUES ('%s', '%s', '%s', '%s', '%s', '%s', '%s', '%s', '%s', '%s', '%s', '%s', '%s', '%s', '%s')
         """ % (table, activity.id, name, distance, elevation, date, location, moving_time, elapsed_time,
-               gear_id, average_speed, average_heartrate, max_heartrate, suffer_score)
+               gear_id, average_speed, average_heartrate, max_heartrate, suffer_score, description, commute)
         self.cursor.execute(sql)
         self.connection.commit()
 
@@ -272,7 +276,7 @@ class Strava:
 
         sql = """SELECT a.id, a.name, a.location, DATE(a.date) AS date, a.distance, a.elevation,
         a.average_speed, a.elapsed_time, a.moving_time, a.suffer_score, a.max_heartrate,
-        a.average_heartrate, b.type AS bike_type, b.name AS bike_name FROM %s
+        a.average_heartrate, a.description, a.commute, b.type AS bike_type, b.name AS bike_name FROM %s
         AS a LEFT JOIN %s AS b ON a.gear_id = b.id
         """ % (self.config['mysql_activities_table'], self.config['mysql_bikes_table'])
         if len(conds) > 0:
