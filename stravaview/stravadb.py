@@ -270,7 +270,11 @@ class Strava:
                 biketype_sql = "b.type = '%s'" % biketype
                 conds.append(biketype_sql)
 
-        sql = "SELECT a.id, a.name, a.location, DATE(a.date) AS date, a.distance, a.elevation, a.average_speed, a.elapsed_time, a.moving_time, a.suffer_score, a.max_heartrate, a.average_heartrate, b.type AS bike_type, b.name AS bike_name FROM %s AS a LEFT JOIN %s AS b ON a.gear_id = b.id" % (self.config['mysql_activities_table'], self.config['mysql_bikes_table'])
+        sql = """SELECT a.id, a.name, a.location, DATE(a.date) AS date, a.distance, a.elevation,
+        a.average_speed, a.elapsed_time, a.moving_time, a.suffer_score, a.max_heartrate,
+        a.average_heartrate, b.type AS bike_type, b.name AS bike_name FROM %s
+        AS a LEFT JOIN %s AS b ON a.gear_id = b.id
+        """ % (self.config['mysql_activities_table'], self.config['mysql_bikes_table'])
         if len(conds) > 0:
             where = " AND ".join(conds)
             sql = sql + " WHERE " + where
