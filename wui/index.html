@@ -51,9 +51,6 @@
             <div class="col-md-2">To:
                 <input type="text" ng-model="endDate" placeholder="yyyy-mm-dd" class="form-control" />
             </div>
-            <!-- <div class="col&#45;md&#45;3">Range date: -->
-                <!-- <input date&#45;range&#45;picker class="form&#45;control date&#45;picker" type="text" placeholder="Date range" ng&#45;model="dateRange" options="{locale: {separator: ' > '}, autoApply: true, autoUpdateInput: true}"/> -->
-            <!-- </div> -->
             <div class="col-md-2 right"><br/>
                 <input type="button" ng-click="update()" Value="Update Local DB" class="form-control mybutton" />
             </div>
@@ -92,7 +89,7 @@
                             </thead>
                             <tbody>
                                 <!-- <tr ng&#45;repeat="data in filtered = (list | filter:search | runType : runType | dateRange : dateRange.startDate : dateRange.endDate | orderBy : predicate :reverse) "> -->
-                                <tr ng-repeat="data in filtered = (list | filter:search | runType : runType | dateRange : startDate : endDate | orderBy : sortable(predicate) :reverse) ">
+                                <tr ng-repeat="data in filtered = (list | filter:narrowSearch(search) | runType : runType | dateRange : startDate : endDate | orderBy : sortable(predicate) :reverse) ">
                                     <td><a href="https://www.strava.com/activities/{{data.id}}">{{data.name}}</a></td>
                                     <td>{{data.location}}</td>
                                     <td>{{data.date}}</td>

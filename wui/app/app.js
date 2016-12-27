@@ -85,6 +85,17 @@ app.controller('runsCrtl', function ($scope, $http, $timeout) {
             $scope.filteredItems = $scope.filtered.length;
         }, 10);
     };
+
+    // Filter to test search pattern against columns {name, location, date}
+    $scope.narrowSearch = function(pattern) {
+        return function(obj) {
+            if (!pattern)
+                return true;
+            lpattern = pattern.toLowerCase();
+            return (obj.name.toLowerCase().indexOf(lpattern) != -1 ||obj.location.toLowerCase().indexOf(lpattern) != -1 ||obj.date.toLowerCase().indexOf(lpattern) != -1);
+        };
+    };
+
     $scope.sort_by = function(predicate) {
         $scope.predicate = predicate;
         $scope.reverse = !$scope.reverse;
