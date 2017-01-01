@@ -4,6 +4,7 @@
 from __future__ import print_function
 
 import stravalib.client
+import stravalib.model
 import stravalib.unithelper
 import pymysql.cursors
 import pymysql.converters
@@ -53,7 +54,15 @@ class Strava:
     """
     Create a local Strava instance with its own local database containing only the funny rides (no commute).
     """
-    FRAME_TYPES = {0: "none", 1: "mtb", 3: "road", 2: "cx", 4: "tt"}
+    CX = 'CX'
+    TT = 'TT'
+    MTB = 'MTB'
+    ROAD = 'Road'
+    RIDE = stravalib.model.Activity.RIDE
+    WALK = stravalib.model.Activity.WALK
+    RUN = stravalib.model.Activity.RUN
+    FRAME_TYPES = {0: "", 1: MTB, 3: ROAD, 2: CX, 4: TT}
+    ACTIVITY_TYPES = {WALK, RUN, RIDE, ROAD, MTB, CX, TT}
 
     def __init__(self, config):
         """
@@ -72,9 +81,9 @@ class Strava:
         self.cursor.close()
         self.connection.close()
 
-    def create_bikes_table(self):
+    def create_gears_table(self):
         """
-        Create the bikes table if it does not already exist
+        Create the gears table if it does not already exist
         """
         # Check if table already exists
         table = self.config['mysql_bikes_table']
@@ -86,11 +95,11 @@ class Strava:
         sql = """CREATE TABLE %s (
         id varchar(45) NOT NULL,
         name varchar(256) DEFAULT NULL,
-        type enum('road','mtb','cx','tt') DEFAULT NULL,
-        frame_type int(11) DEFAULT NULL,
+        type enum('%s','%s','%s','%s','%s','%s') DEFAULT NULL,
+        frame_type int(11) DEFAULT 0,
         PRIMARY KEY (id),
         UNIQUE KEY strid_UNIQUE (id)
-        ) ENGINE=InnoDB DEFAULT CHARSET=utf8""" % table
+        ) ENGINE=InnoDB DEFAULT CHARSET=utf8""" % (table, self.WALK, self.RUN, self.ROAD, self.MTB, self.CX, self.TT)
         self.cursor.execute(sql)
         self.connection.commit()
 
@@ -121,9 +130,10 @@ class Strava:
         suffer_score int DEFAULT 0,
         description text DEFAULT NULL,
         commute tinyint(1) DEFAULT 0,
+        type enum('%s', '%s', '%s') DEFAULT NULL,
         PRIMARY KEY (id),
         UNIQUE KEY strid_UNIQUE (id)
-        ) ENGINE=InnoDB DEFAULT CHARSET=utf8""" % table
+        ) ENGINE=InnoDB DEFAULT CHARSET=utf8""" % (table, self.RIDE, self.RUN, self.WALK)
         self.cursor.execute(sql)
         self.connection.commit()
 
@@ -146,6 +156,25 @@ class Strava:
             self.cursor.execute(sql)
             self.connection.commit()
 
+    def update_shoes(self):
+        """
+        Update the gears table with shoes
+        """
+        # Connect to the database
+        table = self.config['mysql_bikes_table']
+        shoes = self.stravaClient.get_athlete().shoes
+        for shoe in shoes:
+            desc = self.stravaClient.get_gear(shoe.id)
+
+            # Check if the bike already exists
+            sql = "SELECT * FROM %s WHERE id='%s' LIMIT 1" % (table, shoe.id)
+            if (self.cursor.execute(sql) > 0):
+                continue
+
+            sql = "INSERT INTO %s (id, name, type) VALUES ('%s','%s', '%s')" % (table, desc.id, desc.name, self.RUN)
+            self.cursor.execute(sql)
+            self.connection.commit()
+
     def push_activity(self, activity):
         """
         Add the activity `activity` to the activities table
@@ -159,8 +188,8 @@ class Strava:
             print("Activity '%s' already exists in table" % (activity.name))
             return
 
-        if (activity.type != u'Ride'):
-            print("Activity '%s' is not a ride" % (activity.name))
+        if (activity.type != activity.RIDE and activity.type != activity.RUN and activity.type != activity.WALK):
+            print("Activity '%s' is not a ride nor a run" % (activity.name))
             return
         name = _escape_string(activity.name)
         if activity.distance is not None:
@@ -191,13 +220,14 @@ class Strava:
         else:
             suffer_score = 0
         description = _escape_string(activity.description)
-        commute = activity.commute
+        commute = int(activity.commute)
+        activity_type = activity.type
 
         sql = """INSERT INTO %s (id, name, distance, elevation, date, location, moving_time, elapsed_time,
-        gear_id, average_speed, average_heartrate, max_heartrate, suffer_score, description, commute)
-        VALUES ('%s', '%s', '%s', '%s', '%s', '%s', '%s', '%s', '%s', '%s', '%s', '%s', '%s', '%s', '%s')
+        gear_id, average_speed, average_heartrate, max_heartrate, suffer_score, description, commute, type)
+        VALUES ('%s', '%s', '%s', '%s', '%s', '%s', '%s', '%s', '%s', '%s', '%s', '%s', '%s', '%s', '%s', '%s')
         """ % (table, activity.id, name, distance, elevation, date, location, moving_time, elapsed_time,
-               gear_id, average_speed, average_heartrate, max_heartrate, suffer_score, description, commute)
+               gear_id, average_speed, average_heartrate, max_heartrate, suffer_score, description, commute, activity_type)
         self.cursor.execute(sql)
         self.connection.commit()
 
@@ -233,7 +263,7 @@ class Strava:
         bike_type = row['bike_type']
         print ("{7}: {1} | {2} | {3} | {4} | {5} | {6} | https://www.strava.com/activities/{0}".format(identifier, name, date, distance, elevation, moving_time, elapsed_time, bike_type))
 
-    def get_activities(self, before=None, after=None, name=None, biketype=None, json_output=False):
+    def get_activities(self, before=None, after=None, name=None, activity_type=None, json_output=False):
         """
         Get all the activities matching the criterions
 
@@ -246,8 +276,11 @@ class Strava:
         :param name: a substring of the activity name
         :type name: str
 
-        :param category: the type of bike used
-        :type category: an element from FRAME_TYPES {'mtb', 'road', 'cx', 'tt'}
+        :param activity_type: the type of activity. Can be 'Walk', 'Run', 'Ride', 'Road', 'MTB', 'CX', 'TT'.
+        :type activity_type: str
+
+        :param json_output: do we return a JSON encoded result of the query
+        :type json_output: bool
         """
 
         before_sql = ""
@@ -266,17 +299,21 @@ class Strava:
             name_sql = "a.name LIKE '%%%s%%'" % _escape_string(name)
             conds.append(name_sql)
 
-        if biketype is not None:
-            if not (biketype in self.FRAME_TYPES.values()):
-                print("{0} is not valid. Use {1}, {2}, {3}, {4}".format(biketype, self.FRAME_TYPES[1], self.FRAME_TYPES[2], self.FRAME_TYPES[3], self.FRAME_TYPES[4]))
-                biketype = None
+        if activity_type is not None:
+            # We consider FRAME_TYPES as activities on their owns.
+            if not (activity_type in self.ACTIVITY_TYPES):
+                print("{0} is not a valid activity. Use {1}".format(activity_type, ", ".join(self.ACTIVITY_TYPES)))
+                activity_type = None
             else:
-                biketype_sql = "b.type = '%s'" % biketype
-                conds.append(biketype_sql)
+                if activity_type in (self.WALK, self.RUN, self.RIDE):
+                    activity_type_sql = "a.type = '%s'" % activity_type
+                else:
+                    activity_type_sql = "b.type = '%s'" % activity_type
+                conds.append(activity_type_sql)
 
         sql = """SELECT a.id, a.name, a.location, DATE(a.date) AS date, a.distance, a.elevation,
         a.average_speed, a.elapsed_time, a.moving_time, a.suffer_score, a.max_heartrate,
-        a.average_heartrate, a.description, a.commute, b.type AS bike_type, b.name AS bike_name FROM %s
+        a.average_heartrate, a.description, a.commute, a.type as activity_type, b.type AS bike_type, b.name AS bike_name FROM %s
         AS a LEFT JOIN %s AS b ON a.gear_id = b.id
         """ % (self.config['mysql_activities_table'], self.config['mysql_bikes_table'])
         if len(conds) > 0:
