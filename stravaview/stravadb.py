@@ -15,6 +15,8 @@ import datetime
 def _format_timedelta(t):
     """
     Turn a timedelta object into a string representation "hh:mm:ss" with a resolution of one second.
+
+    :param t: a timedelta object
     """
     if (t is not None):
         assert(isinstance(t, datetime.timedelta))
@@ -29,6 +31,8 @@ def _format_timedelta(t):
 def _escape_string(s):
     """
     Escape a string unless is None
+
+    :param s: a basestring
     """
     if (s is not None):
         assert(isinstance(s, basestring))
@@ -76,6 +80,9 @@ class Strava:
         self.connection = pymysql.connect(host='localhost', user=config['mysql_user'], password=config['mysql_password'], db=config['mysql_base'], charset='utf8')
         self.cursor = self.connection.cursor(pymysql.cursors.DictCursor)
         self.stravaClient = stravalib.Client(access_token=config['strava_token'])
+        self.activities_table = config['mysql_activities_table']
+        self.gears_table = config['mysql_bikes_table']
+        self.with_points = config['with_points']
 
     def close(self):
         self.cursor.close()
@@ -128,8 +135,10 @@ class Strava:
         max_heartrate int DEFAULT 0,
         average_heartrate float DEFAULT 0,
         suffer_score int DEFAULT 0,
+        red_points int DEFAULT 0,
         description text DEFAULT NULL,
         commute tinyint(1) DEFAULT 0,
+        calories float DEFAULT 0,
         type enum('%s', '%s', '%s') DEFAULT NULL,
         PRIMARY KEY (id),
         UNIQUE KEY strid_UNIQUE (id)
@@ -175,15 +184,34 @@ class Strava:
             self.cursor.execute(sql)
             self.connection.commit()
 
+    def _get_points(self, activity):
+        """
+        Get the red points for an activity
+
+        :param activity: a Strava activity
+        :type activity: Activity
+        """
+
+        if ((not self.with_points) or (not activity.has_heartrate)):
+            return 0
+        try:
+            zones = activity.zones
+            if len(zones) == 0:
+                return 0
+            for z in zones:
+                if z.type == 'heartrate':
+                    return z.points
+        except:
+            return 0
+
     def push_activity(self, activity):
         """
         Add the activity `activity` to the activities table
 
         :param activity: an object of class:`stravalib.model.Activity`
         """
-        table = self.config['mysql_activities_table']
         # Check if activity is already in the table
-        sql = "SELECT * FROM %s WHERE id='%s' LIMIT 1" % (table, activity.id)
+        sql = "SELECT * FROM %s WHERE id='%s' LIMIT 1" % (self.activities_table, activity.id)
         if (self.cursor.execute(sql) > 0):
             print("Activity '%s' already exists in table" % (activity.name))
             return
@@ -191,15 +219,23 @@ class Strava:
         if (activity.type != activity.RIDE and activity.type != activity.RUN and activity.type != activity.WALK):
             print("Activity '%s' is not a ride nor a run" % (activity.name))
             return
+
+        # Default values
+        distance = 0
+        elevation = 0
+        average_heartrate = 0
+        average_speed = 0
+        max_heartrate = 0
+        suffer_score = 0
+        red_points = 0
+        calories = 0
+
+        # Get the real values
         name = _escape_string(activity.name)
         if activity.distance is not None:
             distance = "%0.2f" % stravalib.unithelper.kilometers(activity.distance).get_num()
-        else:
-            distance = 0
         if activity.total_elevation_gain is not None:
             elevation = "%0.0f" % stravalib.unithelper.meters(activity.total_elevation_gain).get_num()
-        else:
-            elevation = 0
         date = activity.start_date_local
         location = _escape_string(activity.location_city)
         moving_time = _format_timedelta(activity.moving_time)
@@ -207,27 +243,25 @@ class Strava:
         gear_id = _escape_string(activity.gear_id)
         if activity.average_speed is not None:
             average_speed = "%0.1f" % stravalib.unithelper.kilometers_per_hour(activity.average_speed).get_num()
-        else:
-            activity.average_speed = 0
         if activity.average_heartrate is not None:
             average_heartrate = "%0.0f" % activity.average_heartrate
             max_heartrate = activity.max_heartrate
-        else:
-            average_heartrate = 0
-            max_heartrate = 0
-        if activity.suffer_score is not None:
-            suffer_score = activity.suffer_score
-        else:
-            suffer_score = 0
+            if activity.suffer_score is not None:
+                suffer_score = activity.suffer_score
+                red_points = self._get_points(activity)
+        if activity.calories is not None:
+            calories = activity.calories
         description = _escape_string(activity.description)
         commute = int(activity.commute)
         activity_type = activity.type
 
-        sql = """INSERT INTO %s (id, name, distance, elevation, date, location, moving_time, elapsed_time,
-        gear_id, average_speed, average_heartrate, max_heartrate, suffer_score, description, commute, type)
-        VALUES ('%s', '%s', '%s', '%s', '%s', '%s', '%s', '%s', '%s', '%s', '%s', '%s', '%s', '%s', '%s', '%s')
-        """ % (table, activity.id, name, distance, elevation, date, location, moving_time, elapsed_time,
-               gear_id, average_speed, average_heartrate, max_heartrate, suffer_score, description, commute, activity_type)
+        sql = """INSERT INTO %s (id, name, distance, elevation, date, location, moving_time,
+        elapsed_time, gear_id, average_speed, average_heartrate, max_heartrate, suffer_score,
+        description, commute, type, red_points, calories) VALUES ('%s', '%s', '%s', '%s', '%s',
+        '%s', '%s', '%s', '%s', '%s', '%s', '%s', '%s', '%s', '%s', '%s', '%s', '%s')
+        """ % (self.activities_table, activity.id, name, distance, elevation, date, location,
+               moving_time, elapsed_time, gear_id, average_speed, average_heartrate, max_heartrate,
+               suffer_score, description, commute, activity_type, red_points, calories)
         self.cursor.execute(sql)
         self.connection.commit()
 
@@ -235,9 +269,8 @@ class Strava:
         """
         Update the activities table
         """
-        table = self.config['mysql_activities_table']
         # Get the most recent activity
-        sql = "SELECT date FROM %s ORDER BY date DESC LIMIT 1" % table
+        sql = "SELECT date FROM %s ORDER BY date DESC LIMIT 1" % self.activities_table
         if (self.cursor.execute(sql) == 0):
             after = None
         else:
@@ -312,10 +345,10 @@ class Strava:
                 conds.append(activity_type_sql)
 
         sql = """SELECT a.id, a.name, a.location, DATE(a.date) AS date, a.distance, a.elevation,
-        a.average_speed, a.elapsed_time, a.moving_time, a.suffer_score, a.max_heartrate,
-        a.average_heartrate, a.description, a.commute, a.type as activity_type, b.type AS bike_type, b.name AS bike_name FROM %s
-        AS a LEFT JOIN %s AS b ON a.gear_id = b.id
-        """ % (self.config['mysql_activities_table'], self.config['mysql_bikes_table'])
+        a.average_speed, a.elapsed_time, a.moving_time, a.suffer_score, a.red_points, a.calories,
+        a.max_heartrate, a.average_heartrate, a.description, a.commute, a.type as activity_type,
+        b.type AS bike_type, b.name AS bike_name FROM %s AS a LEFT JOIN %s AS b ON a.gear_id = b.id
+        """ % (self.activities_table, self.gears_table)
         if len(conds) > 0:
             where = " AND ".join(conds)
             sql = sql + " WHERE " + where

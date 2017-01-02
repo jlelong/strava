@@ -14,4 +14,6 @@ activities_table =
 [strava]
 # The Strava token identification to be copied from My `Account/My Apps`
 token = 
-
+# Do you want to retrieve red points for every activity. It induces one
+# extra http request per activity. Use "yes" or "no"
+with_points = no

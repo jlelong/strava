@@ -48,4 +48,10 @@ def read_config(inifile):
     except ConfigParser.NoOptionError:
         print "No mysql user provided"
         sys.exit()
+
+    try:
+        config['with_points'] = parser.getboolean('strava', 'with_points')
+    except (ConfigParser.NoOptionError, ValueError):
+        config['with_points'] = False
+
     return config
