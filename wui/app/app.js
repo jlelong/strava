@@ -68,7 +68,7 @@ function query_data(scope, http) {
     http.get('ajax/getRuns.py').then(function(response){
         scope.list = [];
         angular.forEach(response.data, function(obj) {
-            if (obj.activity_type == 'Ride')
+            if (obj.activity_type == 'Ride'  |  obj.activity_type == 'Run' | obj.activity_type == 'Hike')
                 scope.list.push(obj);
         });
         scope.filteredItems = scope.list.length; //Initially for no filter  

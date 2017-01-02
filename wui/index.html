@@ -42,7 +42,7 @@
                     <option value="MTB">MTB</option>
                     <option value="Road">Road</option>
                     <option value="Run">Run</option>
-                    <option value="Walk">Walk</option>
+                    <option value="Hike">Hike</option>
                 </select>
             </div>
             <div class="col-md-3">Filter:
@@ -93,10 +93,10 @@
                             <tbody>
                                 <!-- <tr ng&#45;repeat="data in filtered = (list | filter:search | runType : runType | dateRange : dateRange.startDate : dateRange.endDate | orderBy : predicate :reverse) "> -->
                                 <tr ng-repeat="data in filtered = (list | filter:narrowSearch(search) | runType : runType | dateRange : startDate : endDate | orderBy : sortable(predicate) :reverse) ">
-                                    <td><a href="https://www.strava.com/activities/{{data.id}}">{{data.name}}</a></td>
+				    <td><a href="https://www.strava.com/activities/{{data.id}}">{{data.name}}</a></td>
                                     <td>{{data.location}}</td>
                                     <td>{{data.date}}</td>
-                                    <td title="{{data.bike_name}}">{{data.bike_type}}</td>
+                                    <td title="{{data.bike_name}}">{{data.bike_type || data.activity_type }}</td>
                                     <td>{{data.distance}}</td>
                                     <td>{{data.elevation}}</td>
                                     <td title="Total time: {{data.elapsed_time}}">{{data.moving_time}}</td>

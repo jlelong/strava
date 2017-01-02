@@ -63,10 +63,10 @@ class Strava:
     MTB = 'MTB'
     ROAD = 'Road'
     RIDE = stravalib.model.Activity.RIDE
-    WALK = stravalib.model.Activity.WALK
+    HIKE = stravalib.model.Activity.HIKE
     RUN = stravalib.model.Activity.RUN
     FRAME_TYPES = {0: "", 1: MTB, 3: ROAD, 2: CX, 4: TT}
-    ACTIVITY_TYPES = {WALK, RUN, RIDE, ROAD, MTB, CX, TT}
+    ACTIVITY_TYPES = {HIKE, RUN, RIDE, ROAD, MTB, CX, TT}
 
     def __init__(self, config):
         """
@@ -106,7 +106,7 @@ class Strava:
         frame_type int(11) DEFAULT 0,
         PRIMARY KEY (id),
         UNIQUE KEY strid_UNIQUE (id)
-        ) ENGINE=InnoDB DEFAULT CHARSET=utf8""" % (table, self.WALK, self.RUN, self.ROAD, self.MTB, self.CX, self.TT)
+        ) ENGINE=InnoDB DEFAULT CHARSET=utf8""" % (table, self.HIKE, self.RUN, self.ROAD, self.MTB, self.CX, self.TT)
         self.cursor.execute(sql)
         self.connection.commit()
 
@@ -142,7 +142,7 @@ class Strava:
         type enum('%s', '%s', '%s') DEFAULT NULL,
         PRIMARY KEY (id),
         UNIQUE KEY strid_UNIQUE (id)
-        ) ENGINE=InnoDB DEFAULT CHARSET=utf8""" % (table, self.RIDE, self.RUN, self.WALK)
+        ) ENGINE=InnoDB DEFAULT CHARSET=utf8""" % (table, self.RIDE, self.RUN, self.HIKE)
         self.cursor.execute(sql)
         self.connection.commit()
 
@@ -216,7 +216,7 @@ class Strava:
             print("Activity '%s' already exists in table" % (activity.name))
             return
 
-        if (activity.type != activity.RIDE and activity.type != activity.RUN and activity.type != activity.WALK):
+        if (activity.type != activity.RIDE and activity.type != activity.RUN and activity.type != activity.HIKE):
             print("Activity '%s' is not a ride nor a run" % (activity.name))
             return
 
@@ -338,7 +338,7 @@ class Strava:
                 print("{0} is not a valid activity. Use {1}".format(activity_type, ", ".join(self.ACTIVITY_TYPES)))
                 activity_type = None
             else:
-                if activity_type in (self.WALK, self.RUN, self.RIDE):
+                if activity_type in (self.HIKE, self.RUN, self.RIDE):
                     activity_type_sql = "a.type = '%s'" % activity_type
                 else:
                     activity_type_sql = "b.type = '%s'" % activity_type
