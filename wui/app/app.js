@@ -42,7 +42,8 @@ app.filter('runType', function() {
             return items;
         }
         angular.forEach(items, function(obj){
-            if(obj.bike_type == runTypeId) {
+            // runTypeId can either be an activity type or a bike type because we use a flat selector
+            if(obj.bike_type == runTypeId || obj.activity_type == runTypeId) {
                 retArray.push(obj); 
             }
         });

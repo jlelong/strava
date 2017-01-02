@@ -35,11 +35,14 @@
 <div ng-controller="runsCrtl">
     <div class="container">
         <div class="row">
-            <div class="col-md-2">Run type:
+            <div class="col-md-2">Activity type:
                 <select ng-model="runType" class="form-control">
-                    <option selected value="">Tous</option>
-                    <option value="mtb">VTT</option>
-                    <option value="road">Route</option>
+                    <option selected value="">All</option>
+                    <option value="Ride">All rides</option>
+                    <option value="MTB">MTB</option>
+                    <option value="Road">Road</option>
+                    <option value="Run">Run</option>
+                    <option value="Walk">Walk</option>
                 </select>
             </div>
             <div class="col-md-3">Filter:
@@ -75,7 +78,7 @@
                                     <th ng-click="SetSort('name');" class="c-name"><div class="c1">Name</div></th>
                                     <th ng-click="SetSort('location');" class="c-location"><div class="c2">Location</div></th>
                                     <th ng-click="SetSort('date');"  class="c-date"><div class="c3">Date</div></th>
-                                    <th ng-click="SetSort('bike_type');" class="c-rtype"><div class="c4">Bike</div></th>
+                                    <th ng-click="SetSort('bike_type');" class="c-rtype"><div class="c4">Activity</div></th>
                                     <th ng-click="SetSort('distance');" class="c-int"><div class="c5">Km</div></th>
                                     <th ng-click="SetSort('elevation');" class="c-int"><div class="c6">D+</div></th>
                                     <th ng-click="SetSort('moving_time');" class="c-time"><div class="c7">Time</div></th>
