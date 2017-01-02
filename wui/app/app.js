@@ -42,7 +42,8 @@ app.filter('runType', function() {
             return items;
         }
         angular.forEach(items, function(obj){
-            if(obj.bike_type == runTypeId) {
+            // runTypeId can either be an activity type or a bike type because we use a flat selector
+            if(obj.bike_type == runTypeId || obj.activity_type == runTypeId) {
                 retArray.push(obj); 
             }
         });
@@ -65,12 +66,13 @@ function totals(items) {
 // Query the data base through a Python script.
 function query_data(scope, http) {
     http.get('ajax/getRuns.py').then(function(response){
-        scope.list = response.data;
+        scope.list = [];
+        angular.forEach(response.data, function(obj) {
+            if (obj.activity_type == 'Ride')
+                scope.list.push(obj);
+        });
         scope.filteredItems = scope.list.length; //Initially for no filter  
         scope.totalItems = scope.list.length;
-        angular.forEach(scope.list, function(obj) {
-            // obj.moving_time = moment.duration(obj.moving_time);
-        });
     });
 }
 
