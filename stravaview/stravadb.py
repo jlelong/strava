@@ -76,7 +76,6 @@ class Strava:
 
         :param config:  a dictionnary as returned by readconfig.read_config
         """
-        self.config = config
         self.connection = pymysql.connect(host='localhost', user=config['mysql_user'], password=config['mysql_password'], db=config['mysql_base'], charset='utf8')
         self.cursor = self.connection.cursor(pymysql.cursors.DictCursor)
         self.stravaClient = stravalib.Client(access_token=config['strava_token'])
@@ -93,10 +92,9 @@ class Strava:
         Create the gears table if it does not already exist
         """
         # Check if table already exists
-        table = self.config['mysql_bikes_table']
-        sql = "SHOW TABLES LIKE '%s'" % table
+        sql = "SHOW TABLES LIKE '%s'" % self.gears_table
         if (self.cursor.execute(sql) > 0):
-            print("The table '%s' already exists" % table)
+            print("The table '%s' already exists" % self.gears_table)
             return
 
         sql = """CREATE TABLE %s (
@@ -106,7 +104,7 @@ class Strava:
         frame_type int(11) DEFAULT 0,
         PRIMARY KEY (id),
         UNIQUE KEY strid_UNIQUE (id)
-        ) ENGINE=InnoDB DEFAULT CHARSET=utf8""" % (table, self.HIKE, self.RUN, self.ROAD, self.MTB, self.CX, self.TT)
+        ) ENGINE=InnoDB DEFAULT CHARSET=utf8""" % (self.gears_table, self.HIKE, self.RUN, self.ROAD, self.MTB, self.CX, self.TT)
         self.cursor.execute(sql)
         self.connection.commit()
 
@@ -115,10 +113,9 @@ class Strava:
         Create the activities table if it does not already exist
         """
         # Check if table already exists
-        table = self.config['mysql_activities_table']
-        sql = "SHOW TABLES LIKE '%s'" % table
+        sql = "SHOW TABLES LIKE '%s'" % self.activities_table
         if (self.cursor.execute(sql) > 0):
-            print("The table '%s' already exists" % table)
+            print("The table '%s' already exists" % self.activities_table)
             return
 
         sql = """CREATE TABLE %s (
@@ -142,7 +139,7 @@ class Strava:
         type enum('%s', '%s', '%s') DEFAULT NULL,
         PRIMARY KEY (id),
         UNIQUE KEY strid_UNIQUE (id)
-        ) ENGINE=InnoDB DEFAULT CHARSET=utf8""" % (table, self.RIDE, self.RUN, self.HIKE)
+        ) ENGINE=InnoDB DEFAULT CHARSET=utf8""" % (self.activities_table, self.RIDE, self.RUN, self.HIKE)
         self.cursor.execute(sql)
         self.connection.commit()
 
@@ -151,17 +148,16 @@ class Strava:
         Update the bikes table
         """
         # Connect to the database
-        table = self.config['mysql_bikes_table']
         bikes = self.stravaClient.get_athlete().bikes
         for bike in bikes:
             desc = self.stravaClient.get_gear(bike.id)
 
             # Check if the bike already exists
-            sql = "SELECT * FROM %s WHERE id='%s' LIMIT 1" % (table, bike.id)
+            sql = "SELECT * FROM %s WHERE id='%s' LIMIT 1" % (self.gears_table, bike.id)
             if (self.cursor.execute(sql) > 0):
                 continue
 
-            sql = "INSERT INTO %s (id, name, type, frame_type) VALUES ('%s','%s', '%s', '%d')" % (table, desc.id, desc.name, self.FRAME_TYPES[desc.frame_type], desc.frame_type)
+            sql = "INSERT INTO %s (id, name, type, frame_type) VALUES ('%s','%s', '%s', '%d')" % (self.gears_table, desc.id, desc.name, self.FRAME_TYPES[desc.frame_type], desc.frame_type)
             self.cursor.execute(sql)
             self.connection.commit()
 
@@ -170,17 +166,16 @@ class Strava:
         Update the gears table with shoes
         """
         # Connect to the database
-        table = self.config['mysql_bikes_table']
         shoes = self.stravaClient.get_athlete().shoes
         for shoe in shoes:
             desc = self.stravaClient.get_gear(shoe.id)
 
             # Check if the bike already exists
-            sql = "SELECT * FROM %s WHERE id='%s' LIMIT 1" % (table, shoe.id)
+            sql = "SELECT * FROM %s WHERE id='%s' LIMIT 1" % (self.gears_table, shoe.id)
             if (self.cursor.execute(sql) > 0):
                 continue
 
-            sql = "INSERT INTO %s (id, name, type) VALUES ('%s','%s', '%s')" % (table, desc.id, desc.name, self.RUN)
+            sql = "INSERT INTO %s (id, name, type) VALUES ('%s','%s', '%s')" % (self.gears_table, desc.id, desc.name, self.RUN)
             self.cursor.execute(sql)
             self.connection.commit()
 
