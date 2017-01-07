@@ -146,6 +146,7 @@ class Strava:
 
         sql = """CREATE TABLE %s (
         id int(11) NOT NULL,
+        athlete int(11) DEFAULT 0,
         name varchar(256) DEFAULT NULL,
         location varchar(256) DEFAULT NULL,
         date datetime DEFAULT NULL,
@@ -255,6 +256,7 @@ class Strava:
 
         # Get the real values
         name = _escape_string(activity.name)
+        athlete = activity.athlete.id
         if activity.distance is not None:
             distance = "%0.2f" % stravalib.unithelper.kilometers(activity.distance).get_num()
         if activity.total_elevation_gain is not None:
@@ -278,11 +280,11 @@ class Strava:
         commute = int(activity.commute)
         activity_type = activity.type
 
-        sql = """INSERT INTO %s (id, name, distance, elevation, date, location, moving_time,
+        sql = """INSERT INTO %s (id, athlete, name, distance, elevation, date, location, moving_time,
         elapsed_time, gear_id, average_speed, average_heartrate, max_heartrate, suffer_score,
-        description, commute, type, red_points, calories) VALUES ('%s', '%s', '%s', '%s', '%s',
+        description, commute, type, red_points, calories) VALUES ('%s', '%s', '%s', '%s', '%s', '%s',
         '%s', '%s', '%s', '%s', '%s', '%s', '%s', '%s', '%s', '%s', '%s', '%s', '%s')
-        """ % (self.activities_table, activity.id, name, distance, elevation, date, location,
+        """ % (self.activities_table, activity.id, athlete, name, distance, elevation, date, location,
                moving_time, elapsed_time, gear_id, average_speed, average_heartrate, max_heartrate,
                suffer_score, description, commute, activity_type, red_points, calories)
         self.cursor.execute(sql)
