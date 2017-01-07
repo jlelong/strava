@@ -10,6 +10,7 @@ import pymysql.cursors
 import pymysql.converters
 import json
 import datetime
+from geopy.geocoders import Nominatim
 
 
 def _format_timedelta(t):
@@ -39,6 +40,31 @@ def _escape_string(s):
         return pymysql.converters.escape_string(s)
     else:
         return s
+
+
+def _get_location(cords, geolocator):
+    """
+    Return the city or village along with the department number corresponding
+    to a pair of (latitude, longitude) coordinates
+
+    :param cords: a pair of (latitude, longitude) coordinates
+    :type cords: a list or a tuple
+
+    :param geolocator: an instance of a geocoder capable of reverse locating
+    """
+    location = geolocator.reverse(cords)
+    if location.raw is None or 'address' not in location.raw:
+        return ""
+    address = location.raw['address']
+    city = ""
+    code = ""
+    for key in ('hamlet', 'village', 'city_district', 'city', 'town'):
+        if key in address:
+            city = address[key]
+            break
+    if address['country'] == 'France' and 'postcode' in address:
+        code = ' (' + address['postcode'][0:2] + ')'
+    return city + code
 
 
 class ExtenededEncoder(json.JSONEncoder):
@@ -199,11 +225,13 @@ class Strava:
         except:
             return 0
 
-    def push_activity(self, activity):
+    def push_activity(self, activity, geolocator):
         """
         Add the activity `activity` to the activities table
 
         :param activity: an object of class:`stravalib.model.Activity`
+
+        :param an instance of a geocoder capable of reverse search
         """
         # Check if activity is already in the table
         sql = "SELECT * FROM %s WHERE id='%s' LIMIT 1" % (self.activities_table, activity.id)
@@ -232,7 +260,7 @@ class Strava:
         if activity.total_elevation_gain is not None:
             elevation = "%0.0f" % stravalib.unithelper.meters(activity.total_elevation_gain).get_num()
         date = activity.start_date_local
-        location = _escape_string(activity.location_city)
+        location = _escape_string(_get_location(activity.start_latlng, geolocator))
         moving_time = _format_timedelta(activity.moving_time)
         elapsed_time = _format_timedelta(activity.elapsed_time)
         gear_id = _escape_string(activity.gear_id)
@@ -271,8 +299,9 @@ class Strava:
         else:
             after = self.cursor.fetchone()['date']
         new_activities = self.stravaClient.get_activities(after=after)
+        geolocator = Nominatim()
         for activity in new_activities:
-            self.push_activity(activity)
+            self.push_activity(activity, geolocator)
 
     def print_row(self, row):
         """
