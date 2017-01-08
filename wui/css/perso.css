@@ -2,6 +2,10 @@
     float: right;
 }
 
+.col-date{
+    width: 10em;
+}
+
 .mybutton {
     cursor: pointer;
     background-color: #FFF;
