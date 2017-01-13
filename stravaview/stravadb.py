@@ -67,7 +67,7 @@ def _get_location(cords, geolocator):
     return city + code
 
 
-class ExtenededEncoder(json.JSONEncoder):
+class ExtendedEncoder(json.JSONEncoder):
     """
     Extend the JSON encoding facilities from datetime objects
     """
@@ -382,7 +382,7 @@ class Strava:
         # print(sql + "\n")
         self.cursor.execute(sql)
         if json_output:
-            return json.dumps(self.cursor.fetchall(), cls=ExtenededEncoder)
+            return json.dumps(self.cursor.fetchall(), cls=ExtendedEncoder)
         else:
             for row in self.cursor.fetchall():
                 self.print_row(row)
