@@ -1,10 +1,11 @@
 # StravaView
 Interface de consultation des activités vélo de Strava. Cette interface
 contient deux parties : 
-* une base de données et des fonctionnalités Python associées
-    Nécessite stravalib, pymysql et un serveur mysql
-* une application web de consultation de la base de données.
-    Nécessite un serveur Web sachant interpréter du code Python
+* une base de données et des fonctionnalités Python associées.  
+    Nécessite un serveur mysql et les modules Python ``geopy``, ``pymysql`` et ``stravalib``.
+* une application web de consultation de la base de données.  
+    Nécessite le module Python ``cherrypy`` qui permet de faire tourner un
+    serveur Web.
 
 
 ## Base de données et accès Python
@@ -55,7 +56,8 @@ contient deux parties :
     de l'activité.
 
     ```
-    stravaview.stravadb.get_activities(before=None, after=None, name=None, bikeype=None, json_output=False)
+    stravaview.stravadb.get_activities(before=None, after=None, name=None, 
+                                       bikeype=None, json_output=False)
     ```
 
     Les dates `before` et `after` peuvent être spécifiées comme des chaînes
@@ -83,34 +85,9 @@ Cette partie nécessite la partie précédente.
 Cette application Web est une interface de consultation de la base
 précédente et utilise les fonctionnalités Python précédentes.
 
-1. Pré-requis
-
-    Avoir un serveur Web fonctionnel sachant exécuter du code Python. 
-    
-    
-2. Installation
-
-    Deux solutions:
-    * Copier le répertoire `strava` dans son intégralité dans le répertoire
-      utilisateur du serveur Web.
-    * Créer un lien vers `strava/wui` dans le répertoire utilisateur du
-      serveur Web.
-
-    Dans les deux cas, s'assurer que le serveur Web interprètera
-    correctement les scripts Python se trouvant `wui/ajax`.
-    Pour les serveurs Apache, il suffit de configurer les propriétés
-    suivantes pour les répertoires contenant le code Python
-    ```
-    Options +ExecCGI
-    AddHandler cgi-script .py
-    ```
-
-    S'assurer que les fichiers `strava/wui/ajax/getRuns.py` et
-    `strava/wui/ajax/updalocaldb.py` sont bien exécutables et que leur
-    première ligne pointe bien vers un interpréteur Python ayant accès à
-    `stravalib` et `pymysql`. 
-
-2. Utilisation
-
-   Faire pointer un navigateur vers `http://localhost/chemin/vers/wui`.
+Lancer
+```
+python ./wui/server/serve.py
+```
+et pointer un navigateur vers `http://localhost:8080`.
     

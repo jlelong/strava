@@ -65,7 +65,7 @@ function totals(items) {
 
 // Query the data base through a Python script.
 function query_data(scope, http) {
-    http.get('ajax/getRuns.py').then(function(response){
+    http.get('getRuns').then(function(response){
         scope.list = [];
         angular.forEach(response.data, function(obj) {
             if (obj.activity_type == 'Ride'  |  obj.activity_type == 'Run' | obj.activity_type == 'Hike')
@@ -127,7 +127,7 @@ app.controller('runsCrtl', function ($scope, $http, $timeout) {
 
     $scope.update = function() {
         $scope.update_response = "";
-        $http.get('ajax/updatelocaldb.py').then(function(response){
+        $http.get('updatelocaldb').then(function(response){
             $scope.update_response = "Database successfuly updated.";
             query_data($scope, $http);
         });
