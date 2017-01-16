@@ -104,7 +104,7 @@ class Strava:
         """
         self.connection = pymysql.connect(host='localhost', user=config['mysql_user'], password=config['mysql_password'], db=config['mysql_base'], charset='utf8')
         self.cursor = self.connection.cursor(pymysql.cursors.DictCursor)
-        self.stravaClient = stravalib.Client(access_token=config['strava_token'])
+        self.stravaClient = stravalib.Client(access_token=token)
         self.activities_table = config['mysql_activities_table']
         self.gears_table = config['mysql_bikes_table']
         self.with_points = config['with_points']

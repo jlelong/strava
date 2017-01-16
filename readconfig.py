@@ -28,25 +28,25 @@ def read_config(inifile):
     try:
         config['mysql_base'] = parser.get('mysql', 'base')
     except ConfigParser.NoOptionError:
-        print "No mysql user provided"
+        print "No name provided for the mysql base"
         sys.exit()
 
     try:
         config['mysql_bikes_table'] = parser.get('mysql', 'bikes_table')
     except ConfigParser.NoOptionError:
-        print "No mysql user provided"
+        print "No name provided for the bikes table"
         sys.exit()
 
     try:
         config['mysql_activities_table'] = parser.get('mysql', 'activities_table')
     except ConfigParser.NoOptionError:
-        print "No mysql user provided"
+        print "No name provided for the activities table"
         sys.exit()
 
     try:
-        config['strava_token'] = parser.get('strava', 'token')
+        config['token'] = parser.get('strava', 'token')
     except ConfigParser.NoOptionError:
-        print "No mysql user provided"
+        print "No Strava token provided"
         sys.exit()
 
     try:
