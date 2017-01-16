@@ -20,19 +20,20 @@
 
     <!-- Angular App -->
     <script src="app/app.js"></script>
-
     <title>MyStrava</title>
 </head>
 <body>
 
-<div class="navbar navbar-default" id="navbar">
-    <div class="container" id="navbar-container">
-        <h2><a href="#">MyStrava</a></h2>
-    </div>
-</div>
-
-
 <div ng-controller="runsCrtl">
+    <div class="navbar navbar-default" id="navbar">
+        <div class="container" id="navbar-container">
+            <h2><a href="#">MyStrava</a> 
+                <div class="col-md-2 right">
+                    <input type="button" ng-click="connect()" Value="Connect to Strava" class="form-control myconnectbutton" />
+                </div>
+            </h2>
+        </div>
+    </div>
     <div class="container">
         <div class="row">
             <div class="col-md-2">Activity type:

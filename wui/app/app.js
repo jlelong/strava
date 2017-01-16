@@ -33,7 +33,7 @@ app.filter('dateRange', function() {
         });
 
         return retArray;
-    }
+    };
 });
 app.filter('runType', function() {
     return function(items, runTypeId) {
@@ -48,14 +48,14 @@ app.filter('runType', function() {
             }
         });
         return retArray;
-    }
+    };
 });
 
 // Compute the total distance and elevation.
 // To be called on the filtered list
 function totals(items) {
-    var elevation = 0.;
-    var distance = 0.;
+    var elevation = 0.0;
+    var distance = 0.0;
     angular.forEach(items, function(obj){
         elevation += obj.elevation;
         distance += obj.distance;
@@ -76,7 +76,7 @@ function query_data(scope, http) {
     });
 }
 
-app.controller('runsCrtl', function ($scope, $http, $timeout) {
+app.controller('runsCrtl', function ($scope, $window, $http, $timeout) {
     $scope.update_response = "";
     query_data($scope, $http);
     $scope.setPage = function(pageNo) {
@@ -132,5 +132,10 @@ app.controller('runsCrtl', function ($scope, $http, $timeout) {
             query_data($scope, $http);
         });
     };
+
+    $scope.connect = function() {
+        $window.location.href = 'connect';
+    };
+
     $scope.totals = totals;
 });

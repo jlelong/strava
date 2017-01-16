@@ -50,6 +50,18 @@ def read_config(inifile):
         sys.exit()
 
     try:
+        config['client_id'] = parser.get('strava', 'client_id')
+    except ConfigParser.NoOptionError:
+        print "No Strava client id provided"
+        sys.exit()
+
+    try:
+        config['client_secret'] = parser.get('strava', 'client_secret')
+    except ConfigParser.NoOptionError:
+        print "No Strava client secret provided"
+        sys.exit()
+
+    try:
         config['with_points'] = parser.getboolean('strava', 'with_points')
     except (ConfigParser.NoOptionError, ValueError):
         config['with_points'] = False

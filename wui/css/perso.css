@@ -6,7 +6,7 @@
     width: 10em;
 }
 
-.mybutton {
+.mybutton .myconnectbutton {
     cursor: pointer;
     background-color: #FFF;
     font-weight: bold;
@@ -16,6 +16,12 @@
     -webkit-border-radius: 8px;
     border-radius: 8px;
 }
+
+.myconnectbutton {
+    color: #FFF;
+    background-color: #7989D6;
+}
+
 
 .totals {
     color: #7989D6;
