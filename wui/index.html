@@ -2,27 +2,14 @@
 <html lang="fr">
 <head>
     <meta charset="utf-8">
-    <!-- <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.5/css/bootstrap.min.css" /> -->
-    <!-- <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/bootstrap&#45;daterangepicker/2.1.13/daterangepicker.min.css" /> -->
     <link href="css/bootstrap.min.css" rel="stylesheet">
     <link href="css/scrollable-table.css" rel="stylesheet">
     <link href="css/perso.css" rel="stylesheet">
     <script src="js/jquery-1.12.4.min.js"></script>
     <script src="js/angular.js"></script>
     <script src="js/moment.js"></script>
-    <!-- From https://github.com/alalonde/angular-scrollable-table -->
     <script src="js/angular-scrollable-table.js"></script>
-    
-    <!-- <script src="https://code.jquery.com/jquery&#45;2.1.4.min.js"></script> -->
-    <!-- <script src="https://ajax.googleapis.com/ajax/libs/angularjs/1.3.20/angular.min.js"></script> -->
-    <!-- <script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.5/js/bootstrap.min.js"></script> -->
     <script src="js/ui-bootstrap-tpls-0.10.0.min.js"></script>
-    <!-- <script src="https://cdnjs.cloudflare.com/ajax/libs/moment.js/2.10.6/moment.min.js"></script> -->
-    <!-- Date Range Picker -->
-    <!-- <script src="https://cdnjs.cloudflare.com/ajax/libs/bootstrap&#45;daterangepicker/2.1.13/daterangepicker.min.js"></script> -->
-    <!-- <script src="js/angular&#45;daterangepicker.min.js"></script> -->
-
-    <!-- Angular App -->
     <script src="app/app.js"></script>
     <title>MyStrava</title>
 </head>
@@ -51,10 +38,10 @@
                 </select>
             </div>
             <div class="col-md-4">Filter:
-                <input type="text" ng-model="search" ng-change="filter()" placeholder="Filter" class="form-control" />
+                <input type="text" ng-model="search" placeholder="Filter" class="form-control" />
             </div>
             <div class="col-md-2 col-date">Date Range:
-                <input type="text" ng-model="startDate" ng-change="filter()" placeholder="yyyy-mm-dd" class="form-control" />
+                <input type="text" ng-model="startDate" placeholder="yyyy-mm-dd" class="form-control" />
             </div>
             <div class="col-md-2 col-date">To:
                 <input type="text" ng-model="endDate" placeholder="yyyy-mm-dd" class="form-control" />
@@ -85,12 +72,9 @@
                                 <th ng-click="SetSort('distance');" class="c-int"><div class="c5">Km</div></th>
                                 <th ng-click="SetSort('elevation');" class="c-int"><div class="c6">D+</div></th>
                                 <th ng-click="SetSort('moving_time');" class="c-time"><div class="c7">Time</div></th>
-                                <!-- <th ng&#45;click="SetSort('elapsed_time');"><div class="c8">Et</div></th> -->
                                 <th ng-click="SetSort('average_speed');" class="c-int"><div class="c9">Km/h</div></th>
                                 <th ng-click="SetSort('suffer_score');" class="c-int"><div class="c12">Score</div></th>
-                                <!-- <th ng&#45;click="SetSort('max_heartrate');" class="c&#45;int"><div class="c10">Max HR</div></th> -->
                                 <th ng-click="SetSort('average_heartrate');" class="c-int"><div class="c11">HR</div></th>
-                                <!--<th>Suffer_score&nbsp;<a ng-click="sort_by('suffer_score');"><i class="glyphicon glyphicon-sort"></i></a>-->
                             </tr>
                         </thead>
                         <tbody>
@@ -111,7 +95,6 @@
                             </tr>
                         </tbody>
                     </table>
-                    <!-- {{ sendResultsToMainController(filteredItems); "" }} -->
                     {{ rootCtrl.filteredItems = filteredItems; "" }}
                 </scrollable-table>
             </div>
