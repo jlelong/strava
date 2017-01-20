@@ -50,6 +50,7 @@
                 <input type="button" ng-click="update()" Value="Update Local DB" class="form-control mybutton" />
             </div>
         </div>
+        <input type="checkbox" ng-model="withCommutes" /> Include commutes
         <div class="row">
             {{tots = totals(rootCtrl.filteredItems); ""}}
             <h5>
@@ -78,8 +79,7 @@
                             </tr>
                         </thead>
                         <tbody>
-                            <!-- ctrl refers to the root scope. This enables to access the filter results in the root scope and not int the one defined by <scrollable-table> -->
-                            <tr ng-repeat="data in list | filter:narrowSearch(search) | runType : runType | dateRange : startDate : endDate | orderBy : sortable(predicate) :reverse as filteredItems">
+                            <tr ng-repeat="data in list | filter:narrowSearch(search) | selectActivityType : runType : withCommutes | dateRange : startDate : endDate | orderBy : sortable(predicate) :reverse as filteredItems">
                                 <td><a href="https://www.strava.com/activities/{{data.id}}">{{data.name}}</a></td>
                                 <td>{{data.location}}</td>
                                 <td>{{data.date}}</td>

@@ -3,7 +3,7 @@
 // Make the table height responsive
 $(function() {
     $(window).resize(function() {
-        $('.scrollableContainer').height(($(window).height() - 240));
+        $('.scrollableContainer').height(($(window).height() - 260));
     }).resize();
 });
 
@@ -43,15 +43,16 @@ app.filter('dateRange', function() {
     };
 });
 
-app.filter('runType', function() {
-    return function(items, runTypeId) {
+// This filter handles both the activity type and the commute selector
+app.filter('selectActivityType', function() {
+    return function(items, runTypeId, withCommutes) {
         var retArray = [];
-        if (!runTypeId) {
+        if (!runTypeId && withCommutes) {
             return items;
         }
         angular.forEach(items, function(obj){
             // runTypeId can either be an activity type or a bike type because we use a flat selector
-            if(obj.bike_type == runTypeId || obj.activity_type == runTypeId) {
+            if(((!runTypeId) || (obj.bike_type == runTypeId || obj.activity_type == runTypeId)) && (withCommutes || !obj.commute)) {
                 retArray.push(obj); 
             }
         });
