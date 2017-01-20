@@ -1,13 +1,17 @@
 <!DOCTYPE html>
-<html ng-app="MyStrava" ng-app lang="fr">
+<html lang="fr">
 <head>
     <meta charset="utf-8">
     <!-- <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.5/css/bootstrap.min.css" /> -->
     <!-- <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/bootstrap&#45;daterangepicker/2.1.13/daterangepicker.min.css" /> -->
     <link href="css/bootstrap.min.css" rel="stylesheet">
+    <link href="css/scrollable-table.css" rel="stylesheet">
     <link href="css/perso.css" rel="stylesheet">
+    <script src="js/jquery-1.12.4.min.js"></script>
     <script src="js/angular.js"></script>
     <script src="js/moment.js"></script>
+    <!-- From https://github.com/alalonde/angular-scrollable-table -->
+    <script src="js/angular-scrollable-table.js"></script>
     
     <!-- <script src="https://code.jquery.com/jquery&#45;2.1.4.min.js"></script> -->
     <!-- <script src="https://ajax.googleapis.com/ajax/libs/angularjs/1.3.20/angular.min.js"></script> -->
@@ -22,16 +26,16 @@
     <script src="app/app.js"></script>
     <title>MyStrava</title>
 </head>
-<body>
+<body ng-app="MyStrava" >
 
-<div ng-controller="runsCrtl">
+<div ng-controller="runsCrtl as rootCtrl">
     <div class="navbar navbar-default" id="navbar">
-        <div class="container" id="navbar-container">
-            <h2><a href="#">MyStrava</a> 
-                <div class="col-md-2 right">
-                    <input type="button" ng-click="connect()" Value="Connect to Strava" class="form-control myconnectbutton" />
-                </div>
-            </h2>
+        <div class="container">
+                <h2><a href="#">MyStrava</a> 
+                    <div class="col-md-2 right">
+                        <input type="button" ng-click="connect()" Value="Connect to Strava" class="form-control myconnectbutton" />
+                    </div>
+                </h2>
         </div>
     </div>
     <div class="container">
@@ -60,61 +64,60 @@
             </div>
         </div>
         <div class="row">
-            {{tots = totals(filtered); ""}}
+            {{tots = totals(rootCtrl.filteredItems); ""}}
             <h5>
-                <div class="col-md-5"> Filtered {{ filtered.length }} of {{ totalItems}} total runs. {{update_response}} </div>
-                <div class="col-md-3 right totals">Total elevation: {{ tots.elevation }} m</div>
-                <div class="col-md-3 right totals">Total distance: {{ tots.distance }} km</div>
+                <div class="col-md-5"> Filtered {{rootCtrl.filteredItems.length}} of {{nTotalItems}} total activities. {{update_response}} </div>
+                <div class="col-md-3 right totals">Total elevation: {{tots.elevation }} m</div>
+                <div class="col-md-3 right totals">Total distance: {{tots.distance }} km</div>
             </h5>
         </div>
         <br/>
         <div class="row">
-            <div class="col-md-12" ng-show="filteredItems > 0">
-                <div class="table-wrapper">
-                    <div class="table-container">
-
-                        <table class="table table-striped table-bordered">
-                            <thead>
-                                <tr>
-                                    <th ng-click="SetSort('name');" class="c-name"><div class="c1">Name</div></th>
-                                    <th ng-click="SetSort('location');" class="c-location"><div class="c2">Location</div></th>
-                                    <th ng-click="SetSort('date');"  class="c-date"><div class="c3">Date</div></th>
-                                    <th ng-click="SetSort('bike_type');" class="c-rtype"><div class="c4">Activity</div></th>
-                                    <th ng-click="SetSort('distance');" class="c-int"><div class="c5">Km</div></th>
-                                    <th ng-click="SetSort('elevation');" class="c-int"><div class="c6">D+</div></th>
-                                    <th ng-click="SetSort('moving_time');" class="c-time"><div class="c7">Time</div></th>
-                                    <!-- <th ng&#45;click="SetSort('elapsed_time');"><div class="c8">Et</div></th> -->
-                                    <th ng-click="SetSort('average_speed');" class="c-int"><div class="c9">Km/h</div></th>
-                                    <th ng-click="SetSort('suffer_score');" class="c-int"><div class="c12">Score</div></th>
-                                    <!-- <th ng&#45;click="SetSort('max_heartrate');" class="c&#45;int"><div class="c10">Max HR</div></th> -->
-                                    <th ng-click="SetSort('average_heartrate');" class="c-int"><div class="c11">HR</div></th>
-                                    <!--<th>Suffer_score&nbsp;<a ng-click="sort_by('suffer_score');"><i class="glyphicon glyphicon-sort"></i></a>-->
-                                </tr>
-                            </thead>
-                            <tbody>
-                                <!-- <tr ng&#45;repeat="data in filtered = (list | filter:search | runType : runType | dateRange : dateRange.startDate : dateRange.endDate | orderBy : predicate :reverse) "> -->
-                                <tr ng-repeat="data in filtered = (list | filter:narrowSearch(search) | runType : runType | dateRange : startDate : endDate | orderBy : sortable(predicate) :reverse) ">
-				    <td><a href="https://www.strava.com/activities/{{data.id}}">{{data.name}}</a></td>
-                                    <td>{{data.location}}</td>
-                                    <td>{{data.date}}</td>
-                                    <td title="{{data.bike_name}}">{{data.bike_type || data.activity_type }}</td>
-                                    <td>{{data.distance}}</td>
-                                    <td>{{data.elevation}}</td>
-                                    <td title="Total time: {{data.elapsed_time}}">{{data.moving_time}}</td>
-                                    <!-- <td>{{data.elapsed_time}}</td> -->
-                                    <td>{{data.average_speed}}</td>
-                                    <td title="Red points: {{data.red_points}}">{{data.suffer_score}}</td>
-                                    <!-- <td>{{data.max_heartrate}}</td> -->
-                                    <td title="Max HR: {{data.max_heartrate}}">{{data.average_heartrate}}</td>
-                                </tr>
-                            </tbody>
-                        </table>
-                    </div>
-                </div>
+            <div class="col-md-12" ng-show="rootCtrl.filteredItems.length > 0">
+                <scrollable-table>
+                    <table class="table table-striped table-bordered">
+                        <thead>
+                            <tr>
+                                <th ng-click="SetSort('name');" class="c-name"><div class="c1">Name</div></th>
+                                <th ng-click="SetSort('location');" class="c-location"><div class="c2">Location</div></th>
+                                <th ng-click="SetSort('date');"  class="c-date"><div class="c3">Date</div></th>
+                                <th ng-click="SetSort('bike_type');" class="c-rtype"><div class="c4">Activity</div></th>
+                                <th ng-click="SetSort('distance');" class="c-int"><div class="c5">Km</div></th>
+                                <th ng-click="SetSort('elevation');" class="c-int"><div class="c6">D+</div></th>
+                                <th ng-click="SetSort('moving_time');" class="c-time"><div class="c7">Time</div></th>
+                                <!-- <th ng&#45;click="SetSort('elapsed_time');"><div class="c8">Et</div></th> -->
+                                <th ng-click="SetSort('average_speed');" class="c-int"><div class="c9">Km/h</div></th>
+                                <th ng-click="SetSort('suffer_score');" class="c-int"><div class="c12">Score</div></th>
+                                <!-- <th ng&#45;click="SetSort('max_heartrate');" class="c&#45;int"><div class="c10">Max HR</div></th> -->
+                                <th ng-click="SetSort('average_heartrate');" class="c-int"><div class="c11">HR</div></th>
+                                <!--<th>Suffer_score&nbsp;<a ng-click="sort_by('suffer_score');"><i class="glyphicon glyphicon-sort"></i></a>-->
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <!-- ctrl refers to the root scope. This enables to access the filter results in the root scope and not int the one defined by <scrollable-table> -->
+                            <tr ng-repeat="data in list | filter:narrowSearch(search) | runType : runType | dateRange : startDate : endDate | orderBy : sortable(predicate) :reverse as filteredItems">
+                                <td><a href="https://www.strava.com/activities/{{data.id}}">{{data.name}}</a></td>
+                                <td>{{data.location}}</td>
+                                <td>{{data.date}}</td>
+                                <td title="{{data.bike_name}}">{{data.bike_type || data.activity_type }}</td>
+                                <td>{{data.distance}}</td>
+                                <td>{{data.elevation}}</td>
+                                <td title="Total time: {{data.elapsed_time}}">{{data.moving_time}}</td>
+                                <!-- <td>{{data.elapsed_time}}</td> -->
+                                <td>{{data.average_speed}}</td>
+                                <td title="Red points: {{data.red_points}}">{{data.suffer_score}}</td>
+                                <!-- <td>{{data.max_heartrate}}</td> -->
+                                <td title="Max HR: {{data.max_heartrate}}">{{data.average_heartrate}}</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                    <!-- {{ sendResultsToMainController(filteredItems); "" }} -->
+                    {{ rootCtrl.filteredItems = filteredItems; "" }}
+                </scrollable-table>
             </div>
-            <div class="col-md-12" ng-show="filteredItems == 0">
+            <div class="col-md-12" ng-show="rootCtrl.filteredItems.length == 0">
                 <div class="col-md-12">
-                    <h4>No run found</h4>
+                    <h4>No activity found</h4>
                 </div>
             </div>
         </div>

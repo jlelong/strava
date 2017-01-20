@@ -1,6 +1,13 @@
 // vim: set sw=4 ts=4 sts=4:
 
-var app = angular.module('MyStrava', ['ui.bootstrap']);
+// Make the table height responsive
+$(function() {
+    $(window).resize(function() {
+        $('.scrollableContainer').height(($(window).height() - 240));
+    }).resize();
+});
+
+var app = angular.module('MyStrava', ['ui.bootstrap', 'scrollable-table']);
 
 app.filter('dateRange', function() {
     return function(items, startStr, endStr) {
@@ -35,6 +42,7 @@ app.filter('dateRange', function() {
         return retArray;
     };
 });
+
 app.filter('runType', function() {
     return function(items, runTypeId) {
         var retArray = [];
@@ -71,22 +79,13 @@ function query_data(scope, http) {
             if (obj.activity_type == 'Ride'  |  obj.activity_type == 'Run' | obj.activity_type == 'Hike')
                 scope.list.push(obj);
         });
-        scope.filteredItems = scope.list.length; //Initially for no filter  
-        scope.totalItems = scope.list.length;
+        scope.nTotalItems = scope.list.length;
     });
 }
 
 app.controller('runsCrtl', function ($scope, $window, $http, $timeout) {
     $scope.update_response = "";
     query_data($scope, $http);
-    $scope.setPage = function(pageNo) {
-        $scope.currentPage = pageNo;
-    };
-    $scope.filter = function() {
-        $timeout(function() { 
-            $scope.filteredItems = $scope.filtered.length;
-        }, 10);
-    };
 
     // Filter to test search pattern against columns {name, location, date}
     $scope.narrowSearch = function(pattern) {
@@ -105,13 +104,6 @@ app.controller('runsCrtl', function ($scope, $window, $http, $timeout) {
     $scope.SetSort = function (objName) {
         $scope.predicate = objName;
         $scope.reverse = !$scope.reverse;
-        // angular.forEach($scope.names, function (obj) {
-        //   for(var i in obj )
-        //   {
-        //     if(i == objName && obj[i] != '')
-        //       obj[i] =  parseFloat(obj[i]);
-        //   }
-        // });
     };
 
     $scope.sortable = function(predicate) {
