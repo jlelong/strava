@@ -44,12 +44,6 @@ def read_config(inifile):
         sys.exit()
 
     try:
-        config['token'] = parser.get('strava', 'token')
-    except ConfigParser.NoOptionError:
-        print "No Strava token provided"
-        sys.exit()
-
-    try:
         config['client_id'] = parser.get('strava', 'client_id')
     except ConfigParser.NoOptionError:
         print "No Strava client id provided"
