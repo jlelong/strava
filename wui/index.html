@@ -15,12 +15,12 @@
 </head>
 <body ng-app="MyStrava" >
 
-<div ng-controller="runsCrtl as rootCtrl">
+<div ng-controller="StravaController as vm">
     <div class="navbar navbar-default" id="navbar">
         <div class="container">
                 <h2><a href="#">MyStrava</a> 
                     <div class="col-md-2 right">
-                        <input type="button" ng-click="connect()" Value="Connect to Strava" class="form-control myconnectbutton" />
+                        <input type="button" ng-click="vm.connect()" Value="{{vm.connectLabel}}" class="form-control myconnectbutton" />
                     </div>
                 </h2>
         </div>
@@ -28,7 +28,7 @@
     <div class="container">
         <div class="row">
             <div class="col-md-2">Activity type:
-                <select ng-model="runType" class="form-control">
+                <select ng-model="vm.runType" class="form-control">
                     <option selected value="">All</option>
                     <option value="Ride">All rides</option>
                     <option value="MTB">MTB</option>
@@ -38,48 +38,48 @@
                 </select>
             </div>
             <div class="col-md-4">Filter:
-                <input type="text" ng-model="search" placeholder="Filter" class="form-control" />
+                <input type="text" ng-model="vm.search" placeholder="Filter" class="form-control" />
             </div>
             <div class="col-md-2 col-date">Date Range:
-                <input type="text" ng-model="startDate" placeholder="yyyy-mm-dd" class="form-control" />
+                <input type="text" ng-model="vm.startDate" placeholder="yyyy-mm-dd" class="form-control" />
             </div>
             <div class="col-md-2 col-date">To:
-                <input type="text" ng-model="endDate" placeholder="yyyy-mm-dd" class="form-control" />
+                <input type="text" ng-model="vm.endDate" placeholder="yyyy-mm-dd" class="form-control" />
             </div>
             <div class="col-md-2 right"><br/>
-                <input type="button" ng-click="update()" Value="Update Local DB" class="form-control mybutton" />
+                <input type="button" ng-click="vm.update()" Value="Update Local DB" class="form-control mybutton" />
             </div>
         </div>
-        <input type="checkbox" ng-model="withCommutes" /> Include commutes
+        <input type="checkbox" ng-model="vm.withCommutes" /> Include commutes
         <div class="row">
-            {{tots = totals(rootCtrl.filteredItems); ""}}
+            {{vm.tots = vm.totals(vm.filteredItems); ""}}
             <h5>
-                <div class="col-md-5"> Filtered {{rootCtrl.filteredItems.length}} of {{nTotalItems}} total activities. {{update_response}} </div>
-                <div class="col-md-3 right totals">Total elevation: {{tots.elevation }} m</div>
-                <div class="col-md-3 right totals">Total distance: {{tots.distance }} km</div>
+                <div class="col-md-5"> Filtered {{vm.filteredItems.length}} of {{vm.nTotalItems}} total activities. {{vm.update_response}} </div>
+                <div class="col-md-3 right totals">Total elevation: {{vm.tots.elevation }} m</div>
+                <div class="col-md-3 right totals">Total distance: {{vm.tots.distance }} km</div>
             </h5>
         </div>
         <br/>
         <div class="row">
-            <div class="col-md-12" ng-show="rootCtrl.filteredItems.length > 0">
+            <div class="col-md-12" ng-show="vm.filteredItems.length > 0">
                 <scrollable-table>
                     <table class="table table-striped table-bordered">
                         <thead>
                             <tr>
-                                <th ng-click="SetSort('name');" class="c-name"><div class="c1">Name</div></th>
-                                <th ng-click="SetSort('location');" class="c-location"><div class="c2">Location</div></th>
-                                <th ng-click="SetSort('date');"  class="c-date"><div class="c3">Date</div></th>
-                                <th ng-click="SetSort('bike_type');" class="c-rtype"><div class="c4">Activity</div></th>
-                                <th ng-click="SetSort('distance');" class="c-int"><div class="c5">Km</div></th>
-                                <th ng-click="SetSort('elevation');" class="c-int"><div class="c6">D+</div></th>
-                                <th ng-click="SetSort('moving_time');" class="c-time"><div class="c7">Time</div></th>
-                                <th ng-click="SetSort('average_speed');" class="c-int"><div class="c9">Km/h</div></th>
-                                <th ng-click="SetSort('suffer_score');" class="c-int"><div class="c12">Score</div></th>
-                                <th ng-click="SetSort('average_heartrate');" class="c-int"><div class="c11">HR</div></th>
+                                <th ng-click="vm.setSort('name');" class="c-name"><div class="c1">Name</div></th>
+                                <th ng-click="vm.setSort('location');" class="c-location"><div class="c2">Location</div></th>
+                                <th ng-click="vm.setSort('date');"  class="c-date"><div class="c3">Date</div></th>
+                                <th ng-click="vm.setSort('bike_type');" class="c-rtype"><div class="c4">Activity</div></th>
+                                <th ng-click="vm.setSort('distance');" class="c-int"><div class="c5">Km</div></th>
+                                <th ng-click="vm.setSort('elevation');" class="c-int"><div class="c6">D+</div></th>
+                                <th ng-click="vm.setSort('moving_time');" class="c-time"><div class="c7">Time</div></th>
+                                <th ng-click="vm.setSort('average_speed');" class="c-int"><div class="c9">Km/h</div></th>
+                                <th ng-click="vm.setSort('suffer_score');" class="c-int"><div class="c12">Score</div></th>
+                                <th ng-click="vm.setSort('average_heartrate');" class="c-int"><div class="c11">HR</div></th>
                             </tr>
                         </thead>
                         <tbody>
-                            <tr ng-repeat="data in list | filter:narrowSearch(search) | selectActivityType : runType : withCommutes | dateRange : startDate : endDate | orderBy : sortable(predicate) :reverse as filteredItems">
+                            <tr ng-repeat="data in vm.filteredItems = (vm.list | filter:vm.narrowSearch(vm.search) | selectActivityTypeFilter : vm.runType : vm.withCommutes | dateRangeFilter : vm.startDate : vm.endDate | orderBy : vm.sortable(vm.predicate) : vm.reverse)">
                                 <td><a href="https://www.strava.com/activities/{{data.id}}">{{data.name}}</a></td>
                                 <td>{{data.location}}</td>
                                 <td>{{data.date}}</td>
@@ -87,18 +87,15 @@
                                 <td>{{data.distance}}</td>
                                 <td>{{data.elevation}}</td>
                                 <td title="Total time: {{data.elapsed_time}}">{{data.moving_time}}</td>
-                                <!-- <td>{{data.elapsed_time}}</td> -->
                                 <td>{{data.average_speed}}</td>
                                 <td title="Red points: {{data.red_points}}">{{data.suffer_score}}</td>
-                                <!-- <td>{{data.max_heartrate}}</td> -->
                                 <td title="Max HR: {{data.max_heartrate}}">{{data.average_heartrate}}</td>
                             </tr>
                         </tbody>
                     </table>
-                    {{ rootCtrl.filteredItems = filteredItems; "" }}
                 </scrollable-table>
             </div>
-            <div class="col-md-12" ng-show="rootCtrl.filteredItems.length == 0">
+            <div class="col-md-12" ng-show="vm.filteredItems.length == 0">
                 <div class="col-md-12">
                     <h4>No activity found</h4>
                 </div>

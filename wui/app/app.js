@@ -7,10 +7,22 @@ $(function() {
     }).resize();
 });
 
-var app = angular.module('MyStrava', ['ui.bootstrap', 'scrollable-table']);
 
-app.filter('dateRange', function() {
-    return function(items, startStr, endStr) {
+// Angular stuff
+angular
+    .module('MyStrava', ['ui.bootstrap', 'scrollable-table'])
+    .controller('StravaController', StravaController)
+    .filter('selectActivityTypeFilter', selectActivityTypeFilter)
+    .filter('dateRangeFilter', dateRangeFilter);
+
+function dateRangeFilter()
+{
+    // Function called for filtering dates
+    // items: list of activities to be filtered
+    // startStr: start date as a String
+    // endStr: end date as a String
+    return function(items, startStr, endStr)
+    {
         var retArray = [];
         if (!startStr && !endStr) {
             return items;
@@ -32,7 +44,7 @@ app.filter('dateRange', function() {
             endDate.subtract(1, "days");
         }
 
-        angular.forEach(items, function(obj){
+        angular.forEach(items, function(obj) {
             var runDate = moment(obj.date);
             if(runDate.isSameOrAfter(startDate) && runDate.isSameOrBefore(endDate)) {
                 retArray.push(obj);
@@ -41,11 +53,13 @@ app.filter('dateRange', function() {
 
         return retArray;
     };
-});
+}
 
 // This filter handles both the activity type and the commute selector
-app.filter('selectActivityType', function() {
-    return function(items, runTypeId, withCommutes) {
+function selectActivityTypeFilter() 
+{
+    return function(items, runTypeId, withCommutes) 
+    {
         var retArray = [];
         if (!runTypeId && withCommutes) {
             return items;
@@ -58,56 +72,41 @@ app.filter('selectActivityType', function() {
         });
         return retArray;
     };
-});
-
-// Compute the total distance and elevation.
-// To be called on the filtered list
-function totals(items) {
-    var elevation = 0.0;
-    var distance = 0.0;
-    angular.forEach(items, function(obj){
-        elevation += obj.elevation;
-        distance += obj.distance;
-    });
-    return {'elevation': elevation, 'distance': distance.toFixed(2)};
 }
 
-// Query the data base through a Python script.
-function query_data(scope, http) {
-    http.get('getRuns').then(function(response){
-        scope.list = [];
-        angular.forEach(response.data, function(obj) {
-            if (obj.activity_type == 'Ride'  |  obj.activity_type == 'Run' | obj.activity_type == 'Hike')
-                scope.list.push(obj);
-        });
-        scope.nTotalItems = scope.list.length;
-    });
-}
 
-app.controller('runsCrtl', function ($scope, $window, $http, $timeout) {
-    $scope.update_response = "";
-    query_data($scope, $http);
+function StravaController($scope, $window, $http, $timeout) 
+{
+    var vm = this;
 
+    // Attributes
+    vm.connectLabel = "Connect to Strava";
+    vm.update_response = "";
+    vm.list = [];
+    vm.nTotalItems = 0;
+    vm.reverse = false;
+
+    // Methods
+    vm.connect = function() { $window.location.href = 'connect'; };
+    vm.update = update;
+    vm.totals = totals;
     // Filter to test search pattern against columns {name, location, date}
-    $scope.narrowSearch = function(pattern) {
-        return function(obj) {
-            if (!pattern)
-                return true;
-            lpattern = pattern.toLowerCase();
-            return (obj.name.toLowerCase().indexOf(lpattern) != -1 ||obj.location.toLowerCase().indexOf(lpattern) != -1 ||obj.date.toLowerCase().indexOf(lpattern) != -1);
-        };
-    };
+    vm.narrowSearch = narrowSearch;
+    vm.setSort = setSort;
+    vm.sortable = sortable;
 
-    $scope.sort_by = function(predicate) {
-        $scope.predicate = predicate;
-        $scope.reverse = !$scope.reverse;
-    };
-    $scope.SetSort = function (objName) {
-        $scope.predicate = objName;
-        $scope.reverse = !$scope.reverse;
-    };
+    query_data($http);
+    
+    // Set the sorting column
+    function setSort(objName) 
+    {
+        vm.predicate = objName;
+        vm.reverse = !vm.reverse;
+    }
 
-    $scope.sortable = function(predicate) {
+    // Return the value of the predicate column
+    function sortable(predicate) 
+    {
         return function(obj) {
             if (predicate == 'moving_time') {
                 return moment.duration(obj[predicate]);
@@ -116,19 +115,51 @@ app.controller('runsCrtl', function ($scope, $window, $http, $timeout) {
                 return obj[predicate];
             }
         };
-    };
+    }
 
-    $scope.update = function() {
-        $scope.update_response = "";
+    // Update the local database
+    function update() 
+    {
+        vm.update_response = "";
         $http.get('updatelocaldb').then(function(response){
-            $scope.update_response = "Database successfuly updated.";
-            query_data($scope, $http);
+            vm.update_response = "Database successfuly updated.";
+            query_data($http);
         });
-    };
+    }
 
-    $scope.connect = function() {
-        $window.location.href = 'connect';
-    };
+    // Query the data base through a Python script.
+    function query_data(http) 
+    {
+        http.get('getRuns').then(function(response){
+            vm.list = [];
+            angular.forEach(response.data, function(obj) {
+                if (obj.activity_type == 'Ride'  |  obj.activity_type == 'Run' | obj.activity_type == 'Hike')
+                    vm.list.push(obj);
+            });
+            vm.nTotalItems = vm.list.length;
+        });
+    }
 
-    $scope.totals = totals;
-});
+    // Compute the total distance and elevation.
+    // To be called on the filtered list
+    function totals(items) 
+    {
+        var elevation = 0.0;
+        var distance = 0.0;
+        angular.forEach(items, function(obj){
+            elevation += obj.elevation;
+            distance += obj.distance;
+        });
+        return {'elevation': elevation, 'distance': distance.toFixed(2)};
+    }
+
+    function narrowSearch(pattern)
+    {
+        return function(obj) {
+            if (!pattern)
+                return true;
+            lpattern = pattern.toLowerCase();
+            return (obj.name.toLowerCase().indexOf(lpattern) != -1 ||obj.location.toLowerCase().indexOf(lpattern) != -1 ||obj.date.toLowerCase().indexOf(lpattern) != -1);
+        };
+    }
+}
