@@ -6,6 +6,7 @@ import stravalib
 import json
 
 ROOT_DIR = os.path.join(os.path.dirname(os.path.abspath(sys.argv[0])), '..')
+SESSION_DIR = '/tmp/MyStrava'
 py_level_dir = os.path.join(ROOT_DIR, '..')
 sys.path.append(py_level_dir)
 from readconfig import read_config
@@ -23,17 +24,6 @@ class StravaUI(object):
         self.rootdir = rootdir
         self.config = read_config(os.path.join(py_level_dir, 'setup.ini'))
 
-    def _set_session_cookie(self, id=None):
-        """
-        Set cookie session_id to id if not None and set its expiring date
-
-        :param id: the id a the session to create or None to use the current session
-        """
-        if id is not None:
-            cherrypy.response.cookie['session_id'] = id
-        cherrypy.response.cookie['session_id']['max-age'] = 3600 * 24 * 30  # 1 month
-        cherrypy.response.cookie['session_id']['expires'] = 3600 * 24 * 30  # 1 month
-
     @cherrypy.expose
     def index(self):
         """
@@ -41,7 +31,6 @@ class StravaUI(object):
         """
         # Keep session alive
         cherrypy.session[self.DUMMY] = 'MyStrava'
-        self._set_session_cookie()
         return open(os.path.join(self.rootdir, 'index.html'))
 
     @cherrypy.expose
@@ -83,41 +72,29 @@ class StravaUI(object):
         Connect to Strava and grant authentification.
         """
         # Keep session alive
+        print "connect - {}".format(cherrypy.session.id)
         cherrypy.session[self.DUMMY] = 'MyStravaConnect'
         client = stravalib.Client()
-        # Make sure to pass the current session_id to withdraw it later when back to our app.
         url = client.authorization_url(
             client_id=self.config['client_id'], scope='view_private',
-            state=cherrypy.session.id,
-            redirect_uri='http://127.0.0.1:{}/authorization'.format(cherrypy.server.socket_port))
-        print "connected to Strava - {}".format(cherrypy.session.id)
+            redirect_uri='http://127.0.0.1:{}/authorize'.format(cherrypy.server.socket_port))
         raise cherrypy.HTTPRedirect(url)
 
     @cherrypy.expose
-    def authorization(self, state=None, code=None):
-        """
-        Redirection url once Strava authentification granted.
-        This is only a first step redirection to restore the session id before
-        proceeding with token echange.
-
-        :param state: the id of the current session in our app
-
-        :param code: the code returned by Strava authentification to be
-        further exchanged for a token.
-        """
-        # Restore the session_id
-        self._set_session_cookie(state)
-        raise cherrypy.HTTPRedirect('/authorized?code={}'.format(code))
-
-    @cherrypy.expose
-    def authorized(self, code=None):
+    def authorize(self, state=None, code=None):
         """
         Echange code for a token and set token and athlete_id in the current session
 
+        :param state: the state variable passed to Strava authentification url and returned here.
+        We do not use it, so it is always None but we have to keep it in the argument list
+        as it is part of the url.
+
         :param code: the code returned by Strava authentification to be
         further exchanged for a token.
         """
+        print cherrypy.request.cookie['session_id']
         print "authorization - {}".format(cherrypy.session.id)
+        # Keep session alive
         cherrypy.session[self.DUMMY] = 'MyStravaAuthorized'
         client = stravalib.Client()
         token = client.exchange_code_for_token(client_id=self.config['client_id'],
@@ -126,19 +103,20 @@ class StravaUI(object):
         cherrypy.session[self.TOKEN] = token
         client = stravalib.Client(access_token=token)
         cherrypy.session[self.ATHLETE_ID] = client.get_athlete().id
-        # cookies = cherrypy.response.cookie
-        # # expires = datetime.datetime.utcnow() + datetime.timedelta(days=30)
-        # cookies[self.COOKIE_NAME] = cherrypy.session[self.ATHLETE_ID]
-        # cookies[self.COOKIE_NAME]['max-age'] = 3600 * 24 * 30
         print "athlete: {}".format(cherrypy.session.get(self.ATHLETE_ID))
-        print "token: {}".format(cherrypy.session.get(self.ATHLETE_ID))
+        print "token: {}".format(cherrypy.session.get(self.TOKEN))
         raise cherrypy.HTTPRedirect('/')
 
 
 if __name__ == '__main__':
+    if not os.path.exists(SESSION_DIR):
+        os.mkdir(SESSION_DIR)
     conf = {
         '/': {
             'tools.sessions.on': True,
+            'tools.sessions.storage_class': cherrypy.lib.sessions.FileSession,
+            'tools.sessions.storage_path': SESSION_DIR,
+            'tools.sessions.timeout': 60 * 24 * 30,  # 1 month
             'tools.staticdir.on': True,
             'tools.staticdir.root': ROOT_DIR,
             'tools.staticdir.dir': '',
@@ -147,5 +125,5 @@ if __name__ == '__main__':
     }
 
 print(conf['/'])
-cherrypy.config.update({'server.socket_port': 8080})
+cherrypy.config.update({'server.socket_host': '127.0.0.1', 'server.socket_port': 8080})
 cherrypy.quickstart(StravaUI(ROOT_DIR), '/', conf)
