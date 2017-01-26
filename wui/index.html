@@ -38,13 +38,13 @@
                 </select>
             </div>
             <div class="col-md-4">Filter:
-                <input type="text" ng-model="vm.search" placeholder="Filter" class="form-control" />
+                <input type="text" ng-model="search.field" ng-model-options=" {getterSetter: true }" placeholder="Filter" title='To match a string with whitespaces enclose it into "...". Use AND to indicate you want to match all clauses.' class="form-control" />
             </div>
             <div class="col-md-2 col-date">Date Range:
-                <input type="text" ng-model="vm.startDate" placeholder="yyyy-mm-dd" class="form-control" />
+                <input type="text" ng-model="vm.startDate" placeholder="yyyy-mm-dd" title='2016 is equivalent to 2016-01-01. 2016-02 is equivalent to 2016-02-01' class="form-control" />
             </div>
             <div class="col-md-2 col-date">To:
-                <input type="text" ng-model="vm.endDate" placeholder="yyyy-mm-dd" class="form-control" />
+                <input type="text" ng-model="vm.endDate" placeholder="yyyy-mm-dd" title='2016 is equivalent to 2016-12-31. 2016-03 is equivalent to 2016-03-31' class="form-control" />
             </div>
             <div class="col-md-2 right"><br/>
                 <input type="button" ng-click="vm.update()" Value="Update Local DB" class="form-control mybutton" />
@@ -79,7 +79,7 @@
                             </tr>
                         </thead>
                         <tbody>
-                            <tr ng-repeat="data in vm.filteredItems = (vm.list | filter:vm.narrowSearch(vm.search) | selectActivityTypeFilter : vm.runType : vm.withCommutes | dateRangeFilter : vm.startDate : vm.endDate | orderBy : vm.sortable(vm.predicate) : vm.reverse)">
+                            <tr ng-repeat="data in vm.filteredItems = (vm.list | filter:vm.narrowSearch(vm.searchRegex) | selectActivityTypeFilter : vm.runType : vm.withCommutes | dateRangeFilter : vm.startDate : vm.endDate | orderBy : vm.sortable(vm.predicate) : vm.reverse)">
                                 <td><a href="https://www.strava.com/activities/{{data.id}}">{{data.name}}</a></td>
                                 <td>{{data.location}}</td>
                                 <td>{{data.date}}</td>

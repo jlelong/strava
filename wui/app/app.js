@@ -85,6 +85,8 @@ function StravaController($scope, $window, $http, $timeout)
     vm.list = [];
     vm.nTotalItems = 0;
     vm.reverse = false;
+    vm.searchField = "";
+    vm.searchRegex = null;
 
     // Methods
     vm.connect = function() { $window.location.href = 'connect'; };
@@ -94,6 +96,8 @@ function StravaController($scope, $window, $http, $timeout)
     vm.narrowSearch = narrowSearch;
     vm.setSort = setSort;
     vm.sortable = sortable;
+    $scope.search =  { field: getterSetterSearchField };
+ 
 
     query_data($http);
     
@@ -153,13 +157,80 @@ function StravaController($scope, $window, $http, $timeout)
         return {'elevation': elevation, 'distance': distance.toFixed(2)};
     }
 
-    function narrowSearch(pattern)
+
+    // getterSetterSearchField;
+    // We use this getterSetter to compute the regex filter only once and not for every line of the table.
+    function getterSetterSearchField(value) {
+        if (arguments.length) {
+            vm.searchField = value;
+            vm.searchRegex = createRegex(value);
+            console.log(vm.searchRegex);
+        } else {
+            return vm.searchField;
+        }
+    }
+
+    function narrowSearch(regex)
     {
         return function(obj) {
-            if (!pattern)
+            if (!regex)
                 return true;
-            lpattern = pattern.toLowerCase();
-            return (obj.name.toLowerCase().indexOf(lpattern) != -1 ||obj.location.toLowerCase().indexOf(lpattern) != -1 ||obj.date.toLowerCase().indexOf(lpattern) != -1);
+            return (obj.name.match(regex) !== null || obj.location.match(regex) !== null || obj.date.match(regex) !== null);
+            // lpattern = pattern.toLowerCase();^M
+            // return (obj.name.toLowerCase().indexOf(lpattern) != -1 ||obj.location.toLowerCase().indexOf(lpattern) != -1 ||obj.date.toLowerCase().indexOf(lpattern) != -1);
         };
     }
+
+    function createRegex(pattern) 
+    {
+        // tokens = pattern.match(/(".*?"|[^"\s]+)+(?=\s*|\s*$)/g);
+        // var regexp = new RegExp(tokens.join("|"), 'gi');
+        // return regexp;
+        var regex;
+        var tokens = [];
+        var tokenElements = [];
+        var quoteOpen = false;
+        var separator = ' ';
+        for (var i = 0; i < pattern.length; ++i) {
+            var e = pattern[i];
+            if (e == '"' && !quoteOpen) {
+                quoteOpen = true;
+            }
+            else if (e == '"' && quoteOpen) {
+                // Closing a block
+                quoteOpen = false;
+                continue;
+            }
+            else if (e == separator && !quoteOpen) {
+                if (tokenElements.length > 0) {
+                    tokens.push(tokenElements.join(''));
+                    tokenElements = [];
+                }
+            }
+            else {
+                tokenElements.push(e);
+            }
+        }
+        if (tokenElements.length > 0) {
+            tokens.push(tokenElements.join(''));
+        }
+        var tokensLogic = [];
+        for (i = 0; i < tokens.length; ++i) {
+            if (tokens[i] == "AND") {
+                var prev = tokensLogic.pop();
+                var cur = '(?=.*' + prev + ')' + '(?=.*' + tokens[i+1] + ').*';
+                tokensLogic.push(cur);
+                ++i;
+                continue;
+            }
+            else {
+                tokensLogic.push(tokens[i]);
+            }
+
+        }
+        return new RegExp(tokensLogic.join("|"), 'gi');
+    }
+
+
+    
 }
