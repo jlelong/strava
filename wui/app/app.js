@@ -96,7 +96,7 @@ function StravaController($scope, $window, $http, $timeout)
     vm.narrowSearch = narrowSearch;
     vm.setSort = setSort;
     vm.sortable = sortable;
-    $scope.search =  { field: getterSetterSearchField };
+    vm.search =  { field: getterSetterSearchField };
  
 
     query_data($http);
