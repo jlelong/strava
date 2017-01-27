@@ -175,7 +175,7 @@ function StravaController($scope, $window, $http, $timeout)
         return function(obj) {
             if (!regex)
                 return true;
-            return (obj.name.match(regex) !== null || obj.location.match(regex) !== null || obj.date.match(regex) !== null);
+            return ((obj.name + obj.location + obj.date).match(regex) !== null);
             // lpattern = pattern.toLowerCase();^M
             // return (obj.name.toLowerCase().indexOf(lpattern) != -1 ||obj.location.toLowerCase().indexOf(lpattern) != -1 ||obj.date.toLowerCase().indexOf(lpattern) != -1);
         };
@@ -183,9 +183,6 @@ function StravaController($scope, $window, $http, $timeout)
 
     function createRegex(pattern) 
     {
-        // tokens = pattern.match(/(".*?"|[^"\s]+)+(?=\s*|\s*$)/g);
-        // var regexp = new RegExp(tokens.join("|"), 'gi');
-        // return regexp;
         var regex;
         var tokens = [];
         var tokenElements = [];
@@ -194,6 +191,7 @@ function StravaController($scope, $window, $http, $timeout)
         for (var i = 0; i < pattern.length; ++i) {
             var e = pattern[i];
             if (e == '"' && !quoteOpen) {
+                // Etnering a block
                 quoteOpen = true;
             }
             else if (e == '"' && quoteOpen) {
@@ -202,6 +200,7 @@ function StravaController($scope, $window, $http, $timeout)
                 continue;
             }
             else if (e == separator && !quoteOpen) {
+                // End of a pattern
                 if (tokenElements.length > 0) {
                     tokens.push(tokenElements.join(''));
                     tokenElements = [];
@@ -211,9 +210,11 @@ function StravaController($scope, $window, $http, $timeout)
                 tokenElements.push(e);
             }
         }
+        // Push the last pattern
         if (tokenElements.length > 0) {
             tokens.push(tokenElements.join(''));
         }
+        // Handle the logic keyword AND.
         var tokensLogic = [];
         for (i = 0; i < tokens.length; ++i) {
             if (tokens[i] == "AND") {
