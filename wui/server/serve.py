@@ -75,13 +75,16 @@ class StravaUI(object):
         print "connect - {}".format(cherrypy.session.id)
         cherrypy.session[self.DUMMY] = 'MyStravaConnect'
         client = stravalib.Client()
-        url = client.authorization_url(
+        redirect_url = cherrypy.url(path='/authorized', script_name='/')
+        print redirect_url
+        authentification_url = client.authorization_url(
             client_id=self.config['client_id'], scope='view_private',
-            redirect_uri='http://127.0.0.1:{}/authorize'.format(cherrypy.server.socket_port))
-        raise cherrypy.HTTPRedirect(url)
+            redirect_uri=redirect_url)
+        print authentification_url
+        raise cherrypy.HTTPRedirect(authentification_url)
 
     @cherrypy.expose
-    def authorize(self, state=None, code=None):
+    def authorized(self, state=None, code=None):
         """
         Echange code for a token and set token and athlete_id in the current session
 
@@ -105,7 +108,7 @@ class StravaUI(object):
         cherrypy.session[self.ATHLETE_ID] = client.get_athlete().id
         print "athlete: {}".format(cherrypy.session.get(self.ATHLETE_ID))
         print "token: {}".format(cherrypy.session.get(self.TOKEN))
-        raise cherrypy.HTTPRedirect('/')
+        raise cherrypy.HTTPRedirect(cherrypy.url(path='/', script_name=''))
 
 
 if __name__ == '__main__':
@@ -113,6 +116,9 @@ if __name__ == '__main__':
         os.mkdir(SESSION_DIR)
     conf = {
         '/': {
+            # 'tools.proxy.on': True,
+            # 'tools.proxy.base': 'http://localhost/mystrava',
+            # 'tools.proxy.local': "",
             'tools.sessions.on': True,
             'tools.sessions.storage_class': cherrypy.lib.sessions.FileSession,
             'tools.sessions.storage_path': SESSION_DIR,
@@ -126,4 +132,5 @@ if __name__ == '__main__':
 
 print(conf['/'])
 cherrypy.config.update({'server.socket_host': '127.0.0.1', 'server.socket_port': 8080})
+# cherrypy.quickstart(StravaUI(ROOT_DIR), '/mystrava', conf)
 cherrypy.quickstart(StravaUI(ROOT_DIR), '/', conf)
