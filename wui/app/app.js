@@ -10,7 +10,7 @@ $(function() {
 
 // Angular stuff
 angular
-    .module('MyStrava', ['ui.bootstrap', 'scrollable-table'])
+    .module('MyStrava', ['ui.bootstrap', 'scrollable-table', 'ngCookies'])
     .controller('StravaController', StravaController)
     .filter('selectActivityTypeFilter', selectActivityTypeFilter)
     .filter('dateRangeFilter', dateRangeFilter);
@@ -75,7 +75,7 @@ function selectActivityTypeFilter()
 }
 
 
-function StravaController($scope, $window, $http, $timeout) 
+function StravaController($cookies, $scope, $window, $http, $timeout) 
 {
     var vm = this;
 
@@ -89,7 +89,8 @@ function StravaController($scope, $window, $http, $timeout)
     vm.searchRegex = null;
 
     // Methods
-    vm.connect = function() { $window.location.href = 'connect'; };
+    vm.isConnected = function() { return ($cookies.get('connected') !== undefined); };
+    vm.connectOrDisconnect = connectOrDisconnect; 
     vm.update = update;
     vm.totals = totals;
     // Filter to test search pattern against columns {name, location, date}
@@ -99,7 +100,21 @@ function StravaController($scope, $window, $http, $timeout)
     vm.search =  { field: getterSetterSearchField };
  
 
-    query_data($http);
+    if (!vm.isConnected()) {
+        vm.connectLabel = "Connect to Strava";
+    } else {
+        vm.connectLabel = "Disconnect";
+    }
+
+    query_data();
+
+    function connectOrDisconnect() 
+    { 
+        if (! vm.isConnected())
+            $window.location.href = 'connect'; 
+        else
+            $window.location.href = 'disconnect'; 
+    }
     
     // Set the sorting column
     function setSort(objName) 
@@ -125,6 +140,10 @@ function StravaController($scope, $window, $http, $timeout)
     function update() 
     {
         vm.update_response = "";
+        if (!vm.isConnected()) {
+            alert("Connect to Strava to update the local DB.");
+            return;
+        }
         $http.get('updatelocaldb').then(function(response){
             vm.update_response = "Database successfuly updated.";
             query_data($http);
@@ -132,9 +151,9 @@ function StravaController($scope, $window, $http, $timeout)
     }
 
     // Query the data base through a Python script.
-    function query_data(http) 
+    function query_data() 
     {
-        http.get('getRuns').then(function(response){
+        $http.get('getRuns').then(function(response){
             vm.list = [];
             angular.forEach(response.data, function(obj) {
                 if (obj.activity_type == 'Ride'  |  obj.activity_type == 'Run' | obj.activity_type == 'Hike')

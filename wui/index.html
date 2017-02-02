@@ -7,6 +7,7 @@
     <link href="css/perso.css" rel="stylesheet">
     <script src="js/jquery-1.12.4.min.js"></script>
     <script src="js/angular.js"></script>
+    <script src="js/angular-cookies.js"></script>
     <script src="js/moment.js"></script>
     <script src="js/angular-scrollable-table.js"></script>
     <script src="js/ui-bootstrap-tpls-0.10.0.min.js"></script>
@@ -20,7 +21,7 @@
         <div class="container">
                 <h2><a href="#">MyStrava</a> 
                     <div class="col-md-2 right">
-                        <input type="button" ng-click="vm.connect()" Value="{{vm.connectLabel}}" class="form-control myconnectbutton" />
+                        <input type="button" ng-click="vm.connectOrDisconnect()" Value="{{vm.connectLabel}}" class="form-control myconnectbutton" />
                     </div>
                 </h2>
         </div>
@@ -38,7 +39,7 @@
                 </select>
             </div>
             <div class="col-md-4">Filter:
-                <input type="text" ng-model="vm.search.field" ng-model-options=" {getterSetter: true }" placeholder="Filter" title='To match a string with whitespaces enclose it into "...". Use AND to indicate you want to match all clauses.' class="form-control" />
+                <input type="text" ng-model="vm.search.field" ng-model-options=" {getterSetter: true, debounce: 200 }" placeholder="Filter" title='To match a string with whitespaces enclose it into "...". Use AND to indicate you want to match all clauses.' class="form-control" />
             </div>
             <div class="col-md-2 col-date">Date Range:
                 <input type="text" ng-model="vm.startDate" placeholder="yyyy-mm-dd" title='2016 is equivalent to 2016-01-01. 2016-02 is equivalent to 2016-02-01' class="form-control" />

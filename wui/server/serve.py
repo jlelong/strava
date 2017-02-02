@@ -31,6 +31,20 @@ class StravaUI(object):
         """
         # Keep session alive
         cherrypy.session[self.DUMMY] = 'MyStrava'
+        if cherrypy.session.get(self.ATHLETE_ID) is not None and cherrypy.session.get(self.TOKEN) is not None:
+            cookie = cherrypy.response.cookie
+            cookie['connected'] = 1
+        else:
+            self.disconnect()
+        return open(os.path.join(self.rootdir, 'index.html'))
+
+    @cherrypy.expose
+    def disconnect(self):
+        cookie = cherrypy.response.cookie
+        cookie['connected'] = 0
+        cookie['connected']['expires'] = 0
+        cherrypy.session[self.ATHLETE_ID] = None
+        cherrypy.session[self.TOKEN] = None
         return open(os.path.join(self.rootdir, 'index.html'))
 
     @cherrypy.expose
