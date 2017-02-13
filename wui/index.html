@@ -55,7 +55,7 @@
         <div class="row">
             {{vm.tots = vm.totals(vm.filteredItems); ""}}
             <h5>
-                <div class="col-md-5"> Filtered {{vm.filteredItems.length}} of {{vm.nTotalItems}} total activities. {{vm.update_response}} </div>
+                <div class="col-md-5"> Filtered {{vm.filteredItems.length}} of {{vm.nTotalItems}} total activities. <span class="text-success">{{vm.update_response}}</span> </div>
                 <div class="col-md-3 right totals">Total elevation: {{vm.tots.elevation }} m</div>
                 <div class="col-md-3 right totals">Total distance: {{vm.tots.distance }} km</div>
             </h5>
