@@ -235,20 +235,36 @@ function StravaController($cookies, $scope, $window, $http, $timeout)
         }
         // Handle the logic keyword AND.
         var tokensLogic = [];
-        for (i = 0; i < tokens.length; ++i) {
-            if (tokens[i] == "AND") {
-                var prev = tokensLogic.pop();
-                var cur = '(?=.*' + prev + ')' + '(?=.*' + tokens[i+1] + ').*';
-                tokensLogic.push(cur);
-                ++i;
+        var andOpen = false;
+        var cur = "";
+        var len = tokens.length;
+        for (i = 0; i < len; ++i) {
+            if (tokens[i] == "AND"){
+                continue;
+            }
+            if ((i < len - 1 && tokens[i+1] == "AND") || (i > 1 && tokens[i-1] == "AND")) {
+                cur += '(?=.*' + tokens[i] + ')'; // + '(?=.*' + tokens[i+1] + ').*';
+                // tokensLogic.push(cur);
                 continue;
             }
             else {
+                if (cur) {
+                    cur += '.*';
+                    tokensLogic.push(cur);
+                    cur = "";
+                }
                 tokensLogic.push(tokens[i]);
             }
 
         }
-        return new RegExp(tokensLogic.join("|"), 'gi');
+        if (cur) {
+            cur += '.*';
+            tokensLogic.push(cur);
+            cur = "";
+        }
+        var reg = new RegExp(tokensLogic.join("|"), 'gi');
+        console.log(reg);
+        return  reg;
     }
 
 
