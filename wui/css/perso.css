@@ -68,3 +68,33 @@ td + td {
 	margin-left: 0;
 	margin-right: 0;
 }
+
+.table>tbody>tr.row-details>td {
+    padding-left: 35px;
+}
+
+.toggle-details {
+    display: inline-block;
+    width: 1em;
+    vertical-align: top;
+}
+
+.name {
+    display: inline-block;
+    width: calc(100% - 3em);
+}
+
+.view-activities>tbody>tr:nth-child(4n+1)>td,
+.view-activities>tbody>tr:nth-child(4n+2)>td {
+    background-color: #f9f9f9;
+}
+
+.view-activities>tbody>tr:nth-child(4n+3)>td,
+.view-activities>tbody>tr:nth-child(4n)>td {
+    background-color: white;
+}
+
+.bike-name, .total-time, .max-hr, .red-points {
+    display: inline-block;
+    width: 15em;
+}

@@ -64,7 +64,7 @@
         <div class="row">
             <div class="col-md-12" ng-show="vm.filteredItems.length > 0">
                 <scrollable-table>
-                    <table class="table table-striped table-bordered">
+                    <table class="table table-bordered view-activities">
                         <thead>
                             <tr>
                                 <th ng-click="vm.setSort('name');" class="c-name"><div class="c1">Name</div></th>
@@ -80,17 +80,29 @@
                             </tr>
                         </thead>
                         <tbody>
-                            <tr ng-repeat="data in vm.filteredItems = (vm.list | filter:vm.narrowSearch(vm.searchRegex) | selectActivityTypeFilter : vm.runType : vm.withCommutes | dateRangeFilter : vm.startDate : vm.endDate | orderBy : vm.sortable(vm.predicate) : vm.reverse)">
-                                <td><a href="https://www.strava.com/activities/{{data.id}}">{{data.name}}</a></td>
+                            <tr ng-repeat-start="data in vm.filteredItems = (vm.list | filter:vm.narrowSearch(vm.searchRegex) | selectActivityTypeFilter : vm.runType : vm.withCommutes | dateRangeFilter : vm.startDate : vm.endDate | orderBy : vm.sortable(vm.predicate) : vm.reverse)">
+                                <td>
+                                    <a href="" ng-click="expanded = !expanded"><div ng-bind="expanded ? '-' : '+'" class="toggle-details"></div></a>
+                                    <div class="name"> <a href="https://www.strava.com/activities/{{data.id}}">{{data.name}}</a></div>
+                                </td>
                                 <td>{{data.location}}</td>
                                 <td>{{data.date}}</td>
-                                <td title="{{data.bike_name}}">{{data.bike_type || data.activity_type }}</td>
+                                <td>{{data.bike_type || data.activity_type }}</td>
                                 <td>{{data.distance}}</td>
                                 <td>{{data.elevation}}</td>
-                                <td title="Total time: {{data.elapsed_time}}">{{data.moving_time}}</td>
+                                <td>{{data.moving_time}}</td>
                                 <td>{{data.average_speed}}</td>
-                                <td title="Red points: {{data.red_points}}">{{data.suffer_score}}</td>
-                                <td title="Max HR: {{data.max_heartrate}}">{{data.average_heartrate}}</td>
+                                <td>{{data.suffer_score}}</td>
+                                <td>{{data.average_heartrate}}</td>
+                            </tr>
+                            <tr ng-repeat-end ng-show="expanded" class="row-details">
+                                <td colspan="11"> 
+                                    <div ng-show="data.description">{{data.description}}</div>
+                                    <div class="bike-name" ng-show="data.bike_name">Bike: {{data.bike_name}} </div>
+                                    <div class="total-time"> Total time: {{data.elapsed_time}} </div>
+                                    <div class="max-hr" ng-show="data.max_heartrate"> Max HR: {{data.max_heartrate}}</div>
+                                    <div class="red-points" ng-show="data.red_points"> Red points: {{data.red_points}}</div>
+                                </td>
                             </tr>
                         </tbody>
                     </table>
