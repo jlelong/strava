@@ -29,17 +29,22 @@ def _format_timedelta(t):
         return ""
 
 
-def _escape_string(s):
-    """
-    Escape a string unless is None
+# def _escape_string(s):
+#     """
+#     Escape a string unless is None
+#
+#     :param s: a basestring
+#     """
+#     if (s is not None):
+#         assert(isinstance(s, basestring))
+#         return pymysql.converters.escape_string(s)
+#     else:
+#         return ""
 
-    :param s: a basestring
-    """
-    if (s is not None):
-        assert(isinstance(s, basestring))
-        return pymysql.converters.escape_string(s)
-    else:
-        return s
+# Apparently, we do not need to escape strings when using the form
+# .execute(query, (vars))
+def _escape_string(s):
+    return s
 
 
 def _get_location(cords, geolocator):
@@ -192,8 +197,8 @@ class StravaClient:
         :param an instance of a geocoder capable of reverse search
         """
         # Check if activity is already in the table
-        sql = "SELECT * FROM %s WHERE id='%s' LIMIT 1" % (self.activities_table, activity.id)
-        if (self.cursor.execute(sql) > 0):
+        sql = "SELECT * FROM {} WHERE id=%s LIMIT 1".format(self.activities_table)
+        if (self.cursor.execute(sql, activity.id) > 0):
             print("Activity '%s' already exists in table" % (activity.name))
             return
 
@@ -237,14 +242,14 @@ class StravaClient:
         commute = int(activity.commute)
         activity_type = activity.type
 
-        sql = """INSERT INTO %s (id, athlete, name, distance, elevation, date, location, moving_time,
+        sql = """INSERT INTO {} (id, athlete, name, distance, elevation, date, location, moving_time,
         elapsed_time, gear_id, average_speed, average_heartrate, max_heartrate, suffer_score,
-        description, commute, type, red_points, calories) VALUES ('%s', '%s', '%s', '%s', '%s', '%s',
-        '%s', '%s', '%s', '%s', '%s', '%s', '%s', '%s', '%s', '%s', '%s', '%s', '%s')
-        """ % (self.activities_table, activity.id, athlete, name, distance, elevation, date, location,
-               moving_time, elapsed_time, gear_id, average_speed, average_heartrate, max_heartrate,
-               suffer_score, description, commute, activity_type, red_points, calories)
-        self.cursor.execute(sql)
+        description, commute, type, red_points, calories) VALUES (%s, %s, %s, %s, %s, %s,
+        %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)
+        """.format(self.activities_table)
+        self.cursor.execute(sql, (activity.id, athlete, name, distance, elevation, date, location,
+                                  moving_time, elapsed_time, gear_id, average_speed, average_heartrate, max_heartrate,
+                                  suffer_score, description, commute, activity_type, red_points, calories))
         self.connection.commit()
 
     def update_activities(self):
@@ -252,8 +257,8 @@ class StravaClient:
         Update the activities table
         """
         # Get the most recent activity
-        sql = "SELECT date FROM %s WHERE athlete = '%s' ORDER BY date DESC LIMIT 1" % (self.activities_table, self.athlete)
-        if (self.cursor.execute(sql) == 0):
+        sql = "SELECT date FROM {} WHERE athlete = %s ORDER BY date DESC LIMIT 1".format(self.activities_table)
+        if (self.cursor.execute(sql, (self.athlete)) == 0):
             after = None
         else:
             after = self.cursor.fetchone()['date']
@@ -297,20 +302,20 @@ class StravaView:
         Create the gears table if it does not already exist
         """
         # Check if table already exists
-        sql = "SHOW TABLES LIKE '%s'" % self.gears_table
-        if (self.cursor.execute(sql) > 0):
+        sql = "SHOW TABLES LIKE %s"
+        if (self.cursor.execute(sql, self.gears_table) > 0):
             print("The table '%s' already exists" % self.gears_table)
             return
 
-        sql = """CREATE TABLE %s (
+        sql = """CREATE TABLE {} (
         id varchar(45) NOT NULL,
         name varchar(256) DEFAULT NULL,
-        type enum('%s','%s','%s','%s','%s','%s') DEFAULT NULL,
+        type enum(%s,%s,%s,%s,%s,%s) DEFAULT NULL,
         frame_type int(11) DEFAULT 0,
         PRIMARY KEY (id),
         UNIQUE KEY strid_UNIQUE (id)
-        ) ENGINE=InnoDB DEFAULT CHARSET=utf8""" % (self.gears_table, self.activityTypes.HIKE, self.activityTypes.RUN, self.activityTypes.ROAD, self.activityTypes.MTB, self.activityTypes.CX, self.activityTypes.TT)
-        self.cursor.execute(sql)
+        ) ENGINE=InnoDB DEFAULT CHARSET=utf8""".format(self.gears_table)
+        self.cursor.execute(sql, (self.activityTypes.HIKE, self.activityTypes.RUN, self.activityTypes.ROAD, self.activityTypes.MTB, self.activityTypes.CX, self.activityTypes.TT))
         self.connection.commit()
 
     def create_activities_table(self):
@@ -318,12 +323,12 @@ class StravaView:
         Create the activities table if it does not already exist
         """
         # Check if table already exists
-        sql = "SHOW TABLES LIKE '%s'" % self.activities_table
-        if (self.cursor.execute(sql) > 0):
+        sql = "SHOW TABLES LIKE %s"
+        if (self.cursor.execute(sql, self.activities_table) > 0):
             print("The table '%s' already exists" % self.activities_table)
             return
 
-        sql = """CREATE TABLE %s (
+        sql = """CREATE TABLE {} (
         id int(11) NOT NULL,
         athlete int(11) DEFAULT 0,
         name varchar(256) DEFAULT NULL,
@@ -342,11 +347,11 @@ class StravaView:
         description text DEFAULT NULL,
         commute tinyint(1) DEFAULT 0,
         calories float DEFAULT 0,
-        type enum('%s', '%s', '%s') DEFAULT NULL,
+        type enum(%s, %s, %s) DEFAULT NULL,
         PRIMARY KEY (id),
         UNIQUE KEY strid_UNIQUE (id)
-        ) ENGINE=InnoDB DEFAULT CHARSET=utf8""" % (self.activities_table, self.activityTypes.RIDE, self.activityTypes.RUN, self.activityTypes.HIKE)
-        self.cursor.execute(sql)
+        ) ENGINE=InnoDB DEFAULT CHARSET=utf8""".format(self.activities_table)
+        self.cursor.execute(sql, (self.activityTypes.RIDE, self.activityTypes.RUN, self.activityTypes.HIKE))
         self.connection.commit()
 
     def print_row(self, row):
