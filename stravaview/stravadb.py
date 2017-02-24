@@ -11,6 +11,7 @@ import pymysql.converters
 import json
 import datetime
 from geopy.geocoders import Nominatim
+from geopy.exc import GeocoderTimedOut
 
 
 def _format_timedelta(t):
@@ -59,17 +60,24 @@ def _get_location(cords, geolocator):
     """
     location = geolocator.reverse(cords)
     if location.raw is None or 'address' not in location.raw:
-        return ""
-    address = location.raw['address']
-    city = ""
-    code = ""
-    for key in ('hamlet', 'village', 'city_district', 'city', 'town'):
-        if key in address:
-            city = address[key]
-            break
-    if address['country'] == 'France' and 'postcode' in address:
-        code = ' (' + address['postcode'][0:2] + ')'
-    return city + code
+        return None
+    attempts = 0
+    while True:
+        try:
+            address = location.raw['address']
+            city = ""
+            code = ""
+            for key in ('hamlet', 'village', 'city_district', 'city', 'town'):
+                if key in address:
+                    city = address[key]
+                    break
+            if address['country'] == 'France' and 'postcode' in address:
+                code = ' (' + address['postcode'][0:2] + ')'
+            return city + code
+        except GeocoderTimedOut:
+            attempts += 1
+            if attempts > 4:
+                break
 
 
 class ExtendedEncoder(json.JSONEncoder):
@@ -188,13 +196,11 @@ class StravaClient:
         except:
             return 0
 
-    def push_activity(self, activity, geolocator):
+    def push_activity(self, activity):
         """
         Add the activity `activity` to the activities table
 
         :param activity: an object of class:`stravalib.model.Activity`
-
-        :param an instance of a geocoder capable of reverse search
         """
         # Check if activity is already in the table
         sql = "SELECT * FROM {} WHERE id=%s LIMIT 1".format(self.activities_table)
@@ -215,6 +221,8 @@ class StravaClient:
         suffer_score = 0
         red_points = 0
         calories = 0
+        location = None
+        description = None
 
         # Get the real values
         name = _escape_string(activity.name)
@@ -224,7 +232,6 @@ class StravaClient:
         if activity.total_elevation_gain is not None:
             elevation = "%0.0f" % stravalib.unithelper.meters(activity.total_elevation_gain).get_num()
         date = activity.start_date_local
-        location = _escape_string(_get_location(activity.start_latlng, geolocator))
         moving_time = _format_timedelta(activity.moving_time)
         elapsed_time = _format_timedelta(activity.elapsed_time)
         gear_id = _escape_string(activity.gear_id)
@@ -235,10 +242,8 @@ class StravaClient:
             max_heartrate = activity.max_heartrate
             if activity.suffer_score is not None:
                 suffer_score = activity.suffer_score
-                red_points = self._get_points(activity)
         if activity.calories is not None:
             calories = activity.calories
-        description = _escape_string(activity.description)
         commute = int(activity.commute)
         activity_type = activity.type
 
@@ -251,6 +256,44 @@ class StravaClient:
                                   moving_time, elapsed_time, gear_id, average_speed, average_heartrate, max_heartrate,
                                   suffer_score, description, commute, activity_type, red_points, calories))
         self.connection.commit()
+
+    def update_activity_location(self, activity, geolocator):
+        """
+        Update the location of an activity already in the db.
+
+        :param activity: an object of class:`stravalib.model.Activity`
+
+        :param an instance of a geocoder capable of reverse search
+        """
+        location = _get_location(activity.start_latlng, geolocator)
+        sql = "UPDATE {} SET location=%s where id=%s".format(self.activities_table)
+        self.cursor.execute(sql, (location, activity.id))
+        self.connection.commit()
+
+    def update_activity_description(self, activity):
+        """
+        Update the location of an activity already in the db.
+
+        :param activity: an object of class:`stravalib.model.Activity`
+        """
+        detailed_activity = self.stravaClient.get_activity(activity.id)
+        description = detailed_activity.description
+        if description is not None and description != "":
+            sql = "UPDATE {} SET description=%s where id=%s".format(self.activities_table)
+            self.cursor.execute(sql, (description, activity.id))
+            self.connection.commit()
+
+    def update_activity_points(self, activity):
+        """
+        Update the location of an activity already in the db.
+
+        :param activity: an object of class:`stravalib.model.Activity`
+        """
+        red_points = self._get_points(activity)
+        if red_points != 0:
+            sql = "UPDATE {} SET red_points=%s where id=%s".format(self.activities_table)
+            self.cursor.execute(sql, (red_points, activity.id))
+            self.connection.commit()
 
     def update_activities(self):
         """
@@ -265,7 +308,15 @@ class StravaClient:
         new_activities = self.stravaClient.get_activities(after=after)
         geolocator = Nominatim()
         for activity in new_activities:
-            self.push_activity(activity, geolocator)
+            self.push_activity(activity)
+            print("{} - {}".format(activity.id, activity.name.encode('utf-8')))
+        for activity in new_activities:
+            self.update_activity_location(activity, geolocator)
+            print("Update the location of activity {} ".format(activity.id))
+            self.update_activity_description(activity)
+            print("Update the description of activity {} ".format(activity.id))
+            self.update_activity_points(activity)
+            print("Update the points of activity {} ".format(activity.id))
 
 
 class StravaView:
@@ -390,6 +441,10 @@ class StravaView:
         :param json_output: do we return a JSON encoded result of the query
         :type json_output: bool
         """
+        # Return if activity table does not exist
+        sql = "SHOW TABLES LIKE %s"
+        if (self.cursor.execute(sql, self.activities_table) == 0):
+            return ""
 
         before_sql = ""
         after_sql = ""
