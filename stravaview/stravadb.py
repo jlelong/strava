@@ -203,9 +203,14 @@ class StravaClient:
         :param activity: an object of class:`stravalib.model.Activity`
         """
         # Check if activity is already in the table
-        sql = "SELECT * FROM {} WHERE id=%s LIMIT 1".format(self.activities_table)
+        sql = "SELECT name FROM {} WHERE id=%s LIMIT 1".format(self.activities_table)
         if (self.cursor.execute(sql, activity.id) > 0):
-            print("Activity '%s' already exists in table" % (activity.name))
+            entry = self.cursor.fetchone()
+            if entry['name'] != activity.name:
+                sql = "UPDATE {} SET name=%s where id=%s".format(self.activities_table)
+                self.cursor.execute(sql, (activity.name, activity.id))
+                self.connection.commit()
+                print("Activity '%s' already exists in table" % (activity.name))
             return
 
         if (activity.type != activity.RIDE and activity.type != activity.RUN and activity.type != activity.HIKE):
@@ -317,6 +322,35 @@ class StravaClient:
             print("Update the description of activity {} ".format(activity.id))
             self.update_activity_points(activity)
             print("Update the points of activity {} ".format(activity.id))
+
+    def upgrade_activities(self):
+        """
+        Upgrade all the activities
+        """
+        all_activities = self.stravaClient.get_activities()
+        geolocator = Nominatim()
+        for activity in all_activities:
+            self.push_activity(activity)
+            print("{} - {}".format(activity.id, activity.name.encode('utf-8')))
+        for activity in all_activities:
+            sql = "SELECT location, description, red_points, suffer_score FROM {} WHERE id=%s".format(self.activities_table)
+            self.cursor.execute(sql, activity.id)
+            self.connection.commit()
+            entry = self.cursor.fetchone()
+            if entry is None:
+                # This happens for activities which are not rides or runs and therefore are not stored in the local db.
+                continue
+            location = entry.get('location')
+            red_points = entry.get('red_points')
+            suffer_score = entry.get('suffer_score')
+            if location is None or location == "":
+                self.update_activity_location(activity, geolocator)
+                print("Update the location of activity {} ".format(activity.id))
+            if red_points == 0 and suffer_score > 0:
+                self.update_activity_points(activity)
+                print("Update the points of activity {} ".format(activity.id))
+            self.update_activity_description(activity)
+            print("Update the description of activity {} ".format(activity.id))
 
 
 class StravaView:

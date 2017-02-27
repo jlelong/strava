@@ -48,7 +48,16 @@
                 <input type="text" ng-model="vm.endDate" placeholder="yyyy-mm-dd" title='2016 is equivalent to 2016-12-31. 2016-03 is equivalent to 2016-03-31' class="form-control" />
             </div>
             <div class="col-md-2 right"><br/>
-                <input type="button" ng-click="vm.update()" Value="Update Local DB" class="form-control mybutton" />
+				<div class="btn-group">
+					<button type="button" class="btn btn-default mybutton dropdown-toggle" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+						Local DB <span class="caret"></span>
+					</button>
+                    <ul class="dropdown-menu">
+                        <li ng-click="vm.update()"><a class="mylink" href="">Update Local DB</a></li>
+                        <li ng-click="vm.upgrade()"><a class="mylink" href="">Upgrade All</a></li>
+                    </ul>
+			    </div>
+				<!-- <button type="button" ng&#45;click="vm.update()" Value="Update Local DB" class="form&#45;control mybutton" /> -->
             </div>
         </div>
         <input type="checkbox" ng-model="vm.withCommutes" /> Include commutes

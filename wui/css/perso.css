@@ -17,6 +17,10 @@
     border-radius: 8px;
 }
 
+.dropdown-menu>li>a.mylink {
+    color: #7989D6;
+}
+
 .myconnectbutton {
     color: #FFF;
     background-color: #7989D6;

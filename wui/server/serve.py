@@ -81,6 +81,21 @@ class StravaUI(object):
         stravaInstance.close()
 
     @cherrypy.expose
+    def upgradelocaldb(self):
+        """
+        Ajax query /upgradelocaldb to upgrade the database
+        """
+        view = StravaView(self.config, cherrypy.session.get(self.ATHLETE_ID))
+        view.create_gears_table()
+        view.create_activities_table()
+        view.close()
+        stravaInstance = StravaClient(self.config, cherrypy.session.get(self.TOKEN))
+        stravaInstance.update_bikes()
+        stravaInstance.update_shoes()
+        stravaInstance.upgrade_activities()
+        stravaInstance.close()
+
+    @cherrypy.expose
     def connect(self):
         """
         Connect to Strava and grant authentification.
