@@ -98,7 +98,12 @@ td + td {
     background-color: white;
 }
 
-.bike-name, .total-time, .max-hr, .red-points {
+.bike-name{
+    display: inline-block;
+    width: 25em;
+}
+
+.total-time, .max-hr, .red-points {
     display: inline-block;
     width: 15em;
 }
