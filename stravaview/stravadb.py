@@ -133,7 +133,8 @@ class StravaClient:
         self.with_points = config['with_points']
         self.client_id = config['client_id']
         self.client_secret = config['client_secret']
-        self.athlete = self.stravaClient.get_athlete().id
+        athlete = self.stravaClient.get_athlete()
+        self.athlete_id = athlete.id
 
     def close(self):
         self.cursor.close()
@@ -184,7 +185,7 @@ class StravaClient:
         :type activity: Activity
         """
 
-        if ((not self.with_points) or (not activity.has_heartrate)):
+        if ((not self.with_points) or (activity.suffer_score is not None)):
             return 0
         try:
             zones = activity.zones
@@ -231,7 +232,7 @@ class StravaClient:
 
         # Get the real values
         name = _escape_string(activity.name)
-        athlete = activity.athlete.id
+        athlete_id = activity.athlete.id
         if activity.distance is not None:
             distance = "%0.2f" % stravalib.unithelper.kilometers(activity.distance).get_num()
         if activity.total_elevation_gain is not None:
@@ -257,7 +258,7 @@ class StravaClient:
         description, commute, type, red_points, calories) VALUES (%s, %s, %s, %s, %s, %s,
         %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)
         """.format(self.activities_table)
-        self.cursor.execute(sql, (activity.id, athlete, name, distance, elevation, date, location,
+        self.cursor.execute(sql, (activity.id, athlete_id, name, distance, elevation, date, location,
                                   moving_time, elapsed_time, gear_id, average_speed, average_heartrate, max_heartrate,
                                   suffer_score, description, commute, activity_type, red_points, calories))
         self.connection.commit()
@@ -306,7 +307,7 @@ class StravaClient:
         """
         # Get the most recent activity
         sql = "SELECT date FROM {} WHERE athlete = %s ORDER BY date DESC LIMIT 1".format(self.activities_table)
-        if (self.cursor.execute(sql, (self.athlete)) == 0):
+        if (self.cursor.execute(sql, (self.athlete_id)) == 0):
             after = None
         else:
             after = self.cursor.fetchone()['date']
@@ -359,7 +360,7 @@ class StravaView:
     """
     activityTypes = ActivityTypes()
 
-    def __init__(self, config, athlete):
+    def __init__(self, config, athlete_id):
         """
         Initialize the StravaView class.
 
@@ -376,7 +377,7 @@ class StravaView:
         self.with_points = config['with_points']
         self.client_id = config['client_id']
         self.client_secret = config['client_secret']
-        self.athlete = athlete
+        self.athlete_id = athlete_id
 
     def close(self):
         self.cursor.close()
@@ -484,7 +485,7 @@ class StravaView:
         after_sql = ""
         name_sql = ""
         conds = list()
-        conds.append("athlete = '%s'" % self.athlete)
+        conds.append("athlete = '%s'" % self.athlete_id)
         if before is not None:
             before_sql = "a.date <= '%s'" % before
             conds.append(before_sql)
