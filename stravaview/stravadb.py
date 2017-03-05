@@ -185,7 +185,7 @@ class StravaClient:
         :type activity: Activity
         """
 
-        if ((not self.with_points) or (activity.suffer_score is not None)):
+        if ((not self.with_points) or (activity.suffer_score is None)):
             return 0
         try:
             zones = activity.zones
