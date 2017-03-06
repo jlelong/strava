@@ -1,7 +1,12 @@
 .right {
     float: right;
+    text-align: right;
 }
 
+.vmiddle {
+    line-height: 60px;
+    vertical-align: middle;
+}
 .col-date{
     width: 10em;
 }
@@ -107,3 +112,4 @@ td + td {
     display: inline-block;
     width: 15em;
 }
+

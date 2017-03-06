@@ -135,6 +135,7 @@ class StravaClient:
         self.client_secret = config['client_secret']
         athlete = self.stravaClient.get_athlete()
         self.athlete_id = athlete.id
+        self.athlete_profile = athlete.profile_medium
 
     def close(self):
         self.cursor.close()

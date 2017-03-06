@@ -87,6 +87,7 @@ function StravaController($cookies, $scope, $window, $http, $timeout)
     vm.reverse = false;
     vm.searchField = "";
     vm.searchRegex = null;
+    vm.profile_picture = "";
 
     // Methods
     vm.isConnected = function() { return ($cookies.get('connected') !== undefined); };
@@ -105,6 +106,9 @@ function StravaController($cookies, $scope, $window, $http, $timeout)
         vm.connectLabel = "Connect to Strava";
     } else {
         vm.connectLabel = "Disconnect";
+        $http.get('getAthleteProfile').then(function(response){
+            vm.profile_picture = response.data;
+        });
     }
 
     query_data();
@@ -113,8 +117,9 @@ function StravaController($cookies, $scope, $window, $http, $timeout)
     { 
         if (! vm.isConnected())
             $window.location.href = 'connect'; 
-        else
+        else {
             $window.location.href = 'disconnect'; 
+        }
     }
     
     // Set the sorting column

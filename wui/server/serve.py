@@ -66,6 +66,18 @@ class StravaUI(object):
         return activities
 
     @cherrypy.expose
+    def getAthleteProfile(self):
+        """
+        Get the url of the profile picture.
+        """
+        cherrypy.session[self.DUMMY] = 'MyStravaGetRuns'
+        cherrypy.response.headers["Content-Type"] = "text/html"
+        stravaInstance = StravaClient(self.config, cherrypy.session.get(self.TOKEN))
+        profile = stravaInstance.athlete_profile
+        stravaInstance.close()
+        return profile
+
+    @cherrypy.expose
     def updatelocaldb(self):
         """
         Ajax query /updatelocaldb to update the database
