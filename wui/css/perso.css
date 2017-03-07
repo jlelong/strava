@@ -1,3 +1,6 @@
+body {
+    margin-bottom: 20px;
+}
 .right {
     float: right;
     text-align: right;
@@ -71,11 +74,6 @@ td + td {
 
 .c-int {
     width: 4em;
-}
-
-.container .row { 
-	margin-left: 0;
-	margin-right: 0;
 }
 
 .table>tbody>tr.row-details>td {

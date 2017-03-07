@@ -19,12 +19,14 @@
 <div ng-controller="StravaController as vm">
     <div class="navbar navbar-default" id="navbar">
         <div class="container h1">
-            <div class="col-md-2 vmiddle">
-                <a href="#">MyStrava</a> 
-            </div>
-            <div class="col-md-4 right">
-                <img ng-src="{{vm.profile_picture}}" alt="">
-                <button type="button" ng-click="vm.connectOrDisconnect()" class="btn btn-default myconnectbutton">{{vm.connectLabel}}</button>
+            <div class="row">
+                <div class="col-md-2 vmiddle">
+                    <a href="#">MyStrava</a> 
+                </div>
+                <div class="col-md-4 right">
+                    <img class="img-circle" ng-src="{{vm.profile_picture}}" alt="">
+                    <button type="button" ng-click="vm.connectOrDisconnect()" class="btn btn-default myconnectbutton">{{vm.connectLabel}}</button>
+                </div>
             </div>
         </div>
     </div>

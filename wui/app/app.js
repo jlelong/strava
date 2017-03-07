@@ -3,7 +3,7 @@
 // Make the table height responsive
 $(function() {
     $(window).resize(function() {
-        $('.scrollableContainer').height(($(window).height() - 260));
+        $('.scrollableContainer').height(($(window).height() - 60));
     }).resize();
 });
 
@@ -104,6 +104,7 @@ function StravaController($cookies, $scope, $window, $http, $timeout)
 
     if (!vm.isConnected()) {
         vm.connectLabel = "Connect to Strava";
+        vm.profile_picture = "";
     } else {
         vm.connectLabel = "Disconnect";
         $http.get('getAthleteProfile').then(function(response){
