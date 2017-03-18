@@ -30,24 +30,6 @@ def _format_timedelta(t):
         return ""
 
 
-# def _escape_string(s):
-#     """
-#     Escape a string unless is None
-#
-#     :param s: a basestring
-#     """
-#     if (s is not None):
-#         assert(isinstance(s, basestring))
-#         return pymysql.converters.escape_string(s)
-#     else:
-#         return ""
-
-# Apparently, we do not need to escape strings when using the form
-# .execute(query, (vars))
-def _escape_string(s):
-    return s
-
-
 def _get_location(cords, geolocator):
     """
     Return the city or village along with the department number corresponding
@@ -236,7 +218,7 @@ class StravaClient:
         description = None
 
         # Get the real values
-        name = _escape_string(activity.name)
+        name = activity.name
         athlete_id = activity.athlete.id
         if activity.distance is not None:
             distance = "%0.2f" % stravalib.unithelper.kilometers(activity.distance).get_num()
@@ -245,7 +227,7 @@ class StravaClient:
         date = activity.start_date_local
         moving_time = _format_timedelta(activity.moving_time)
         elapsed_time = _format_timedelta(activity.elapsed_time)
-        gear_id = _escape_string(activity.gear_id)
+        gear_id = activity.gear_id
         if activity.average_speed is not None:
             average_speed = "%0.1f" % stravalib.unithelper.kilometers_per_hour(activity.average_speed).get_num()
         if activity.average_heartrate is not None:
@@ -500,7 +482,7 @@ class StravaView:
             conds.append(after_sql)
 
         if name is not None:
-            name_sql = "a.name LIKE '%%%s%%'" % _escape_string(name)
+            name_sql = "a.name LIKE '%%%s%%'" % name
             conds.append(name_sql)
 
         if activity_type is not None:
