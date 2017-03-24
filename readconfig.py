@@ -60,4 +60,9 @@ def read_config(inifile):
     except (ConfigParser.NoOptionError, ValueError):
         config['with_points'] = False
 
+    try:
+        config['with_description'] = parser.getboolean('strava', 'with_description')
+    except (ConfigParser.NoOptionError, ValueError):
+        config['with_description'] = False
+
     return config

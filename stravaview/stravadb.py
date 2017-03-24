@@ -113,6 +113,7 @@ class StravaClient:
         self.activities_table = config['mysql_activities_table']
         self.gears_table = config['mysql_bikes_table']
         self.with_points = config['with_points']
+        self.with_description = config['with_description']
         self.client_id = config['client_id']
         self.client_secret = config['client_secret']
         athlete = self.stravaClient.get_athlete()
@@ -281,6 +282,8 @@ class StravaClient:
 
         :return False if the description did not need update and True otherwise
         """
+        if not self.with_description:
+            return False
         detailed_activity = self.stravaClient.get_activity(activity.id)
         description = detailed_activity.description
         if description is not None and description != "" and description != old_description:
