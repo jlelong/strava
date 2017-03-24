@@ -125,14 +125,14 @@ class StravaClient:
 
     def update_bikes(self):
         """
-        Update the bikes table
+        Update the gears table with bikes
         """
         # Connect to the database
         bikes = self.stravaClient.get_athlete().bikes
         for bike in bikes:
             desc = self.stravaClient.get_gear(bike.id)
 
-            # Check if the bike already exists
+            # Check if the gear already exists
             sql = "SELECT * FROM %s WHERE id='%s' LIMIT 1" % (self.gears_table, bike.id)
             if (self.cursor.execute(sql) > 0):
                 continue
@@ -151,7 +151,7 @@ class StravaClient:
         for shoe in shoes:
             desc = self.stravaClient.get_gear(shoe.id)
 
-            # Check if the bike already exists
+            # Check if the gear already exists
             sql = "SELECT * FROM %s WHERE id='%s' LIMIT 1" % (self.gears_table, shoe.id)
             if (self.cursor.execute(sql) > 0):
                 continue
@@ -250,43 +250,65 @@ class StravaClient:
                                   suffer_score, description, commute, activity_type, red_points, calories))
         self.connection.commit()
 
-    def update_activity_location(self, activity, geolocator):
+    def update_activity_location(self, old_location, activity, geolocator):
         """
         Update the location of an activity already in the db.
+
+        :param old_location: current value of location in the table.
 
         :param activity: an object of class:`stravalib.model.Activity`
 
         :param an instance of a geocoder capable of reverse search
+
+        :return False if the location did not need update and True otherwise
         """
         location = _get_location(activity.start_latlng, geolocator)
-        sql = "UPDATE {} SET location=%s where id=%s".format(self.activities_table)
-        self.cursor.execute(sql, (location, activity.id))
-        self.connection.commit()
+        if old_location != location:
+            sql = "UPDATE {} SET location=%s where id=%s".format(self.activities_table)
+            self.cursor.execute(sql, (location, activity.id))
+            self.connection.commit()
+            return True
+        else:
+            return False
 
-    def update_activity_description(self, activity):
+    def update_activity_description(self, old_description, activity):
         """
         Update the location of an activity already in the db.
 
+        :param old_description: current value of description in the table.
+
         :param activity: an object of class:`stravalib.model.Activity`
+
+        :return False if the description did not need update and True otherwise
         """
         detailed_activity = self.stravaClient.get_activity(activity.id)
         description = detailed_activity.description
-        if description is not None and description != "":
+        if description is not None and description != "" and description != old_description:
             sql = "UPDATE {} SET description=%s where id=%s".format(self.activities_table)
             self.cursor.execute(sql, (description, activity.id))
             self.connection.commit()
+            return True
+        else:
+            return False
 
-    def update_activity_points(self, activity):
+    def update_activity_points(self, old_points, activity):
         """
         Update the location of an activity already in the db.
 
+        :param old_points: current value of points in the table.
+
         :param activity: an object of class:`stravalib.model.Activity`
+
+        :return False if the red_points did not need update and True otherwise
         """
         red_points = self._get_points(activity)
-        if red_points != 0:
+        if red_points != old_points:
             sql = "UPDATE {} SET red_points=%s where id=%s".format(self.activities_table)
             self.cursor.execute(sql, (red_points, activity.id))
             self.connection.commit()
+            return True
+        else:
+            return False
 
     def update_activities(self):
         """
@@ -304,11 +326,11 @@ class StravaClient:
             self.push_activity(activity)
             print("{} - {}".format(activity.id, activity.name.encode('utf-8')))
         for activity in new_activities:
-            self.update_activity_location(activity, geolocator)
+            self.update_activity_location("", activity, geolocator)
             print("Update the location of activity {} ".format(activity.id))
-            self.update_activity_description(activity)
+            self.update_activity_description("", activity)
             print("Update the description of activity {} ".format(activity.id))
-            self.update_activity_points(activity)
+            self.update_activity_points(0, activity)
             print("Update the points of activity {} ".format(activity.id))
 
     def upgrade_activities(self):
@@ -331,13 +353,14 @@ class StravaClient:
             location = entry.get('location')
             red_points = entry.get('red_points')
             suffer_score = entry.get('suffer_score')
+            description = entry.get('description')
             if location is None or location == "":
-                self.update_activity_location(activity, geolocator)
+                self.update_activity_location(location, activity, geolocator)
                 print("Update the location of activity {} ".format(activity.id))
             if red_points == 0 and suffer_score > 0:
-                self.update_activity_points(activity)
+                self.update_activity_points(red_points, activity)
                 print("Update the points of activity {} ".format(activity.id))
-            self.update_activity_description(activity)
+            self.update_activity_description(description, activity)
             print("Update the description of activity {} ".format(activity.id))
 
 
