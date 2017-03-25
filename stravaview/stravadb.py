@@ -90,15 +90,15 @@ class ActivityTypes:
     ACTIVITY_TYPES = {HIKE, RUN, RIDE, ROAD, MTB, CX, TT}
 
 
-class StravaClient:
+class StravaRequest:
     """
-    Create a local Strava instance with its own local database containing only the funny rides (no commute).
+    Request the Strava API
     """
     activityTypes = ActivityTypes()
 
     def __init__(self, config, token):
         """
-        Initialize the StravaView class.
+        Initialize the StravaRequest class.
 
         Create a connection to the mysql server and prepare the dialog with the Strava api
 
@@ -106,64 +106,19 @@ class StravaClient:
 
         :param token: an access token returned by Strava, must be at list view_private.
         """
-        self.connection = pymysql.connect(host='localhost', user=config['mysql_user'], password=config['mysql_password'], db=config['mysql_base'], charset='utf8')
-        self.cursor = self.connection.cursor(pymysql.cursors.DictCursor)
         self.token = token
-        self.stravaClient = stravalib.Client(access_token=token)
-        self.activities_table = config['mysql_activities_table']
-        self.gears_table = config['mysql_bikes_table']
+        self.client = stravalib.Client(access_token=token)
         self.with_points = config['with_points']
         self.with_description = config['with_description']
         self.client_id = config['client_id']
         self.client_secret = config['client_secret']
-        athlete = self.stravaClient.get_athlete()
-        self.athlete_id = athlete.id
-        self.athlete_profile = athlete.profile_medium
+        self.athlete = self.client.get_athlete()
+        self.athlete_id = self.athlete.id
+        self.athlete_profile = self.athlete.profile_medium
 
-    def close(self):
-        self.cursor.close()
-        self.connection.close()
-
-    def update_bikes(self):
+    def get_points(self, activity):
         """
-        Update the gears table with bikes
-        """
-        # Connect to the database
-        bikes = self.stravaClient.get_athlete().bikes
-        for bike in bikes:
-            desc = self.stravaClient.get_gear(bike.id)
-
-            # Check if the gear already exists
-            sql = "SELECT * FROM %s WHERE id='%s' LIMIT 1" % (self.gears_table, bike.id)
-            if (self.cursor.execute(sql) > 0):
-                continue
-
-            sql = "INSERT INTO %s (id, name, type, frame_type) VALUES ('%s','%s', '%s', '%d')" % (
-                self.gears_table, desc.id, desc.name, self.activityTypes.FRAME_TYPES[desc.frame_type], desc.frame_type)
-            self.cursor.execute(sql)
-            self.connection.commit()
-
-    def update_shoes(self):
-        """
-        Update the gears table with shoes
-        """
-        # Connect to the database
-        shoes = self.stravaClient.get_athlete().shoes
-        for shoe in shoes:
-            desc = self.stravaClient.get_gear(shoe.id)
-
-            # Check if the gear already exists
-            sql = "SELECT * FROM %s WHERE id='%s' LIMIT 1" % (self.gears_table, shoe.id)
-            if (self.cursor.execute(sql) > 0):
-                continue
-
-            sql = "INSERT INTO %s (id, name, type) VALUES ('%s','%s', '%s')" % (self.gears_table, desc.id, desc.name, self.activityTypes.RUN)
-            self.cursor.execute(sql)
-            self.connection.commit()
-
-    def _get_points(self, activity):
-        """
-        Get the red points for an activity
+        Request the points for an activity
 
         :param activity: a Strava activity
         :type activity: Activity
@@ -180,6 +135,144 @@ class StravaClient:
                     return z.points
         except:
             return 0
+
+    def get_description(self, activity):
+        """
+        Request the description of an activity
+
+        :param activity: a Strava activity
+        :type activity: Activity
+        """
+        if not self.with_description:
+            return None
+        detailed_activity = self.client.get_activity(activity.id)
+        description = detailed_activity.description
+        return description
+
+
+class StravaView:
+    """
+    Interact with the local database containing gears and activities.
+    """
+    activityTypes = ActivityTypes()
+
+    def __init__(self, config, athlete_id):
+        """
+        Initialize the StravaView class.
+
+        Create a connection to the mysql server and prepare the dialog with the Strava api
+
+        :param config:  a dictionnary as returned by readconfig.read_config
+
+        :param athlete: the strava id of the athlete logged in
+        """
+        self.connection = pymysql.connect(host='localhost', user=config['mysql_user'], password=config['mysql_password'], db=config['mysql_base'], charset='utf8')
+        self.cursor = self.connection.cursor(pymysql.cursors.DictCursor)
+        self.activities_table = config['mysql_activities_table']
+        self.gears_table = config['mysql_bikes_table']
+        self.athlete_id = athlete_id
+
+    def close(self):
+        self.cursor.close()
+        self.connection.close()
+
+    def create_gears_table(self):
+        """
+        Create the gears table if it does not already exist
+        """
+        # Check if table already exists
+        sql = "SHOW TABLES LIKE %s"
+        if (self.cursor.execute(sql, self.gears_table) > 0):
+            print("The table '%s' already exists" % self.gears_table)
+            return
+
+        sql = """CREATE TABLE {} (
+        id varchar(45) NOT NULL,
+        name varchar(256) DEFAULT NULL,
+        type enum(%s,%s,%s,%s,%s,%s) DEFAULT NULL,
+        frame_type int(11) DEFAULT 0,
+        PRIMARY KEY (id),
+        UNIQUE KEY strid_UNIQUE (id)
+        ) ENGINE=InnoDB DEFAULT CHARSET=utf8""".format(self.gears_table)
+        self.cursor.execute(sql, (self.activityTypes.HIKE, self.activityTypes.RUN, self.activityTypes.ROAD, self.activityTypes.MTB, self.activityTypes.CX, self.activityTypes.TT))
+        self.connection.commit()
+
+    def create_activities_table(self):
+        """
+        Create the activities table if it does not already exist
+        """
+        # Check if table already exists
+        sql = "SHOW TABLES LIKE %s"
+        if (self.cursor.execute(sql, self.activities_table) > 0):
+            print("The table '%s' already exists" % self.activities_table)
+            return
+
+        sql = """CREATE TABLE {} (
+        id int(11) NOT NULL,
+        athlete int(11) DEFAULT 0,
+        name varchar(256) DEFAULT NULL,
+        location varchar(256) DEFAULT NULL,
+        date datetime DEFAULT NULL,
+        distance float DEFAULT 0,
+        elevation float DEFAULT 0,
+        moving_time time DEFAULT 0,
+        elapsed_time time DEFAULT 0,
+        gear_id varchar(45) DEFAULT NULL,
+        average_speed float DEFAULT 0,
+        max_heartrate int DEFAULT 0,
+        average_heartrate float DEFAULT 0,
+        suffer_score int DEFAULT 0,
+        red_points int DEFAULT 0,
+        description text DEFAULT NULL,
+        commute tinyint(1) DEFAULT 0,
+        calories float DEFAULT 0,
+        type enum(%s, %s, %s) DEFAULT NULL,
+        PRIMARY KEY (id),
+        UNIQUE KEY strid_UNIQUE (id)
+        ) ENGINE=InnoDB DEFAULT CHARSET=utf8""".format(self.activities_table)
+        self.cursor.execute(sql, (self.activityTypes.RIDE, self.activityTypes.RUN, self.activityTypes.HIKE))
+        self.connection.commit()
+
+    def update_bikes(self, stravaRequest):
+        """
+        Update the gears table with bikes
+
+        :param stravaRequest: an instance of StravaRequest to send requests to the Strava API
+        """
+        # Connect to the database
+        bikes = stravaRequest.athlete.bikes
+        for bike in bikes:
+            desc = stravaRequest.client.get_gear(bike.id)
+
+            # Check if the gear already exists
+            sql = "SELECT * FROM %s WHERE id='%s' LIMIT 1" % (self.gears_table, bike.id)
+            if (self.cursor.execute(sql) > 0):
+                continue
+
+            sql = "INSERT INTO %s (id, name, type, frame_type) VALUES ('%s','%s', '%s', '%d')" % (
+                self.gears_table, desc.id, desc.name, self.activityTypes.FRAME_TYPES[desc.frame_type], desc.frame_type)
+            self.cursor.execute(sql)
+            self.connection.commit()
+
+    def update_shoes(self, stravaRequest):
+        """
+        Update the gears table with shoes
+
+        :param stravaRequest: an instance of StravaRequest to send requests to the Strava API
+        """
+        # Connect to the database
+        shoes = stravaRequest.athlete.shoes
+        for shoe in shoes:
+            desc = stravaRequest.client.get_gear(shoe.id)
+
+            # Check if the gear already exists
+            sql = "SELECT * FROM %s WHERE id='%s' LIMIT 1" % (self.gears_table, shoe.id)
+            if (self.cursor.execute(sql) > 0):
+                continue
+
+            sql = "INSERT INTO %s (id, name, type) VALUES ('%s','%s', '%s')" % (self.gears_table, desc.id, desc.name, self.activityTypes.RUN)
+            self.cursor.execute(sql)
+            self.connection.commit()
 
     def push_activity(self, activity):
         """
@@ -272,7 +365,7 @@ class StravaClient:
         else:
             return False
 
-    def update_activity_description(self, old_description, activity):
+    def update_activity_description(self, old_description, activity, stravaRequest):
         """
         Update the location of an activity already in the db.
 
@@ -280,12 +373,11 @@ class StravaClient:
 
         :param activity: an object of class:`stravalib.model.Activity`
 
+        :param stravaRequest: an instance of StravaRequest to send requests to the Strava API
+
         :return False if the description did not need update and True otherwise
         """
-        if not self.with_description:
-            return False
-        detailed_activity = self.stravaClient.get_activity(activity.id)
-        description = detailed_activity.description
+        description = stravaRequest.get_description(activity)
         if description is not None and description != "" and description != old_description:
             sql = "UPDATE {} SET description=%s where id=%s".format(self.activities_table)
             self.cursor.execute(sql, (description, activity.id))
@@ -294,7 +386,7 @@ class StravaClient:
         else:
             return False
 
-    def update_activity_points(self, old_points, activity):
+    def update_activity_points(self, old_points, activity, stravaRequest):
         """
         Update the location of an activity already in the db.
 
@@ -302,9 +394,11 @@ class StravaClient:
 
         :param activity: an object of class:`stravalib.model.Activity`
 
+        :param stravaRequest: an instance of StravaRequest to send requests to the Strava API
+
         :return False if the red_points did not need update and True otherwise
         """
-        red_points = self._get_points(activity)
+        red_points = stravaRequest.get_points(activity)
         if red_points != old_points:
             sql = "UPDATE {} SET red_points=%s where id=%s".format(self.activities_table)
             self.cursor.execute(sql, (red_points, activity.id))
@@ -313,9 +407,41 @@ class StravaClient:
         else:
             return False
 
-    def update_activities(self):
+    def update_activity(self, activity, stravaRequest, geolocator):
         """
-        Update the activities table
+        Update a given activity already in the local db
+
+        :param activity: a Strava activity
+
+        :param stravaRequest: an instance of StravaRequest to send requests to the Strava API
+
+        :param geolocator:
+        """
+        sql = "SELECT location, description, red_points, suffer_score FROM {} WHERE id=%s".format(self.activities_table)
+        self.cursor.execute(sql, activity.id)
+        self.connection.commit()
+        entry = self.cursor.fetchone()
+        if entry is None:
+            # This happens for activities which are not rides or runs and therefore are not stored in the local db.
+            return
+        location = entry.get('location')
+        red_points = entry.get('red_points')
+        suffer_score = entry.get('suffer_score')
+        description = entry.get('description')
+        if location is None or location == "":
+            self.update_activity_location(location, activity, geolocator)
+            print("Update the location of activity {} ".format(activity.id))
+        if red_points == 0 and suffer_score > 0:
+            self.update_activity_points(red_points, activity, stravaRequest)
+            print("Update the points of activity {} ".format(activity.id))
+        self.update_activity_description(description, activity, stravaRequest)
+        print("Update the description of activity {} ".format(activity.id))
+
+    def update_activities(self, stravaRequest):
+        """
+        Fetch new activities and push into the local db.
+
+        :param stravaRequest: an instance of StravaRequest to send requests to the Strava API
         """
         # Get the most recent activity
         sql = "SELECT date FROM {} WHERE athlete = %s ORDER BY date DESC LIMIT 1".format(self.activities_table)
@@ -323,135 +449,27 @@ class StravaClient:
             after = None
         else:
             after = self.cursor.fetchone()['date']
-        new_activities = self.stravaClient.get_activities(after=after)
+        new_activities = stravaRequest.client.get_activities(after=after)
         geolocator = Nominatim()
         for activity in new_activities:
             self.push_activity(activity)
             print("{} - {}".format(activity.id, activity.name.encode('utf-8')))
         for activity in new_activities:
-            self.update_activity_location("", activity, geolocator)
-            print("Update the location of activity {} ".format(activity.id))
-            self.update_activity_description("", activity)
-            print("Update the description of activity {} ".format(activity.id))
-            self.update_activity_points(0, activity)
-            print("Update the points of activity {} ".format(activity.id))
+            self.update_activity(activity, stravaRequest, geolocator)
 
-    def upgrade_activities(self):
+    def upgrade_activities(self, stravaRequest):
         """
         Upgrade all the activities
+
+        :param stravaRequest: an instance of StravaRequest to send requests to the Strava API
         """
-        all_activities = self.stravaClient.get_activities()
+        all_activities = stravaRequest.client.get_activities()
         geolocator = Nominatim()
         for activity in all_activities:
             self.push_activity(activity)
             print("{} - {}".format(activity.id, activity.name.encode('utf-8')))
         for activity in all_activities:
-            sql = "SELECT location, description, red_points, suffer_score FROM {} WHERE id=%s".format(self.activities_table)
-            self.cursor.execute(sql, activity.id)
-            self.connection.commit()
-            entry = self.cursor.fetchone()
-            if entry is None:
-                # This happens for activities which are not rides or runs and therefore are not stored in the local db.
-                continue
-            location = entry.get('location')
-            red_points = entry.get('red_points')
-            suffer_score = entry.get('suffer_score')
-            description = entry.get('description')
-            if location is None or location == "":
-                self.update_activity_location(location, activity, geolocator)
-                print("Update the location of activity {} ".format(activity.id))
-            if red_points == 0 and suffer_score > 0:
-                self.update_activity_points(red_points, activity)
-                print("Update the points of activity {} ".format(activity.id))
-            self.update_activity_description(description, activity)
-            print("Update the description of activity {} ".format(activity.id))
-
-
-class StravaView:
-    """
-    Create a local Strava instance with its own local database containing only the funny rides (no commute).
-    """
-    activityTypes = ActivityTypes()
-
-    def __init__(self, config, athlete_id):
-        """
-        Initialize the StravaView class.
-
-        Create a connection to the mysql server and prepare the dialog with the Strava api
-
-        :param config:  a dictionnary as returned by readconfig.read_config
-
-        :param athlete: the strava id of the athlete logged in
-        """
-        self.connection = pymysql.connect(host='localhost', user=config['mysql_user'], password=config['mysql_password'], db=config['mysql_base'], charset='utf8')
-        self.cursor = self.connection.cursor(pymysql.cursors.DictCursor)
-        self.activities_table = config['mysql_activities_table']
-        self.gears_table = config['mysql_bikes_table']
-        self.with_points = config['with_points']
-        self.client_id = config['client_id']
-        self.client_secret = config['client_secret']
-        self.athlete_id = athlete_id
-
-    def close(self):
-        self.cursor.close()
-        self.connection.close()
-
-    def create_gears_table(self):
-        """
-        Create the gears table if it does not already exist
-        """
-        # Check if table already exists
-        sql = "SHOW TABLES LIKE %s"
-        if (self.cursor.execute(sql, self.gears_table) > 0):
-            print("The table '%s' already exists" % self.gears_table)
-            return
-
-        sql = """CREATE TABLE {} (
-        id varchar(45) NOT NULL,
-        name varchar(256) DEFAULT NULL,
-        type enum(%s,%s,%s,%s,%s,%s) DEFAULT NULL,
-        frame_type int(11) DEFAULT 0,
-        PRIMARY KEY (id),
-        UNIQUE KEY strid_UNIQUE (id)
-        ) ENGINE=InnoDB DEFAULT CHARSET=utf8""".format(self.gears_table)
-        self.cursor.execute(sql, (self.activityTypes.HIKE, self.activityTypes.RUN, self.activityTypes.ROAD, self.activityTypes.MTB, self.activityTypes.CX, self.activityTypes.TT))
-        self.connection.commit()
-
-    def create_activities_table(self):
-        """
-        Create the activities table if it does not already exist
-        """
-        # Check if table already exists
-        sql = "SHOW TABLES LIKE %s"
-        if (self.cursor.execute(sql, self.activities_table) > 0):
-            print("The table '%s' already exists" % self.activities_table)
-            return
-
-        sql = """CREATE TABLE {} (
-        id int(11) NOT NULL,
-        athlete int(11) DEFAULT 0,
-        name varchar(256) DEFAULT NULL,
-        location varchar(256) DEFAULT NULL,
-        date datetime DEFAULT NULL,
-        distance float DEFAULT 0,
-        elevation float DEFAULT 0,
-        moving_time time DEFAULT 0,
-        elapsed_time time DEFAULT 0,
-        gear_id varchar(45) DEFAULT NULL,
-        average_speed float DEFAULT 0,
-        max_heartrate int DEFAULT 0,
-        average_heartrate float DEFAULT 0,
-        suffer_score int DEFAULT 0,
-        red_points int DEFAULT 0,
-        description text DEFAULT NULL,
-        commute tinyint(1) DEFAULT 0,
-        calories float DEFAULT 0,
-        type enum(%s, %s, %s) DEFAULT NULL,
-        PRIMARY KEY (id),
-        UNIQUE KEY strid_UNIQUE (id)
-        ) ENGINE=InnoDB DEFAULT CHARSET=utf8""".format(self.activities_table)
-        self.cursor.execute(sql, (self.activityTypes.RIDE, self.activityTypes.RUN, self.activityTypes.HIKE))
-        self.connection.commit()
+            self.update_activity(activity, stravaRequest, geolocator)
 
     def print_row(self, row):
         """

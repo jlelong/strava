@@ -10,7 +10,7 @@ SESSION_DIR = '/tmp/MyStrava'
 py_level_dir = os.path.join(ROOT_DIR, '..')
 sys.path.append(py_level_dir)
 from readconfig import read_config
-from stravaview.stravadb import StravaClient
+from stravaview.stravadb import StravaRequest
 from stravaview.stravadb import StravaView
 
 
@@ -72,9 +72,8 @@ class StravaUI(object):
         """
         cherrypy.session[self.DUMMY] = 'MyStravaGetRuns'
         cherrypy.response.headers["Content-Type"] = "text/html"
-        stravaInstance = StravaClient(self.config, cherrypy.session.get(self.TOKEN))
+        stravaInstance = StravaRequest(self.config, cherrypy.session.get(self.TOKEN))
         profile = stravaInstance.athlete_profile
-        stravaInstance.close()
         return profile
 
     @cherrypy.expose
@@ -83,14 +82,13 @@ class StravaUI(object):
         Ajax query /updatelocaldb to update the database
         """
         view = StravaView(self.config, cherrypy.session.get(self.ATHLETE_ID))
+        stravaRequest = StravaRequest(self.config, cherrypy.session.get(self.TOKEN))
         view.create_gears_table()
         view.create_activities_table()
+        view.update_bikes(stravaRequest)
+        view.update_shoes(stravaRequest)
+        view.update_activities(stravaRequest)
         view.close()
-        stravaInstance = StravaClient(self.config, cherrypy.session.get(self.TOKEN))
-        stravaInstance.update_bikes()
-        stravaInstance.update_shoes()
-        stravaInstance.update_activities()
-        stravaInstance.close()
 
     @cherrypy.expose
     def upgradelocaldb(self):
@@ -98,14 +96,13 @@ class StravaUI(object):
         Ajax query /upgradelocaldb to upgrade the database
         """
         view = StravaView(self.config, cherrypy.session.get(self.ATHLETE_ID))
+        stravaRequest = StravaRequest(self.config, cherrypy.session.get(self.TOKEN))
         view.create_gears_table()
         view.create_activities_table()
+        view.update_bikes(stravaRequest)
+        view.update_shoes(stravaRequest)
+        stravaRequest.upgrade_activities()
         view.close()
-        stravaInstance = StravaClient(self.config, cherrypy.session.get(self.TOKEN))
-        stravaInstance.update_bikes()
-        stravaInstance.update_shoes()
-        stravaInstance.upgrade_activities()
-        stravaInstance.close()
 
     @cherrypy.expose
     def connect(self):
