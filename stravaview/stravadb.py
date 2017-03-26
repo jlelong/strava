@@ -292,7 +292,7 @@ class StravaView:
                 sql = "UPDATE {} SET gear_id=%s where id=%s".format(self.activities_table)
                 self.cursor.execute(sql, (activity.gear_id, activity.id))
                 self.connection.commit()
-            print("Activity '{}' was already in the local db. Updated.".format(activity.name))
+            print("Activity '{}' was already in the local db. Updated.".format(activity.name.encode('utf-8')))
             return
 
         if (activity.type != activity.RIDE and activity.type != activity.RUN and activity.type != activity.HIKE):
@@ -407,7 +407,7 @@ class StravaView:
         else:
             return False
 
-    def update_activity(self, activity, stravaRequest, geolocator):
+    def update_activity_extra_fields(self, activity, stravaRequest, geolocator=None):
         """
         Update a given activity already in the local db
 
@@ -429,6 +429,8 @@ class StravaView:
         suffer_score = entry.get('suffer_score')
         description = entry.get('description')
         if location is None or location == "":
+            if geolocator is None:
+                geolocator = Nominatim()
             self.update_activity_location(location, activity, geolocator)
             print("Update the location of activity {} ".format(activity.id))
         if red_points == 0 and suffer_score > 0:
@@ -436,6 +438,19 @@ class StravaView:
             print("Update the points of activity {} ".format(activity.id))
         self.update_activity_description(description, activity, stravaRequest)
         print("Update the description of activity {} ".format(activity.id))
+
+    def update_activity(self, activity, stravaRequest, geolocator=None):
+        """
+        Update a given activity already in the local db
+
+        :param activity: a Strava activity
+
+        :param stravaRequest: an instance of StravaRequest to send requests to the Strava API
+
+        :param geolocator:
+        """
+        self.push_activity(activity)
+        self.update_activity_extra_fields(activity, stravaRequest, geolocator)
 
     def update_activities(self, stravaRequest):
         """
@@ -455,11 +470,12 @@ class StravaView:
             self.push_activity(activity)
             print("{} - {}".format(activity.id, activity.name.encode('utf-8')))
         for activity in new_activities:
-            self.update_activity(activity, stravaRequest, geolocator)
+            self.update_activity_extra_fields(activity, stravaRequest, geolocator)
 
     def upgrade_activities(self, stravaRequest):
         """
-        Upgrade all the activities
+        Get the whole list of activities from Strava and updates the local db accordingly.
+        The activities already in the local db are updated if needed.
 
         :param stravaRequest: an instance of StravaRequest to send requests to the Strava API
         """
@@ -469,7 +485,7 @@ class StravaView:
             self.push_activity(activity)
             print("{} - {}".format(activity.id, activity.name.encode('utf-8')))
         for activity in all_activities:
-            self.update_activity(activity, stravaRequest, geolocator)
+            self.update_activity_extra_fields(activity, stravaRequest, geolocator)
 
     def print_row(self, row):
         """

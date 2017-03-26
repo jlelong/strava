@@ -105,6 +105,17 @@ class StravaUI(object):
         view.close()
 
     @cherrypy.expose
+    def updateactivity(self, id):
+        """
+        Ajax query /updateactivity to update a single activity from its id
+        """
+        view = StravaView(self.config, cherrypy.session.get(self.ATHLETE_ID))
+        stravaRequest = StravaRequest(self.config, cherrypy.session.get(self.TOKEN))
+        activity = stravaRequest.client.get_activity(id)
+        view.update_activity(activity, stravaRequest)
+        view.close()
+
+    @cherrypy.expose
     def connect(self):
         """
         Connect to Strava and grant authentification.

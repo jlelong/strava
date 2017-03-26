@@ -93,6 +93,7 @@ function StravaController($cookies, $scope, $window, $http, $timeout)
     vm.isConnected = function() { return ($cookies.get('connected') !== undefined); };
     vm.connectOrDisconnect = connectOrDisconnect; 
     vm.update = update;
+    vm.update_activity = update_activity;
     vm.upgrade = upgrade;
     vm.totals = totals;
     // Filter to test search pattern against columns {name, location, date}
@@ -152,6 +153,20 @@ function StravaController($cookies, $scope, $window, $http, $timeout)
             return;
         }
         $http.get('updatelocaldb').then(function(response){
+            vm.update_response = "Database successfuly updated.";
+            query_data($http);
+        });
+    }
+
+    // Update the local database
+    function update_activity(id) 
+    {
+        vm.update_response = "";
+        if (!vm.isConnected()) {
+            alert("Connect to Strava to update the local DB.");
+            return;
+        }
+        $http.get('updateactivity', {params: {id: id}}).then(function(response){
             vm.update_response = "Database successfuly updated.";
             query_data($http);
         });

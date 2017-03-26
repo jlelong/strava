@@ -115,6 +115,9 @@
                                     <div class="total-time"> Total time: {{data.elapsed_time}} </div>
                                     <div class="max-hr" ng-show="data.max_heartrate"> Max HR: {{data.max_heartrate}}</div>
                                     <div class="red-points" ng-show="data.suffer_score"> Red points: {{data.red_points}}</div>
+                                    <div class="right">
+                                        <button type="button" ng-click="vm.update_activity(data.id)" class="btn btn-default btn-sm">Update</button>
+                                    </div>
                                 </td>
                             </tr>
                         </tbody>
