@@ -38,4 +38,8 @@ Lancer
 python ./wui/server/serve.py
 ```
 et pointer un navigateur vers `http://localhost:8080`.
+
+Il est possible de restreindre l'utilisation à certains athletes. Il suffit
+de mettre dans le fichier `wui/server/atheltewhitelist.py` la liste des
+athelte_id Strava autorisés.
     

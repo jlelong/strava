@@ -12,6 +12,7 @@ sys.path.append(py_level_dir)
 from readconfig import read_config
 from stravaview.stravadb import StravaRequest
 from stravaview.stravadb import StravaView
+import athletewhitelist
 
 
 class StravaUI(object):
@@ -31,7 +32,10 @@ class StravaUI(object):
         """
         # Keep session alive
         cherrypy.session[self.DUMMY] = 'MyStrava'
-        if cherrypy.session.get(self.ATHLETE_ID) is not None and cherrypy.session.get(self.TOKEN) is not None:
+        athlete_id = cherrypy.session.get(self.ATHLETE_ID)
+        if athlete_id is not None and cherrypy.session.get(self.TOKEN) is not None:
+            if not athletewhitelist.isauthorized(athlete_id):
+                return open(os.path.join(self.rootdir, 'forbid.html'))
             cookie = cherrypy.response.cookie
             cookie['connected'] = 1
         else:
@@ -54,9 +58,12 @@ class StravaUI(object):
         """
         # Keep session alive
         cherrypy.session[self.DUMMY] = 'MyStravaGetRuns'
-        if cherrypy.session.get(self.ATHLETE_ID) is None:
+        athlete_id = cherrypy.session.get(self.ATHLETE_ID)
+        if athlete_id is None:
             activities = json.dumps(None)
         else:
+            if not athletewhitelist.isauthorized(athlete_id):
+                return open(os.path.join(self.rootdir, 'forbid.html'))
             view = StravaView(self.config, cherrypy.session.get(self.ATHLETE_ID))
             activities = view.get_activities(json_output=True)
             view.close()
