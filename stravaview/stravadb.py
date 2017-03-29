@@ -560,7 +560,7 @@ class StravaView:
         sql = """SELECT a.id, a.name, a.location, DATE(a.date) AS date, a.distance, a.elevation,
         a.average_speed, a.elapsed_time, a.moving_time, a.suffer_score, a.red_points, a.calories,
         a.max_heartrate, a.average_heartrate, a.description, a.commute, a.type as activity_type,
-        b.type AS bike_type, b.name AS bike_name FROM %s AS a LEFT JOIN %s AS b ON a.gear_id = b.id
+        b.type AS bike_type, b.name AS equipment_name FROM %s AS a LEFT JOIN %s AS b ON a.gear_id = b.id
         """ % (self.activities_table, self.gears_table)
         if len(conds) > 0:
             where = " AND ".join(conds)
