@@ -59,11 +59,9 @@ class StravaUI(object):
         # Keep session alive
         cherrypy.session[self.DUMMY] = 'MyStravaGetRuns'
         athlete_id = cherrypy.session.get(self.ATHLETE_ID)
-        if athlete_id is None:
+        if athlete_id is None or not athletewhitelist.isauthorized(athlete_id):
             activities = json.dumps(None)
         else:
-            if not athletewhitelist.isauthorized(athlete_id):
-                return open(os.path.join(self.rootdir, 'forbid.html'))
             view = StravaView(self.config, cherrypy.session.get(self.ATHLETE_ID))
             activities = view.get_activities(json_output=True)
             view.close()
@@ -84,31 +82,37 @@ class StravaUI(object):
         return profile
 
     @cherrypy.expose
-    def updatelocaldb(self):
+    def updateactivities(self):
+        """
+        Ajax query /updateactivities to update the activities database
+        """
+        view = StravaView(self.config, cherrypy.session.get(self.ATHLETE_ID))
+        stravaRequest = StravaRequest(self.config, cherrypy.session.get(self.TOKEN))
+        view.create_activities_table()
+        view.update_activities(stravaRequest)
+        view.close()
+
+    @cherrypy.expose
+    def updategears(self):
         """
         Ajax query /updatelocaldb to update the database
         """
         view = StravaView(self.config, cherrypy.session.get(self.ATHLETE_ID))
         stravaRequest = StravaRequest(self.config, cherrypy.session.get(self.TOKEN))
         view.create_gears_table()
-        view.create_activities_table()
         view.update_bikes(stravaRequest)
         view.update_shoes(stravaRequest)
-        view.update_activities(stravaRequest)
         view.close()
 
     @cherrypy.expose
-    def upgradelocaldb(self):
+    def rebuildactivities(self):
         """
         Ajax query /upgradelocaldb to upgrade the database
         """
         view = StravaView(self.config, cherrypy.session.get(self.ATHLETE_ID))
         stravaRequest = StravaRequest(self.config, cherrypy.session.get(self.TOKEN))
-        view.create_gears_table()
         view.create_activities_table()
-        view.update_bikes(stravaRequest)
-        view.update_shoes(stravaRequest)
-        stravaRequest.upgrade_activities()
+        stravaRequest.rebuild_activities()
         view.close()
 
     @cherrypy.expose

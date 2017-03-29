@@ -92,9 +92,10 @@ function StravaController($cookies, $scope, $window, $http, $timeout)
     // Methods
     vm.isConnected = function() { return ($cookies.get('connected') !== undefined); };
     vm.connectOrDisconnect = connectOrDisconnect; 
-    vm.update = update;
+    vm.update_activities = update_activities;
+    vm.update_gears = update_gears;
     vm.update_activity = update_activity;
-    vm.upgrade = upgrade;
+    vm.rebuild_activities = rebuild_activities;
     vm.totals = totals;
     // Filter to test search pattern against columns {name, location, date}
     vm.narrowSearch = narrowSearch;
@@ -144,19 +145,34 @@ function StravaController($cookies, $scope, $window, $http, $timeout)
         };
     }
 
-    // Update the local database
-    function update() 
+    // Update the activities database
+    function update_activities() 
     {
         vm.update_response = "";
         if (!vm.isConnected()) {
             alert("Connect to Strava to update the local DB.");
             return;
         }
-        $http.get('updatelocaldb').then(function(response){
+        $http.get('updateactivities').then(function(response){
             vm.update_response = "Database successfuly updated.";
             query_data($http);
         });
     }
+
+    // Update the gears database
+    function update_gears() 
+    {
+        vm.update_response = "";
+        if (!vm.isConnected()) {
+            alert("Connect to Strava to update the local DB.");
+            return;
+        }
+        $http.get('updategears').then(function(response){
+            vm.update_response = "Database successfuly updated.";
+            query_data($http);
+        });
+    }
+
 
     // Update the local database
     function update_activity(id) 
@@ -173,15 +189,15 @@ function StravaController($cookies, $scope, $window, $http, $timeout)
     }
 
     // Upgrade the local database
-    function upgrade() 
+    function rebuild_activities() 
     {
         vm.update_response = "";
         if (!vm.isConnected()) {
             alert("Connect to Strava to upgrade the local DB.");
             return;
         }
-        $http.get('upgradelocaldb').then(function(response){
-            vm.update_response = "Database successfuly upgraded.";
+        $http.get('rebuild_activities').then(function(response){
+            vm.update_response = "Database successfuly rebuilt.";
             query_data($http);
         });
     }

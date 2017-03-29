@@ -469,10 +469,10 @@ class StravaView:
         for activity in new_activities:
             self.push_activity(activity)
             print("{} - {}".format(activity.id, activity.name.encode('utf-8')))
-        for activity in new_activities:
+        # for activity in new_activities:
             self.update_activity_extra_fields(activity, stravaRequest, geolocator)
 
-    def upgrade_activities(self, stravaRequest):
+    def rebuild_activities(self, stravaRequest):
         """
         Get the whole list of activities from Strava and updates the local db accordingly.
         The activities already in the local db are updated if needed.

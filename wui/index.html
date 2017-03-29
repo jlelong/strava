@@ -54,14 +54,14 @@
             <div class="col-md-2 right"><br/>
 				<div class="btn-group right">
 					<button type="button" class="btn btn-default mybutton dropdown-toggle" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
-						Local DB <span class="caret"></span>
+						Update <span class="caret"></span>
 					</button>
                     <ul class="dropdown-menu dropdown-menu-right">
-                        <li ng-click="vm.update()"><a class="mylink" href="">Update Local DB</a></li>
-                        <li ng-click="vm.upgrade()"><a class="mylink" href="">Upgrade All</a></li>
+                        <li ng-click="vm.update_activities()"><a class="mylink" href="">Update activities</a></li>
+                        <li ng-click="vm.update_gears()"><a class="mylink" href="">Update Equipment</a></li>
+                        <li ng-click="vm.rebuild_activities()"><a class="mylink" href="">Rebuild Activities</a></li>
                     </ul>
 			    </div>
-				<!-- <button type="button" ng&#45;click="vm.update()" Value="Update Local DB" class="form&#45;control mybutton" /> -->
             </div>
         </div>
         <input type="checkbox" ng-model="vm.withCommutes" /> Include commutes
