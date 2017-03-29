@@ -112,7 +112,7 @@ class StravaUI(object):
         view = StravaView(self.config, cherrypy.session.get(self.ATHLETE_ID))
         stravaRequest = StravaRequest(self.config, cherrypy.session.get(self.TOKEN))
         view.create_activities_table()
-        stravaRequest.rebuild_activities()
+        view.rebuild_activities(stravaRequest)
         view.close()
 
     @cherrypy.expose

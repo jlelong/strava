@@ -196,7 +196,7 @@ function StravaController($cookies, $scope, $window, $http, $timeout)
             alert("Connect to Strava to upgrade the local DB.");
             return;
         }
-        $http.get('rebuild_activities').then(function(response){
+        $http.get('rebuildactivities').then(function(response){
             vm.update_response = "Database successfuly rebuilt.";
             query_data($http);
         });
