@@ -278,6 +278,7 @@ function StravaController($cookies, $scope, $window, $http, $timeout)
                 }
             }
             else {
+                if (e == '(' || e == ')') tokenElements.push('\\');
                 tokenElements.push(e);
             }
         }
