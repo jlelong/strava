@@ -40,6 +40,8 @@ def _get_location(cords, geolocator):
 
     :param geolocator: an instance of a geocoder capable of reverse locating
     """
+    if cords is None:
+        return None
     location = geolocator.reverse(cords)
     if location.raw is None or 'address' not in location.raw:
         return None
@@ -344,69 +346,6 @@ class StravaView:
                                   suffer_score, description, commute, activity_type, red_points, calories))
         self.connection.commit()
 
-    def update_activity_location(self, old_location, activity, geolocator):
-        """
-        Update the location of an activity already in the db.
-
-        :param old_location: current value of location in the table.
-
-        :param activity: an object of class:`stravalib.model.Activity`
-
-        :param an instance of a geocoder capable of reverse search
-
-        :return False if the location did not need update and True otherwise
-        """
-        location = _get_location(activity.start_latlng, geolocator)
-        if old_location != location:
-            sql = "UPDATE {} SET location=%s where id=%s".format(self.activities_table)
-            self.cursor.execute(sql, (location, activity.id))
-            self.connection.commit()
-            return True
-        else:
-            return False
-
-    def update_activity_description(self, old_description, activity, stravaRequest):
-        """
-        Update the location of an activity already in the db.
-
-        :param old_description: current value of description in the table.
-
-        :param activity: an object of class:`stravalib.model.Activity`
-
-        :param stravaRequest: an instance of StravaRequest to send requests to the Strava API
-
-        :return False if the description did not need update and True otherwise
-        """
-        description = stravaRequest.get_description(activity)
-        if description is not None and description != "" and description != old_description:
-            sql = "UPDATE {} SET description=%s where id=%s".format(self.activities_table)
-            self.cursor.execute(sql, (description, activity.id))
-            self.connection.commit()
-            return True
-        else:
-            return False
-
-    def update_activity_points(self, old_points, activity, stravaRequest):
-        """
-        Update the location of an activity already in the db.
-
-        :param old_points: current value of points in the table.
-
-        :param activity: an object of class:`stravalib.model.Activity`
-
-        :param stravaRequest: an instance of StravaRequest to send requests to the Strava API
-
-        :return False if the red_points did not need update and True otherwise
-        """
-        red_points = stravaRequest.get_points(activity)
-        if red_points != old_points:
-            sql = "UPDATE {} SET red_points=%s where id=%s".format(self.activities_table)
-            self.cursor.execute(sql, (red_points, activity.id))
-            self.connection.commit()
-            return True
-        else:
-            return False
-
     def update_activity_extra_fields(self, activity, stravaRequest, geolocator=None):
         """
         Update a given activity already in the local db
@@ -421,23 +360,26 @@ class StravaView:
         self.cursor.execute(sql, activity.id)
         self.connection.commit()
         entry = self.cursor.fetchone()
+        # Drop activities which are not rides or runs.
         if entry is None:
-            # This happens for activities which are not rides or runs and therefore are not stored in the local db.
             return
         location = entry.get('location')
         red_points = entry.get('red_points')
         suffer_score = entry.get('suffer_score')
         description = entry.get('description')
+        new_location = location
+        new_description = description
+        new_red_points = red_points
         if location is None or location == "":
-            if geolocator is None:
-                geolocator = Nominatim()
-            self.update_activity_location(location, activity, geolocator)
-            print("Update the location of activity {} ".format(activity.id))
+            new_location = _get_location(activity.start_latlng, geolocator)
         if red_points == 0 and suffer_score > 0:
-            self.update_activity_points(red_points, activity, stravaRequest)
-            print("Update the points of activity {} ".format(activity.id))
-        self.update_activity_description(description, activity, stravaRequest)
-        print("Update the description of activity {} ".format(activity.id))
+            new_red_points = stravaRequest.get_points(activity)
+        new_description = stravaRequest.get_description(activity)
+        if (new_location != location or new_description != description or new_red_points != red_points):
+            sql = "UPDATE {} SET location=%s, description=%s, red_points=%s where id=%s".format(self.activities_table)
+            self.cursor.execute(sql, (new_location, new_description, new_red_points, activity.id))
+            self.connection.commit()
+        print("Update the description, points and location of activity {} ".format(activity.id))
 
     def update_activity(self, activity, stravaRequest, geolocator=None):
         """
@@ -450,6 +392,8 @@ class StravaView:
         :param geolocator:
         """
         self.push_activity(activity)
+        if geolocator is None:
+            geolocator = Nominatim()
         self.update_activity_extra_fields(activity, stravaRequest, geolocator)
 
     def update_activities(self, stravaRequest):
@@ -469,7 +413,7 @@ class StravaView:
         for activity in new_activities:
             self.push_activity(activity)
             print("{} - {}".format(activity.id, activity.name.encode('utf-8')))
-        # for activity in new_activities:
+        for activity in new_activities:
             self.update_activity_extra_fields(activity, stravaRequest, geolocator)
 
     def rebuild_activities(self, stravaRequest):
