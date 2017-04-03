@@ -10,6 +10,7 @@ import pymysql.cursors
 import pymysql.converters
 import json
 import datetime
+import itertools
 from geopy.geocoders import Nominatim
 from geopy.exc import GeocoderTimedOut
 
@@ -410,11 +411,14 @@ class StravaView:
             after = self.cursor.fetchone()['date']
         new_activities = stravaRequest.client.get_activities(after=after)
         geolocator = Nominatim()
+        list_ids = []
         for activity in new_activities:
             self.push_activity(activity)
             print("{} - {}".format(activity.id, activity.name.encode('utf-8')))
+            list_ids.append(activity.id)
         for activity in new_activities:
             self.update_activity_extra_fields(activity, stravaRequest, geolocator)
+        return list_ids
 
     def rebuild_activities(self, stravaRequest):
         """
@@ -470,7 +474,7 @@ class StravaView:
         # Return if activity table does not exist
         sql = "SHOW TABLES LIKE %s"
         if (self.cursor.execute(sql, self.activities_table) == 0):
-            return ""
+            return json.dumps([])
 
         before_sql = ""
         after_sql = ""
@@ -517,3 +521,33 @@ class StravaView:
         else:
             for row in self.cursor.fetchall():
                 self.print_row(row)
+
+    def get_list_activities(self, list_ids):
+        """
+        Return the jsonified data corresponding to the activities with ids in list_ids
+
+        :param list_ids: a list of activities ids
+        """
+        # Return if activity table does not exist
+        sql = "SHOW TABLES LIKE %s"
+        if (self.cursor.execute(sql, self.activities_table) == 0):
+            return json.dumps([])
+        # Make sure we ot a list of ids
+        if isinstance(list_ids, int):
+            list_ids = [list_ids]
+        if len(list_ids) == 0:
+            return json.dumps([])
+
+        sql = """SELECT a.id, a.name, a.location, DATE(a.date) AS date, a.distance, a.elevation,
+        a.average_speed, a.elapsed_time, a.moving_time, a.suffer_score, a.red_points, a.calories,
+        a.max_heartrate, a.average_heartrate, a.description, a.commute, a.type as activity_type,
+        b.type AS bike_type, b.name AS equipment_name FROM %s AS a LEFT JOIN %s AS b ON a.gear_id = b.id
+        """ % (self.activities_table, self.gears_table)
+
+        in_ph = ', '.join(itertools.repeat('%s', len(list_ids)))
+        sql = sql + " WHERE a.athlete=%s AND a.id IN (" + in_ph + ")"
+        sql_args = []
+        sql_args.append(self.athlete_id)
+        sql_args.extend(list_ids)
+        self.cursor.execute(sql, sql_args)
+        return json.dumps(self.cursor.fetchall(), cls=ExtendedEncoder)

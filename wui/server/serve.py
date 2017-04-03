@@ -86,11 +86,15 @@ class StravaUI(object):
         """
         Ajax query /updateactivities to update the activities database
         """
+        cherrypy.session[self.DUMMY] = 'MyStravaUpdateActivities'
         view = StravaView(self.config, cherrypy.session.get(self.ATHLETE_ID))
         stravaRequest = StravaRequest(self.config, cherrypy.session.get(self.TOKEN))
         view.create_activities_table()
-        view.update_activities(stravaRequest)
+        list_ids = view.update_activities(stravaRequest)
+        activities = view.get_list_activities(list_ids)
         view.close()
+        cherrypy.response.headers["Content-Type"] = "application/json"
+        return activities
 
     @cherrypy.expose
     def updategears(self):
@@ -120,11 +124,15 @@ class StravaUI(object):
         """
         Ajax query /updateactivity to update a single activity from its id
         """
+        cherrypy.session[self.DUMMY] = 'MyStravaUpdateActivity'
         view = StravaView(self.config, cherrypy.session.get(self.ATHLETE_ID))
         stravaRequest = StravaRequest(self.config, cherrypy.session.get(self.TOKEN))
         activity = stravaRequest.client.get_activity(id)
         view.update_activity(activity, stravaRequest)
+        activity = view.get_list_activities((id,))
         view.close()
+        cherrypy.response.headers["Content-Type"] = "application/json"
+        return activity
 
     @cherrypy.expose
     def connect(self):

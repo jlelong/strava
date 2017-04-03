@@ -88,6 +88,9 @@ function StravaController($cookies, $scope, $window, $http, $timeout)
     vm.searchField = "";
     vm.searchRegex = null;
     vm.profile_picture = "";
+    // Default order is by decreasing dates
+    vm.predicate = 'date';
+    vm.reverse = true;
 
     // Methods
     vm.isConnected = function() { return ($cookies.get('connected') !== undefined); };
@@ -97,7 +100,6 @@ function StravaController($cookies, $scope, $window, $http, $timeout)
     vm.update_activity = update_activity;
     vm.rebuild_activities = rebuild_activities;
     vm.totals = totals;
-    // Filter to test search pattern against columns {name, location, date}
     vm.narrowSearch = narrowSearch;
     vm.setSort = setSort;
     vm.sortable = sortable;
@@ -155,7 +157,8 @@ function StravaController($cookies, $scope, $window, $http, $timeout)
         }
         $http.get('updateactivities').then(function(response){
             vm.update_response = "Database successfuly updated.";
-            query_data($http);
+            vm.list.push.apply(vm.list, response.data);
+            vm.nTotalItems = vm.list.length;
         });
     }
 
@@ -184,7 +187,12 @@ function StravaController($cookies, $scope, $window, $http, $timeout)
         }
         $http.get('updateactivity', {params: {id: id}}).then(function(response){
             vm.update_response = "Database successfuly updated.";
-            query_data($http);
+            for (var i = 0; i < vm.list.length; i++) {
+                if (vm.list[i].id == id) {
+                    vm.list[i] = response.data[0];
+                    break;
+                }
+            }
         });
     }
 
