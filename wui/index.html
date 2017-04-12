@@ -65,7 +65,7 @@
             </div>
         </div>
         <input type="checkbox" ng-model="vm.withCommutes" /> Include commutes
-        <div class="row">
+        <div class="row" ng-show="vm.nTotalItems > 0">
             {{vm.tots = vm.totals(vm.filteredItems); ""}}
             <h5>
                 <div class="col-md-5"> Filtered {{vm.filteredItems.length}} of {{vm.nTotalItems}} total activities. <span class="text-success">{{vm.update_response}}</span> </div>
@@ -75,6 +75,15 @@
         </div>
         <br/>
         <div class="row">
+            <div ng-show="vm.nTotalItems == 0 && vm.isConnected()">
+                <p class="bg-info h4">
+                <br/>
+                Welcome. You seem to use this application for the first time. <br/>
+                Depending on the number of your Strava activities, the first update may take several minutes. <br/>
+                The page will automatically refresh after the update is completed. <br/> </br>
+                </p>
+                <center><button type="button" ng-click="vm.firstUpdate()" class="btn btn-default myconnectbutton">First Update</button></center>
+            </div>
             <div class="col-md-12" ng-show="vm.filteredItems.length > 0">
                 <scrollable-table>
                     <table class="table table-bordered view-activities">
@@ -124,7 +133,7 @@
                     </table>
                 </scrollable-table>
             </div>
-            <div class="col-md-12" ng-show="vm.filteredItems.length == 0">
+            <div class="col-md-12" ng-show="vm.filteredItems.length == 0 && vm.nTotalItems >0">
                 <div class="col-md-12">
                     <h4>No activity found</h4>
                 </div>

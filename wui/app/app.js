@@ -83,7 +83,7 @@ function StravaController($cookies, $scope, $window, $http, $timeout)
     vm.connectLabel = "Connect to Strava";
     vm.update_response = "";
     vm.list = [];
-    vm.nTotalItems = 0;
+    vm.nTotalItems = -1; // This is a convention to hightlight that we have not requested the db yet.
     vm.reverse = false;
     vm.searchField = "";
     vm.searchRegex = null;
@@ -97,6 +97,7 @@ function StravaController($cookies, $scope, $window, $http, $timeout)
     vm.connectOrDisconnect = connectOrDisconnect; 
     vm.update_activities = update_activities;
     vm.update_gears = update_gears;
+    vm.firstUpdate = firstUpdate;
     vm.update_activity = update_activity;
     vm.rebuild_activities = rebuild_activities;
     vm.totals = totals;
@@ -172,10 +173,23 @@ function StravaController($cookies, $scope, $window, $http, $timeout)
         }
         $http.get('updategears').then(function(response){
             vm.update_response = "Database successfuly updated.";
-            query_data($http);
         });
     }
 
+    function firstUpdate()
+    {
+        vm.update_response = "";
+        if (!vm.isConnected()) {
+            alert("Connect to Strava to update the local DB.");
+            return;
+        }
+        $http.get('updategears').then(function(response){ });
+        $http.get('updateactivities').then(function(response){
+            vm.update_response = "Database successfuly updated.";
+            vm.list.push.apply(vm.list, response.data);
+            vm.nTotalItems = vm.list.length;
+        });
+    }
 
     // Update the local database
     function update_activity(id) 
@@ -215,10 +229,11 @@ function StravaController($cookies, $scope, $window, $http, $timeout)
     {
         $http.get('getRuns').then(function(response){
             vm.list = [];
-            angular.forEach(response.data, function(obj) {
-                if (obj.activity_type == 'Ride'  |  obj.activity_type == 'Run' | obj.activity_type == 'Hike')
-                    vm.list.push(obj);
-            });
+            // angular.forEach(response.data, function(obj) {
+            //     if (obj.activity_type == 'Ride'  |  obj.activity_type == 'Run' | obj.activity_type == 'Hike')
+            //         vm.list.push(obj);
+            // });
+            vm.list = response.data;
             vm.nTotalItems = vm.list.length;
         });
     }
