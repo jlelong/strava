@@ -60,7 +60,7 @@ class StravaUI(object):
         cherrypy.session[self.DUMMY] = 'MyStravaGetRuns'
         athlete_id = cherrypy.session.get(self.ATHLETE_ID)
         if athlete_id is None or not athletewhitelist.isauthorized(athlete_id):
-            activities = json.dumps(None)
+            activities = json.dumps("")
         else:
             view = StravaView(self.config, cherrypy.session.get(self.ATHLETE_ID))
             activities = view.get_activities(json_output=True)
