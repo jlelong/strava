@@ -229,11 +229,10 @@ function StravaController($cookies, $scope, $window, $http, $timeout)
     {
         $http.get('getRuns').then(function(response){
             vm.list = [];
-            // angular.forEach(response.data, function(obj) {
-            //     if (obj.activity_type == 'Ride'  |  obj.activity_type == 'Run' | obj.activity_type == 'Hike')
-            //         vm.list.push(obj);
-            // });
-            vm.list = response.data;
+            angular.forEach(response.data, function(obj) {
+                if (obj.activity_type == 'Ride'  |  obj.activity_type == 'Run' | obj.activity_type == 'Hike')
+                    vm.list.push(obj);
+            });
             vm.nTotalItems = vm.list.length;
         });
     }
