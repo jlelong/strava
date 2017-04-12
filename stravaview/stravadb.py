@@ -116,9 +116,14 @@ class StravaRequest:
         self.with_description = config['with_description']
         self.client_id = config['client_id']
         self.client_secret = config['client_secret']
-        self.athlete = self.client.get_athlete()
-        self.athlete_id = self.athlete.id
-        self.athlete_profile = self.athlete.profile_medium
+        try:
+            self.athlete = self.client.get_athlete()
+            self.athlete_id = self.athlete.id
+            self.athlete_profile = self.athlete.profile_medium
+        except:
+            self.athlete = None
+            self.athlete_id = 0
+            self.athlete_profile = ""
 
     def get_points(self, activity):
         """
