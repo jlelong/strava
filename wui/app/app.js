@@ -83,8 +83,9 @@ function StravaController($cookies, $scope, $window, $http, $timeout)
     vm.connectLabel = "Connect to Strava";
     vm.update_response = "";
     vm.list = [];
-    vm.nTotalItems = -1; // This is a convention to hightlight that we have not requested the db yet.
+    vm.nTotalItems = -1; // This is a convention to hightlight that we have not yet requested the db.
     vm.reverse = false;
+    vm.update_in_progress = false;
     vm.searchField = "";
     vm.searchRegex = null;
     vm.profile_picture = "";
@@ -156,6 +157,7 @@ function StravaController($cookies, $scope, $window, $http, $timeout)
             alert("Connect to Strava to update the local DB.");
             return;
         }
+        vm.update_response = "Update in progress...";
         $http.get('updateactivities').then(function(response){
             vm.update_response = "Database successfuly updated.";
             vm.list.push.apply(vm.list, response.data);
@@ -171,6 +173,7 @@ function StravaController($cookies, $scope, $window, $http, $timeout)
             alert("Connect to Strava to update the local DB.");
             return;
         }
+        vm.update_response = "Update in progress...";
         $http.get('updategears').then(function(response){
             vm.update_response = "Database successfuly updated.";
         });
@@ -183,11 +186,16 @@ function StravaController($cookies, $scope, $window, $http, $timeout)
             alert("Connect to Strava to update the local DB.");
             return;
         }
+        vm.nTotalItems = -1;
+        vm.update_in_progress = true;
         $http.get('updategears').then(function(response){ });
         $http.get('updateactivities').then(function(response){
             vm.update_response = "Database successfuly updated.";
             vm.list.push.apply(vm.list, response.data);
             vm.nTotalItems = vm.list.length;
+            vm.update_in_progress = false;
+        }, function() {
+            vm.update_in_progress = false;
         });
     }
 

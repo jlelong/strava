@@ -76,13 +76,15 @@
         <br/>
         <div class="row">
             <div ng-show="vm.nTotalItems == 0 && vm.isConnected()">
-                <p class="bg-info h4">
-                <br/>
-                Welcome. You seem to use this application for the first time. <br/>
-                Depending on the number of your Strava activities, the first update may take several minutes. <br/>
-                The page will automatically refresh after the update is completed. <br/> </br>
-                </p>
+                <div class="alert alert-info h4" role="alert">
+                    Welcome. You seem to use this application for the first time. <br/>
+                    Depending on the number of your Strava activities, the first update may take several minutes. <br/>
+                    The page will automatically refresh after the update is completed.
+                </div>
                 <center><button type="button" ng-click="vm.firstUpdate()" class="btn btn-default myconnectbutton">First Update</button></center>
+            </div>
+            <div ng-show="vm.update_in_progress" class="alert alert-info h4" role="alert">
+                Update in progress...
             </div>
             <div class="col-md-12" ng-show="vm.filteredItems.length > 0">
                 <scrollable-table>
