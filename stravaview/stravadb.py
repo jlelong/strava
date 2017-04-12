@@ -43,12 +43,13 @@ def _get_location(cords, geolocator):
     """
     if cords is None:
         return None
-    location = geolocator.reverse(cords)
-    if location.raw is None or 'address' not in location.raw:
-        return None
+    max_attempts = 4
     attempts = 0
     while True:
         try:
+            location = geolocator.reverse(cords)
+            if location.raw is None or 'address' not in location.raw:
+                return None
             address = location.raw['address']
             city = ""
             code = ""
@@ -61,7 +62,7 @@ def _get_location(cords, geolocator):
             return city + code
         except GeocoderTimedOut:
             attempts += 1
-            if attempts > 4:
+            if attempts > max_attempts:
                 break
 
 
