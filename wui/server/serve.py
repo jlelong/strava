@@ -5,10 +5,10 @@ import cherrypy
 import stravalib
 import json
 
-ROOT_DIR = os.path.join(os.path.dirname(os.path.abspath(sys.argv[0])), '..')
+WUI_DIR = os.path.join(os.path.dirname(os.path.abspath(sys.argv[0])), '..')
 SESSION_DIR = '/tmp/MyStrava'
-py_level_dir = os.path.join(ROOT_DIR, '..')
-sys.path.append(py_level_dir)
+APP_TOPLEVEL_DIR = os.path.join(WUI_DIR, '..')
+sys.path.append(APP_TOPLEVEL_DIR)
 from readconfig import read_config
 from stravaview.stravadb import StravaRequest
 from stravaview.stravadb import StravaView
@@ -23,7 +23,7 @@ class StravaUI(object):
 
     def __init__(self, rootdir):
         self.rootdir = rootdir
-        self.config = read_config(os.path.join(py_level_dir, 'setup.ini'))
+        self.config = read_config(os.path.join(APP_TOPLEVEL_DIR, 'setup.ini'))
 
     @cherrypy.expose
     def index(self):
@@ -192,13 +192,15 @@ if __name__ == '__main__':
             'tools.sessions.storage_path': SESSION_DIR,
             'tools.sessions.timeout': 60 * 24 * 30,  # 1 month
             'tools.staticdir.on': True,
-            'tools.staticdir.root': ROOT_DIR,
+            'tools.staticdir.root': WUI_DIR,
             'tools.staticdir.dir': '',
             'tools.response_headers.on': True,
+            'log.access_file': "{0}/log/access.log".format(APP_TOPLEVEL_DIR),
+            'log.error_file': "{0}/log/error.log".format(APP_TOPLEVEL_DIR),
         },
     }
 
 print(conf['/'])
 cherrypy.config.update({'server.socket_host': '127.0.0.1', 'server.socket_port': 8080})
-# cherrypy.quickstart(StravaUI(ROOT_DIR), '/mystrava', conf)
-cherrypy.quickstart(StravaUI(ROOT_DIR), '/', conf)
+# cherrypy.quickstart(StravaUI(WUI_DIR), '/mystrava', conf)
+cherrypy.quickstart(StravaUI(WUI_DIR), '/', conf)
