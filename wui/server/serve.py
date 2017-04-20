@@ -4,6 +4,7 @@ import sys
 import cherrypy
 import stravalib
 import json
+import requests
 
 WUI_DIR = os.path.join(os.path.dirname(os.path.abspath(sys.argv[0])), '..')
 SESSION_DIR = '/tmp/MyStrava'
@@ -127,12 +128,28 @@ class StravaUI(object):
         cherrypy.session[self.DUMMY] = 'MyStravaUpdateActivity'
         view = StravaView(self.config, cherrypy.session.get(self.ATHLETE_ID))
         stravaRequest = StravaRequest(self.config, cherrypy.session.get(self.TOKEN))
-        activity = stravaRequest.client.get_activity(id)
-        view.update_activity(activity, stravaRequest)
-        activity = view.get_list_activities((id,))
+        try:
+            activity = stravaRequest.client.get_activity(id)
+            view.update_activity(activity, stravaRequest)
+            activity = view.get_list_activities((id,))
+        except requests.exceptions.HTTPError:
+            # Page not found. Probably a deleted activity.
+            activity = ""
         view.close()
         cherrypy.response.headers["Content-Type"] = "application/json"
         return activity
+
+    @cherrypy.expose
+    def deleteactivity(self, id):
+        """
+        Ajax query /deleteactivity to delete a single activity using its id
+        """
+        cherrypy.session[self.DUMMY] = 'MyStravaDeleteActivity'
+        view = StravaView(self.config, cherrypy.session.get(self.ATHLETE_ID))
+        view.delete_activity(id)
+        view.close()
+        cherrypy.response.headers["Content-Type"] = "text/html"
+        return "Activity deleted"
 
     @cherrypy.expose
     def connect(self):

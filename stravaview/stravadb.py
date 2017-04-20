@@ -403,6 +403,19 @@ class StravaView:
             geolocator = Nominatim()
         self.update_activity_extra_fields(activity, stravaRequest, geolocator)
 
+    def delete_activity(self, activity_id):
+        """
+        Delete a given activity from the local db
+
+        :param activity_id: the id of an activity.
+        """
+        if activity_id is None:
+            return
+        sql = "DELETE FROM {} WHERE id=%s".format(self.activities_table)
+        self.cursor.execute(sql, activity_id)
+        self.connection.commit()
+        print("Activity deleted")
+
     def update_activities(self, stravaRequest):
         """
         Fetch new activities and push into the local db.

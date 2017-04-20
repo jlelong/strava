@@ -100,6 +100,7 @@ function StravaController($cookies, $scope, $window, $http, $timeout)
     vm.update_gears = update_gears;
     vm.firstUpdate = firstUpdate;
     vm.update_activity = update_activity;
+    vm.delete_activity = delete_activity;
     vm.rebuild_activities = rebuild_activities;
     vm.totals = totals;
     vm.narrowSearch = narrowSearch;
@@ -216,6 +217,27 @@ function StravaController($cookies, $scope, $window, $http, $timeout)
                 }
             }
         });
+    }
+    //
+    // Update the local database
+    function delete_activity(id) 
+    {
+        vm.update_response = "";
+        if (!vm.isConnected()) {
+            alert("Connect to Strava to update the local DB.");
+            return;
+        }
+        if (confirm("Are you sure?")) {
+            $http.get('deleteactivity', {params: {id: id}}).then(function(response){
+                vm.update_response = "Activity successfuly deleted.";
+                for (var i = 0; i < vm.list.length; i++) {
+                    if (vm.list[i].id == id) {
+                        vm.list.splice(i, 1);
+                        break;
+                    }
+                }
+            });
+        }
     }
 
     // Upgrade the local database
