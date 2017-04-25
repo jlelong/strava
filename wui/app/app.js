@@ -298,9 +298,7 @@ function StravaController($cookies, $scope, $window, $http, $timeout)
         return function(obj) {
             if (!regex)
                 return true;
-            return ((obj.name + obj.location + obj.date + obj.equipment_name).match(regex) !== null);
-            // lpattern = pattern.toLowerCase();^M
-            // return (obj.name.toLowerCase().indexOf(lpattern) != -1 ||obj.location.toLowerCase().indexOf(lpattern) != -1 ||obj.date.toLowerCase().indexOf(lpattern) != -1);
+            return ((obj.name + obj.location + obj.date + obj.equipment_name + obj.description).match(regex) !== null);
         };
     }
 
