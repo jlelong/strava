@@ -53,7 +53,7 @@ def _get_location(cords, geolocator):
             address = location.raw['address']
             city = ""
             code = ""
-            for key in ('hamlet', 'village', 'city_district', 'city', 'town'):
+            for key in ('hamlet', 'village', 'city', 'town'):
                 if key in address:
                     city = address[key]
                     break
@@ -377,8 +377,8 @@ class StravaView:
         new_location = location
         new_description = description
         new_red_points = red_points
-        if location is None or location == "":
-            new_location = _get_location(activity.start_latlng, geolocator)
+        # if location is None or location == "":
+        new_location = _get_location(activity.start_latlng, geolocator)
         if red_points == 0 and suffer_score > 0:
             new_red_points = stravaRequest.get_points(activity)
         new_description = stravaRequest.get_description(activity)
