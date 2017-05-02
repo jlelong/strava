@@ -53,7 +53,7 @@ def _get_location(cords, geolocator):
             address = location.raw['address']
             city = ""
             code = ""
-            for key in ('hamlet', 'village', 'city', 'town'):
+            for key in ('hamlet', 'village', 'city', 'town', 'state'):
                 if key in address:
                     city = address[key]
                     break
