@@ -285,9 +285,9 @@ function StravaController($cookies, $scope, $window, $http, $timeout)
     // We use this getterSetter to compute the regex filter only once and not for every line of the table.
     function getterSetterSearchField(value) {
         if (arguments.length) {
-            vm.searchField = value;
-            vm.searchRegex = createRegex(value);
-            console.log(vm.searchRegex);
+            var folded_value = removeAccents(value);
+            vm.searchField = folded_value;
+            vm.searchRegex = createRegex(folded_value);
         } else {
             return vm.searchField;
         }
@@ -298,7 +298,7 @@ function StravaController($cookies, $scope, $window, $http, $timeout)
         return function(obj) {
             if (!regex)
                 return true;
-            return ((obj.name + obj.location + obj.date + obj.equipment_name + obj.description).match(regex) !== null);
+            return (removeAccents(obj.name + obj.location + obj.date + obj.equipment_name + obj.description).match(regex) !== null);
         };
     }
 
