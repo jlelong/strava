@@ -175,7 +175,7 @@ class StravaView:
 
         :param athlete: the strava id of the athlete logged in
         """
-        self.connection = pymysql.connect(host='localhost', user=config['mysql_user'], password=config['mysql_password'], db=config['mysql_base'], charset='utf8')
+        self.connection = pymysql.connect(host='localhost', user=config['mysql_user'], password=config['mysql_password'], db=config['mysql_base'], charset='utf8mb4')
         self.cursor = self.connection.cursor(pymysql.cursors.DictCursor)
         self.activities_table = config['mysql_activities_table']
         self.gears_table = config['mysql_bikes_table']
@@ -219,7 +219,7 @@ class StravaView:
         sql = """CREATE TABLE {} (
         id int(11) NOT NULL,
         athlete int(11) DEFAULT 0,
-        name varchar(256) DEFAULT NULL,
+        name varchar(256) COLLATE utf8mb4_bin DEFAULT NULL,
         location varchar(256) DEFAULT NULL,
         date datetime DEFAULT NULL,
         distance float DEFAULT 0,
@@ -232,13 +232,13 @@ class StravaView:
         average_heartrate float DEFAULT 0,
         suffer_score int DEFAULT 0,
         red_points int DEFAULT 0,
-        description text DEFAULT NULL,
+        description text COLLATE utf8mb4_bin DEFAULT NULL,
         commute tinyint(1) DEFAULT 0,
         calories float DEFAULT 0,
         type enum(%s, %s, %s) DEFAULT NULL,
         PRIMARY KEY (id),
         UNIQUE KEY strid_UNIQUE (id)
-        ) ENGINE=InnoDB DEFAULT CHARSET=utf8""".format(self.activities_table)
+        ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_bin""".format(self.activities_table)
         self.cursor.execute(sql, (self.activityTypes.RIDE, self.activityTypes.RUN, self.activityTypes.HIKE))
         self.connection.commit()
 
