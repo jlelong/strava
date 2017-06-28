@@ -80,6 +80,7 @@ function StravaController($cookies, $scope, $window, $http, $timeout)
     var vm = this;
 
     // Attributes
+    vm.is_premium = false;
     vm.connectLabel = "Connect to Strava";
     vm.update_response = "";
     vm.list = [];
@@ -117,6 +118,7 @@ function StravaController($cookies, $scope, $window, $http, $timeout)
         $http.get('getAthleteProfile').then(function(response){
             vm.profile_picture = response.data;
         });
+        vm.is_premium = ($cookies.get('is_premium') == 1);
     }
 
     query_data();

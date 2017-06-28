@@ -19,6 +19,7 @@ import athletewhitelist
 class StravaUI(object):
     COOKIE_NAME = "MyStrava_AthleteID"
     ATHLETE_ID = 'athlete'
+    ATHLETE_IS_PREMIUM = "is_premium"
     TOKEN = 'token'
     DUMMY = 'dummy'  # Used to keep session alive by writing data.
 
@@ -38,7 +39,11 @@ class StravaUI(object):
             if not athletewhitelist.isauthorized(athlete_id):
                 return open(os.path.join(self.rootdir, 'forbid.html'))
             cookie = cherrypy.response.cookie
+            athlete_is_premium = cherrypy.session.get(self.ATHLETE_IS_PREMIUM)
+            if athlete_is_premium is None:
+                athlete_is_premium = 0
             cookie['connected'] = 1
+            cookie['is_premium'] = int(athlete_is_premium)
         else:
             self.disconnect()
         return open(os.path.join(self.rootdir, 'index.html'))
@@ -190,7 +195,9 @@ class StravaUI(object):
                                                code=code)
         cherrypy.session[self.TOKEN] = token
         client = stravalib.Client(access_token=token)
-        cherrypy.session[self.ATHLETE_ID] = client.get_athlete().id
+        athlete = client.get_athlete()
+        cherrypy.session[self.ATHLETE_ID] = athlete.id
+        cherrypy.session[self.ATHLETE_IS_PREMIUM] = athlete.premium
         print "athlete: {}".format(cherrypy.session.get(self.ATHLETE_ID))
         print "token: {}".format(cherrypy.session.get(self.TOKEN))
         raise cherrypy.HTTPRedirect(cherrypy.url(path='/', script_name=''))

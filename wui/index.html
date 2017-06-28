@@ -100,7 +100,7 @@
                                 <th ng-click="vm.setSort('elevation');" class="c-int"><div class="c6">D+</div></th>
                                 <th ng-click="vm.setSort('moving_time');" class="c-time"><div class="c7">Time</div></th>
                                 <th ng-click="vm.setSort('average_speed');" class="c-int"><div class="c9">Km/h</div></th>
-                                <th ng-click="vm.setSort('suffer_score');" class="c-int"><div class="c12">Score</div></th>
+                                <th ng-show="vm.is_premium" ng-click="vm.setSort('suffer_score');" class="c-int"><div class="c12">Score</div></th>
                                 <th ng-click="vm.setSort('average_heartrate');" class="c-int"><div class="c11">HR</div></th>
                             </tr>
                         </thead>
@@ -117,7 +117,7 @@
                                 <td>{{data.elevation}}</td>
                                 <td>{{data.moving_time}}</td>
                                 <td>{{data.average_speed}}</td>
-                                <td>{{data.suffer_score}}</td>
+                                <td ng-show="vm.is_premium">{{data.suffer_score}}</td>
                                 <td>{{data.average_heartrate}}</td>
                             </tr>
                             <tr ng-repeat-end ng-show="expanded" class="row-details">
