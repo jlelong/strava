@@ -55,6 +55,10 @@ class StravaUI(object):
         cookie['connected']['expires'] = 0
         cherrypy.session[self.ATHLETE_ID] = None
         cherrypy.session[self.TOKEN] = None
+        cookie['session_id'] = 0
+        cookie['session_id']['expires'] = 0
+        cookie['is_premium'] = 0
+        cookie['is_premium']['expires'] = 0
         return open(os.path.join(self.rootdir, 'index.html'))
 
     @cherrypy.expose
