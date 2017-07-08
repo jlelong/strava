@@ -210,6 +210,7 @@ function StravaController($cookies, $scope, $window, $http, $timeout)
             alert("Connect to Strava to update the local DB.");
             return;
         }
+        vm.update_response = "Update in progress...";
         $http.get('updateactivity', {params: {id: id}}).then(function(response){
             vm.update_response = "Database successfuly updated.";
             for (var i = 0; i < vm.list.length; i++) {
