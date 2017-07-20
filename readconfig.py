@@ -1,4 +1,8 @@
-import ConfigParser
+from __future__ import print_function
+try:
+    import configparser
+except ImportError:
+    import ConfigParser as configparser
 import sys
 
 
@@ -12,57 +16,57 @@ def read_config(inifile):
     mysql_password: the password associated to the user mysql_user
     strava_token: the access token to access Strava API
     """
-    parser = ConfigParser.RawConfigParser()
+    parser = configparser.RawConfigParser()
     parser.read(inifile)
     config = {}
     try:
         config['mysql_user'] = parser.get('mysql', 'user')
-    except ConfigParser.NoOptionError:
-        print "No mysql user provided"
+    except configparser.NoOptionError:
+        print("No mysql user provided")
         sys.exit()
     try:
         config['mysql_password'] = parser.get('mysql', 'password')
-    except ConfigParser.NoOptionError:
+    except configparser.NoOptionError:
         config['mysql_password'] = ""
 
     try:
         config['mysql_base'] = parser.get('mysql', 'base')
-    except ConfigParser.NoOptionError:
-        print "No name provided for the mysql base"
+    except configparser.NoOptionError:
+        print("No name provided for the mysql base")
         sys.exit()
 
     try:
         config['mysql_bikes_table'] = parser.get('mysql', 'bikes_table')
-    except ConfigParser.NoOptionError:
-        print "No name provided for the bikes table"
+    except configparser.NoOptionError:
+        print("No name provided for the bikes table")
         sys.exit()
 
     try:
         config['mysql_activities_table'] = parser.get('mysql', 'activities_table')
-    except ConfigParser.NoOptionError:
-        print "No name provided for the activities table"
+    except configparser.NoOptionError:
+        print("No name provided for the activities table")
         sys.exit()
 
     try:
         config['client_id'] = parser.get('strava', 'client_id')
-    except ConfigParser.NoOptionError:
-        print "No Strava client id provided"
+    except configparser.NoOptionError:
+        print("No Strava client id provided")
         sys.exit()
 
     try:
         config['client_secret'] = parser.get('strava', 'client_secret')
-    except ConfigParser.NoOptionError:
-        print "No Strava client secret provided"
+    except configparser.NoOptionError:
+        print("No Strava client secret provided")
         sys.exit()
 
     try:
         config['with_points'] = parser.getboolean('strava', 'with_points')
-    except (ConfigParser.NoOptionError, ValueError):
+    except (configparser.NoOptionError, ValueError):
         config['with_points'] = False
 
     try:
         config['with_description'] = parser.getboolean('strava', 'with_description')
-    except (ConfigParser.NoOptionError, ValueError):
+    except (configparser.NoOptionError, ValueError):
         config['with_description'] = False
 
     return config

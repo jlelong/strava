@@ -3,6 +3,7 @@ Interface de consultation des activités vélo et course de Strava. Cette interf
 est une application Web client/serveur nécessitant
 * un serveur MySQL
 * les modules Python 
+    * ``configparser`` pour lire le fichier de configuration
     * ``geopy`` pour géolocaliser les activités Strava
     * ``pymysql`` pour accéder à la base de données MySQL depuis Python
     * ``stravalib`` pour requêter la base de données Strava via son API

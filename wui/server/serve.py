@@ -166,15 +166,15 @@ class StravaUI(object):
         Connect to Strava and grant authentification.
         """
         # Keep session alive
-        print "connect - {}".format(cherrypy.session.id)
+        print("connect - {}".format(cherrypy.session.id))
         cherrypy.session[self.DUMMY] = 'MyStravaConnect'
         client = stravalib.Client()
         redirect_url = cherrypy.url(path='/authorized', script_name='/')
-        print redirect_url
+        print(redirect_url)
         authentification_url = client.authorization_url(
             client_id=self.config['client_id'], scope='view_private',
             redirect_uri=redirect_url)
-        print authentification_url
+        print(authentification_url)
         raise cherrypy.HTTPRedirect(authentification_url)
 
     @cherrypy.expose
@@ -189,8 +189,8 @@ class StravaUI(object):
         :param code: the code returned by Strava authentification to be
         further exchanged for a token.
         """
-        print cherrypy.request.cookie['session_id']
-        print "authorization - {}".format(cherrypy.session.id)
+        print(cherrypy.request.cookie['session_id'])
+        print("authorization - {}".format(cherrypy.session.id))
         # Keep session alive
         cherrypy.session[self.DUMMY] = 'MyStravaAuthorized'
         client = stravalib.Client()
@@ -202,8 +202,8 @@ class StravaUI(object):
         athlete = client.get_athlete()
         cherrypy.session[self.ATHLETE_ID] = athlete.id
         cherrypy.session[self.ATHLETE_IS_PREMIUM] = athlete.premium
-        print "athlete: {}".format(cherrypy.session.get(self.ATHLETE_ID))
-        print "token: {}".format(cherrypy.session.get(self.TOKEN))
+        print("athlete: {}".format(cherrypy.session.get(self.ATHLETE_ID)))
+        print("token: {}".format(cherrypy.session.get(self.TOKEN)))
         raise cherrypy.HTTPRedirect(cherrypy.url(path='/', script_name=''))
 
 
@@ -215,6 +215,7 @@ if __name__ == '__main__':
             # 'tools.proxy.on': True,
             # 'tools.proxy.base': 'http://localhost/mystrava',
             # 'tools.proxy.local': "",
+            'tools.encode.text_only': False,
             'tools.sessions.on': True,
             'tools.sessions.storage_class': cherrypy.lib.sessions.FileSession,
             'tools.sessions.storage_path': SESSION_DIR,
