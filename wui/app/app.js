@@ -263,8 +263,19 @@ function StravaController($cookies, $scope, $window, $http, $timeout)
         $http.get('getRuns').then(function(response){
             vm.list = [];
             angular.forEach(response.data, function(obj) {
-                if (obj.activity_type == 'Ride'  |  obj.activity_type == 'Run' | obj.activity_type == 'Hike')
+                if (obj.activity_type == 'Ride')
                     vm.list.push(obj);
+                if (obj.activity_type == 'Run' | obj.activity_type == 'Hike') {
+                    if (obj.average_speed > 0) {
+                        var pace = 60.0 / obj.average_speed; // pace in minutes
+                        var minutes = Math.floor(pace);
+                        var seconds = parseInt((pace - minutes) * 60);
+                        obj.average_pace = minutes + ":" + seconds;
+                    }
+                    else
+                        obj.average_pace = 0;
+                    vm.list.push(obj);
+                }
             });
             vm.nTotalItems = vm.list.length;
         });

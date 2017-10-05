@@ -76,6 +76,11 @@ td + td {
     width: 4em;
 }
 
+.c-speed {
+    width: 5em;
+}
+
+
 .table>tbody>tr.row-details>td {
     padding-left: 35px;
 }
@@ -91,6 +96,9 @@ td + td {
     width: calc(100% - 3em);
 }
 
+table.view-activities td {
+    font-size: 12px;
+}
 .view-activities>tbody>tr:nth-child(4n+1)>td,
 .view-activities>tbody>tr:nth-child(4n+2)>td {
     background-color: #f9f9f9;

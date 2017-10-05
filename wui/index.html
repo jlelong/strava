@@ -99,7 +99,10 @@
                                 <th ng-click="vm.setSort('distance');" class="c-int"><div class="c5">Km</div></th>
                                 <th ng-click="vm.setSort('elevation');" class="c-int"><div class="c6">D+</div></th>
                                 <th ng-click="vm.setSort('moving_time');" class="c-time"><div class="c7">Time</div></th>
-                                <th ng-click="vm.setSort('average_speed');" class="c-int"><div class="c9">Km/h</div></th>
+                                <th ng-click="vm.setSort('average_speed');" ng-switch="vm.runType" class="c-speed">
+                                    <div ng-switch-when="Run|Hike" ng-switch-when-separator="|">Pace</div>
+                                    <div ng-switch-default>Speed</div>
+                                </th>
                                 <th ng-show="vm.is_premium" ng-click="vm.setSort('suffer_score');" class="c-int"><div class="c12">Score</div></th>
                                 <th ng-click="vm.setSort('average_heartrate');" class="c-int"><div class="c11">HR</div></th>
                             </tr>
@@ -116,7 +119,10 @@
                                 <td>{{data.distance}}</td>
                                 <td>{{data.elevation}}</td>
                                 <td>{{data.moving_time}}</td>
-                                <td>{{data.average_speed}}</td>
+                                <td ng-switch=vm.runType>
+                                    <div ng-switch-when="Run|Hike" ng-switch-when-separator="|">{{data.average_pace}}</div>
+                                    <div ng-switch-default>{{data.average_speed}}</div>
+                                </td>
                                 <td ng-show="vm.is_premium">{{data.suffer_score}}</td>
                                 <td>{{data.average_heartrate}}</td>
                             </tr>
