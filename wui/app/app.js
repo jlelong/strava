@@ -2,9 +2,9 @@
 
 // Make the table height responsive
 $(function() {
-    $(window).resize(function() {
+    $(window).on('resize', function() {
         $('.scrollableContainer').height(($(window).height() - 60));
-    }).resize();
+    }).trigger("resize");
 });
 
 
