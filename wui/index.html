@@ -10,7 +10,7 @@
     <script src="js/angular-cookies.js"></script>
     <script src="js/moment.js"></script>
     <script src="js/angular-scrollable-table.js"></script>
-    <script src="js/ui-bootstrap-tpls-0.10.0.min.js"></script>
+    <script src="js/ui-bootstrap-tpls-2.5.0.min.js"></script>
     <script src="app/accent-folding.js"></script>
     <script src="app/app.js"></script>
     <title>Strava Viewer</title>
@@ -31,7 +31,8 @@
             </div>
         </div>
     </div>
-    <div class="container">
+    <div class="container"><div class="panel panel-default">
+        <div class="panel-body">
         <div class="row">
             <div class="col-md-2">Activity type:
                 <select ng-model="vm.runType" class="form-control">
@@ -53,11 +54,11 @@
                 <input type="text" ng-model="vm.endDate" placeholder="yyyy-mm-dd" title='2016 is equivalent to 2016-12-31. 2016-03 is equivalent to 2016-03-31' class="form-control" />
             </div>
             <div class="col-md-2 right"><br/>
-				<div class="btn-group right">
-					<button type="button" class="btn btn-default mybutton dropdown-toggle" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+				<div class="btn-group right" uib-dropdown>
+					<button type="button" class="btn btn-default mybutton" uib-dropdown-toggle data-toggle="uib-dropdown" aria-haspopup="true" aria-expanded="false">
 						Update <span class="caret"></span>
 					</button>
-                    <ul class="dropdown-menu dropdown-menu-right">
+                    <ul class="dropdown-menu" uib-dropdown-menu role="menu">
                         <li ng-click="vm.update_activities()"><a class="mylink" href="">Update activities</a></li>
                         <li ng-click="vm.update_gears()"><a class="mylink" href="">Update Equipment</a></li>
                         <li ng-click="vm.rebuild_activities()"><a class="mylink" href="">Rebuild Activities</a></li>
@@ -66,6 +67,7 @@
             </div>
         </div>
         <input type="checkbox" ng-model="vm.withCommutes" /> Include commutes
+        </div></div>
         <div class="row" ng-show="vm.nTotalItems > 0">
             {{vm.tots = vm.totals(vm.filteredItems); ""}}
             <h5>
