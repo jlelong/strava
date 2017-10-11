@@ -34,10 +34,13 @@ body {
     background-color: #7989D6;
 }
 
-
 .totals {
     color: #7989D6;
     font-weight: bold;
+}
+
+table.view-activities td {
+    font-size: 12px;
 }
 
 .table>thead>tr>th:hover, .table>thead:first-child>tr:first-child>th:hover {
@@ -46,40 +49,17 @@ body {
 
 .scrollableContainer { height: inherit; }
 
-
-
 td + td {
-  border-left: 1px solid #fff;
+    border-left: 1px solid #fff;
 }
 
-
-.c-name {
-    width: 40em;
-}
-
-.c-location {
-    width: 15em;
-}
-.c-date {
-    width: 8em;
-}
-
-.c-rtype {
-    width: 5em;
-}
-
-.c-time {
-    width: 5em;
-}
-
-.c-int {
-    width: 4em;
-}
-
-.c-speed {
-    width: 5em;
-}
-
+.c-name { width: 424px; }
+.c-location { width: 180px; }
+.c-date { width: 90px; }
+.c-rtype { width: 64px; }
+.c-time { width: 69px; }
+.c-int { width: 52px; }
+.c-speed { width: 63px; }
 
 .table>tbody>tr.row-details>td {
     padding-left: 35px;
@@ -96,9 +76,6 @@ td + td {
     width: calc(100% - 3em);
 }
 
-table.view-activities td {
-    font-size: 12px;
-}
 .view-activities>tbody>tr:nth-child(4n+1)>td,
 .view-activities>tbody>tr:nth-child(4n+2)>td {
     background-color: #f9f9f9;
@@ -118,4 +95,3 @@ table.view-activities td {
     display: inline-block;
     width: 13em;
 }
-
