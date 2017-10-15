@@ -53,6 +53,15 @@ function dateRangeFilter() {
     };
 }
 
+// Activity selector
+var ALL_ACTIVITIES = 1;
+var ALL_RIDES = 2;
+var MTB_RIDES = 3;
+var ROAD_RIDES = 4;
+var RUNS = 5;
+var HIKES = 6;
+
+
 // This filter handles both the activity type and the commute selector
 function selectActivityTypeFilter() {
     return function (items, activityTypeId, withCommutes) {
@@ -89,13 +98,6 @@ function StravaController($cookies, $scope, $window, $http, $timeout) {
     vm.predicate = 'date';
     vm.reverse = true;
 
-    // Activity selector
-    ALL_ACTIVITIES = 1;
-    ALL_RIDES = 2;
-    MTB_RIDES = 3;
-    ROAD_RIDES = 4;
-    RUNS = 5;
-    HIKES = 6;
     // The labels must match the one used in stravadb.ActivityTypes
     vm.activityTypes = [
         { 'id': ALL_ACTIVITIES, 'label': 'All' },
@@ -158,6 +160,24 @@ function StravaController($cookies, $scope, $window, $http, $timeout) {
         };
     }
 
+    /// Add a pace field for Hike or Run activities.
+    /// The argument is modified inside the function.
+    /// @param activities is an array of activities
+    function addPacetoActivities(activities) {
+        angular.forEach(activities, function (obj) {
+            if (obj.activity_type == 'Run' | obj.activity_type == 'Hike') {
+                if (obj.average_speed > 0) {
+                    var pace = 60.0 / obj.average_speed; // pace in minutes
+                    var minutes = Math.floor(pace);
+                    var seconds = parseInt((pace - minutes) * 60);
+                    obj.average_pace = minutes + ":" + ("0" + seconds).slice(-2);
+                }
+                else
+                    obj.average_pace = 0;
+            }
+        });
+    }
+
     // Update the activities database
     function update_activities() {
         vm.update_response = "";
@@ -168,6 +188,7 @@ function StravaController($cookies, $scope, $window, $http, $timeout) {
         vm.update_response = "Update in progress...";
         $http.get('updateactivities').then(function (response) {
             vm.update_response = "Database successfuly updated.";
+            addPacetoActivities(response.data);
             vm.list.push.apply(vm.list, response.data);
             vm.nTotalItems = vm.list.length;
         });
@@ -197,7 +218,8 @@ function StravaController($cookies, $scope, $window, $http, $timeout) {
         $http.get('updategears').then(function (response) { });
         $http.get('updateactivities').then(function (response) {
             vm.update_response = "Database successfuly updated.";
-            vm.list.push.apply(vm.list, response.data);
+            addPacetoActivities(response.data);
+            vm.list =  response.data;
             vm.nTotalItems = vm.list.length;
             vm.update_in_progress = false;
         }, function () {
@@ -215,6 +237,7 @@ function StravaController($cookies, $scope, $window, $http, $timeout) {
         vm.update_response = "Update in progress...";
         $http.get('updateactivity', { params: { id: id } }).then(function (response) {
             vm.update_response = "Database successfuly updated.";
+            addPacetoActivities(response.data);
             for (var i = 0; i < vm.list.length; i++) {
                 if (vm.list[i].id == id) {
                     vm.list[i] = response.data[0];
@@ -260,22 +283,8 @@ function StravaController($cookies, $scope, $window, $http, $timeout) {
     // Query the data base through a Python script.
     function query_data() {
         $http.get('getRuns').then(function (response) {
-            vm.list = [];
-            angular.forEach(response.data, function (obj) {
-                if (obj.activity_type == 'Ride')
-                    vm.list.push(obj);
-                if (obj.activity_type == 'Run' | obj.activity_type == 'Hike') {
-                    if (obj.average_speed > 0) {
-                        var pace = 60.0 / obj.average_speed; // pace in minutes
-                        var minutes = Math.floor(pace);
-                        var seconds = parseInt((pace - minutes) * 60);
-                        obj.average_pace = minutes + ":" + seconds;
-                    }
-                    else
-                        obj.average_pace = 0;
-                    vm.list.push(obj);
-                }
-            });
+            addPacetoActivities(response.data);
+            vm.list = response.data;
             vm.nTotalItems = vm.list.length;
         });
     }

@@ -109,7 +109,7 @@
                                 <th ng-click="vm.setSort('distance');" class="c-int"><div class="c5">Km</div></th>
                                 <th ng-click="vm.setSort('elevation');" class="c-int"><div class="c6">D+</div></th>
                                 <th ng-click="vm.setSort('moving_time');" class="c-time"><div class="c7">Time</div></th>
-                                <th ng-click="vm.setSort('average_speed');" ng-switch="vm.activityType" class="c-speed">
+                                <th ng-click="vm.setSort('average_speed');" ng-switch="vm.activityType.label" class="c-speed">
                                     <div ng-switch-when="Run|Hike" ng-switch-when-separator="|">Pace</div>
                                     <div ng-switch-default>Speed</div>
                                 </th>
@@ -129,7 +129,7 @@
                                 <td>{{data.distance}}</td>
                                 <td>{{data.elevation}}</td>
                                 <td>{{data.moving_time}}</td>
-                                <td ng-switch=vm.activityType>
+                                <td ng-switch=vm.activityType.label>
                                     <div ng-switch-when="Run|Hike" ng-switch-when-separator="|">{{data.average_pace}}</div>
                                     <div ng-switch-default>{{data.average_speed}}</div>
                                 </td>
