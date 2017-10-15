@@ -15,14 +15,12 @@ angular
     .filter('selectActivityTypeFilter', selectActivityTypeFilter)
     .filter('dateRangeFilter', dateRangeFilter);
 
-function dateRangeFilter()
-{
+function dateRangeFilter() {
     // Function called for filtering dates
     // items: list of activities to be filtered
     // startStr: start date as a String
     // endStr: end date as a String
-    return function(items, startStr, endStr)
-    {
+    return function (items, startStr, endStr) {
         var retArray = [];
         if (!startStr && !endStr) {
             return items;
@@ -30,23 +28,23 @@ function dateRangeFilter()
 
         var startDate = moment(startStr, ["YYYY", "YYYY-MM", "YYYY-MM-DD"], true);
         var endDate = moment(endStr, ["YYYY", "YYYY-MM", "YYYY-MM-DD"], true);
-        if (! startDate.isValid()) {
+        if (!startDate.isValid()) {
             startDate = moment("2000-01-01", "YYYY-MM-DD");
-        } 
-        if (! endDate.isValid()) {
+        }
+        if (!endDate.isValid()) {
             endDate = moment();
         } else if (moment(endStr, "YYYY", true).isValid()) {
             // make the date be YYYY-12-31
-            endDate.set({"month": 11, "day": 30});
+            endDate.set({ "month": 11, "day": 30 });
         } else if (moment(endStr, "YYYY-MM", true).isValid()) {
             // make the date be the last day of the month
             endDate.add(1, "months");
             endDate.subtract(1, "days");
         }
 
-        angular.forEach(items, function(obj) {
+        angular.forEach(items, function (obj) {
             var runDate = moment(obj.date);
-            if(runDate.isSameOrAfter(startDate) && runDate.isSameOrBefore(endDate)) {
+            if (runDate.isSameOrAfter(startDate) && runDate.isSameOrBefore(endDate)) {
                 retArray.push(obj);
             }
         });
@@ -56,18 +54,16 @@ function dateRangeFilter()
 }
 
 // This filter handles both the activity type and the commute selector
-function selectActivityTypeFilter() 
-{
-    return function(items, activityTypeId, withCommutes) 
-    {
+function selectActivityTypeFilter() {
+    return function (items, activityTypeId, withCommutes) {
         var retArray = [];
         if (activityTypeId.id == ALL_ACTIVITIES && withCommutes) {
             return items;
         }
-        angular.forEach(items, function(obj){
+        angular.forEach(items, function (obj) {
             // activityTypeId can either be an activity type or a bike type because we use a flat selector
-            if(((activityTypeId.id == ALL_ACTIVITIES) || (obj.bike_type == activityTypeId.label || obj.activity_type == activityTypeId.label)) && (withCommutes || !obj.commute)) {
-                retArray.push(obj); 
+            if (((activityTypeId.id == ALL_ACTIVITIES) || (obj.bike_type == activityTypeId.label || obj.activity_type == activityTypeId.label)) && (withCommutes || !obj.commute)) {
+                retArray.push(obj);
             }
         });
         return retArray;
@@ -75,8 +71,7 @@ function selectActivityTypeFilter()
 }
 
 
-function StravaController($cookies, $scope, $window, $http, $timeout) 
-{
+function StravaController($cookies, $scope, $window, $http, $timeout) {
     var vm = this;
 
     // Attributes
@@ -103,18 +98,18 @@ function StravaController($cookies, $scope, $window, $http, $timeout)
     HIKES = 6;
     // The labels must match the one used in stravadb.ActivityTypes
     vm.activityTypes = [
-        {'id': ALL_ACTIVITIES, 'label': 'All'},
-        {'id': ALL_RIDES, 'label': 'Ride'},
-        {'id': MTB_RIDES, 'label': 'MTB'},
-        {'id': ROAD_RIDES, 'label': 'Road'},
-        {'id': HIKES, 'label': 'Hike'},
-        {'id': RUNS, 'label': 'Run'},
+        { 'id': ALL_ACTIVITIES, 'label': 'All' },
+        { 'id': ALL_RIDES, 'label': 'Ride' },
+        { 'id': MTB_RIDES, 'label': 'MTB' },
+        { 'id': ROAD_RIDES, 'label': 'Road' },
+        { 'id': HIKES, 'label': 'Hike' },
+        { 'id': RUNS, 'label': 'Run' },
     ];
     vm.activityType = vm.activityTypes[0];
 
     // Methods
-    vm.isConnected = function() { return ($cookies.get('connected') !== undefined); };
-    vm.connectOrDisconnect = connectOrDisconnect; 
+    vm.isConnected = function () { return ($cookies.get('connected') !== undefined); };
+    vm.connectOrDisconnect = connectOrDisconnect;
     vm.update_activities = update_activities;
     vm.update_gears = update_gears;
     vm.firstUpdate = firstUpdate;
@@ -125,15 +120,15 @@ function StravaController($cookies, $scope, $window, $http, $timeout)
     vm.narrowSearch = narrowSearch;
     vm.setSort = setSort;
     vm.sortable = sortable;
-    vm.search =  { field: getterSetterSearchField };
- 
+    vm.search = { field: getterSetterSearchField };
+
 
     if (!vm.isConnected()) {
         vm.connectLabel = "Connect to Strava";
         vm.profile_picture = "";
     } else {
         vm.connectLabel = "Disconnect";
-        $http.get('getAthleteProfile').then(function(response){
+        $http.get('getAthleteProfile').then(function (response) {
             vm.profile_picture = response.data;
         });
         vm.is_premium = ($cookies.get('is_premium') == 1);
@@ -141,45 +136,37 @@ function StravaController($cookies, $scope, $window, $http, $timeout)
 
     query_data();
 
-    function connectOrDisconnect() 
-    { 
-        if (! vm.isConnected())
-            $window.location.href = 'connect'; 
-        else {
-            $window.location.href = 'disconnect'; 
-        }
+    function connectOrDisconnect() {
+        if (!vm.isConnected())
+            $window.location.href = 'connect';
+        else
+            $window.location.href = 'disconnect';
     }
-    
+
     // Set the sorting column
-    function setSort(objName) 
-    {
+    function setSort(objName) {
         vm.predicate = objName;
         vm.reverse = !vm.reverse;
     }
 
     // Return the value of the predicate column
-    function sortable(predicate) 
-    {
-        return function(obj) {
-            if (predicate == 'moving_time') {
+    function sortable(predicate) {
+        return function (obj) {
+            if (predicate == 'moving_time') 
                 return moment.duration(obj[predicate]);
-            }
-            else {
-                return obj[predicate];
-            }
+            return obj[predicate];
         };
     }
 
     // Update the activities database
-    function update_activities() 
-    {
+    function update_activities() {
         vm.update_response = "";
         if (!vm.isConnected()) {
             alert("Connect to Strava to update the local DB.");
             return;
         }
         vm.update_response = "Update in progress...";
-        $http.get('updateactivities').then(function(response){
+        $http.get('updateactivities').then(function (response) {
             vm.update_response = "Database successfuly updated.";
             vm.list.push.apply(vm.list, response.data);
             vm.nTotalItems = vm.list.length;
@@ -187,21 +174,19 @@ function StravaController($cookies, $scope, $window, $http, $timeout)
     }
 
     // Update the gears database
-    function update_gears() 
-    {
+    function update_gears() {
         vm.update_response = "";
         if (!vm.isConnected()) {
             alert("Connect to Strava to update the local DB.");
             return;
         }
         vm.update_response = "Update in progress...";
-        $http.get('updategears').then(function(response){
+        $http.get('updategears').then(function (response) {
             vm.update_response = "Database successfuly updated.";
         });
     }
 
-    function firstUpdate()
-    {
+    function firstUpdate() {
         vm.update_response = "";
         if (!vm.isConnected()) {
             alert("Connect to Strava to update the local DB.");
@@ -209,27 +194,26 @@ function StravaController($cookies, $scope, $window, $http, $timeout)
         }
         vm.nTotalItems = -1;
         vm.update_in_progress = true;
-        $http.get('updategears').then(function(response){ });
-        $http.get('updateactivities').then(function(response){
+        $http.get('updategears').then(function (response) { });
+        $http.get('updateactivities').then(function (response) {
             vm.update_response = "Database successfuly updated.";
             vm.list.push.apply(vm.list, response.data);
             vm.nTotalItems = vm.list.length;
             vm.update_in_progress = false;
-        }, function() {
+        }, function () {
             vm.update_in_progress = false;
         });
     }
 
     // Update the local database
-    function update_activity(id) 
-    {
+    function update_activity(id) {
         vm.update_response = "";
         if (!vm.isConnected()) {
             alert("Connect to Strava to update the local DB.");
             return;
         }
         vm.update_response = "Update in progress...";
-        $http.get('updateactivity', {params: {id: id}}).then(function(response){
+        $http.get('updateactivity', { params: { id: id } }).then(function (response) {
             vm.update_response = "Database successfuly updated.";
             for (var i = 0; i < vm.list.length; i++) {
                 if (vm.list[i].id == id) {
@@ -241,15 +225,14 @@ function StravaController($cookies, $scope, $window, $http, $timeout)
     }
     //
     // Update the local database
-    function delete_activity(id) 
-    {
+    function delete_activity(id) {
         vm.update_response = "";
         if (!vm.isConnected()) {
             alert("Connect to Strava to update the local DB.");
             return;
         }
         if (confirm("Are you sure?")) {
-            $http.get('deleteactivity', {params: {id: id}}).then(function(response){
+            $http.get('deleteactivity', { params: { id: id } }).then(function (response) {
                 vm.update_response = "Activity successfuly deleted.";
                 for (var i = 0; i < vm.list.length; i++) {
                     if (vm.list[i].id == id) {
@@ -262,25 +245,23 @@ function StravaController($cookies, $scope, $window, $http, $timeout)
     }
 
     // Upgrade the local database
-    function rebuild_activities() 
-    {
+    function rebuild_activities() {
         vm.update_response = "";
         if (!vm.isConnected()) {
             alert("Connect to Strava to upgrade the local DB.");
             return;
         }
-        $http.get('rebuildactivities').then(function(response){
+        $http.get('rebuildactivities').then(function (response) {
             vm.update_response = "Database successfuly rebuilt.";
             query_data($http);
         });
     }
 
     // Query the data base through a Python script.
-    function query_data() 
-    {
-        $http.get('getRuns').then(function(response){
+    function query_data() {
+        $http.get('getRuns').then(function (response) {
             vm.list = [];
-            angular.forEach(response.data, function(obj) {
+            angular.forEach(response.data, function (obj) {
                 if (obj.activity_type == 'Ride')
                     vm.list.push(obj);
                 if (obj.activity_type == 'Run' | obj.activity_type == 'Hike') {
@@ -301,15 +282,14 @@ function StravaController($cookies, $scope, $window, $http, $timeout)
 
     // Compute the total distance and elevation.
     // To be called on the filtered list
-    function totals(items) 
-    {
+    function totals(items) {
         var elevation = 0.0;
         var distance = 0.0;
-        angular.forEach(items, function(obj){
+        angular.forEach(items, function (obj) {
             elevation += obj.elevation;
             distance += obj.distance;
         });
-        return {'elevation': elevation, 'distance': distance.toFixed(2)};
+        return { 'elevation': elevation, 'distance': distance.toFixed(2) };
     }
 
 
@@ -325,17 +305,15 @@ function StravaController($cookies, $scope, $window, $http, $timeout)
         }
     }
 
-    function narrowSearch(regex)
-    {
-        return function(obj) {
+    function narrowSearch(regex) {
+        return function (obj) {
             if (!regex)
                 return true;
             return (removeAccents(obj.name + obj.location + obj.date + obj.equipment_name + obj.description).match(regex) !== null);
         };
     }
 
-    function createRegex(pattern) 
-    {
+    function createRegex(pattern) {
         var regex;
         var tokens = [];
         var tokenElements = [];
@@ -374,10 +352,10 @@ function StravaController($cookies, $scope, $window, $http, $timeout)
         var cur = "";
         var len = tokens.length;
         for (i = 0; i < len; ++i) {
-            if (tokens[i] == "AND"){
+            if (tokens[i] == "AND") {
                 continue;
             }
-            if ((i < len - 1 && tokens[i+1] == "AND") || (i > 1 && tokens[i-1] == "AND")) {
+            if ((i < len - 1 && tokens[i + 1] == "AND") || (i > 1 && tokens[i - 1] == "AND")) {
                 cur += '(?=.*' + tokens[i] + ')'; // + '(?=.*' + tokens[i+1] + ').*';
                 // tokensLogic.push(cur);
                 continue;
@@ -399,6 +377,6 @@ function StravaController($cookies, $scope, $window, $http, $timeout)
         }
         var reg = new RegExp(tokensLogic.join("|"), 'gi');
         console.log(reg);
-        return  reg;
+        return reg;
     }
 }
