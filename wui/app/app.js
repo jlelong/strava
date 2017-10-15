@@ -58,15 +58,15 @@ function dateRangeFilter()
 // This filter handles both the activity type and the commute selector
 function selectActivityTypeFilter() 
 {
-    return function(items, runTypeId, withCommutes) 
+    return function(items, activityTypeId, withCommutes) 
     {
         var retArray = [];
-        if (!runTypeId && withCommutes) {
+        if (activityTypeId.id == ALL_ACTIVITIES && withCommutes) {
             return items;
         }
         angular.forEach(items, function(obj){
-            // runTypeId can either be an activity type or a bike type because we use a flat selector
-            if(((!runTypeId) || (obj.bike_type == runTypeId || obj.activity_type == runTypeId)) && (withCommutes || !obj.commute)) {
+            // activityTypeId can either be an activity type or a bike type because we use a flat selector
+            if(((activityTypeId.id == ALL_ACTIVITIES) || (obj.bike_type == activityTypeId.label || obj.activity_type == activityTypeId.label)) && (withCommutes || !obj.commute)) {
                 retArray.push(obj); 
             }
         });
@@ -93,6 +93,24 @@ function StravaController($cookies, $scope, $window, $http, $timeout)
     // Default order is by decreasing dates
     vm.predicate = 'date';
     vm.reverse = true;
+
+    // Activity selector
+    ALL_ACTIVITIES = 1;
+    ALL_RIDES = 2;
+    MTB_RIDES = 3;
+    ROAD_RIDES = 4;
+    RUNS = 5;
+    HIKES = 6;
+    // The labels must match the one used in stravadb.ActivityTypes
+    vm.activityTypes = [
+        {'id': ALL_ACTIVITIES, 'label': 'All'},
+        {'id': ALL_RIDES, 'label': 'Ride'},
+        {'id': MTB_RIDES, 'label': 'MTB'},
+        {'id': ROAD_RIDES, 'label': 'Road'},
+        {'id': HIKES, 'label': 'Hike'},
+        {'id': RUNS, 'label': 'Run'},
+    ];
+    vm.activityType = vm.activityTypes[0];
 
     // Methods
     vm.isConnected = function() { return ($cookies.get('connected') !== undefined); };

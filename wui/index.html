@@ -35,13 +35,7 @@
         <div class="panel-body">
             <div class="row">
                 <div class="col-md-2">Activity type:
-                    <select ng-model="vm.runType" class="form-control">
-                        <option selected value="">All</option>
-                        <option value="Ride">All rides</option>
-                        <option value="MTB">MTB</option>
-                        <option value="Road">Road</option>
-                        <option value="Run">Run</option>
-                        <option value="Hike">Hike</option>
+                    <select ng-model="vm.activityType" class="form-control" ng-options="x as x.label for x in vm.activityTypes track by x.id">
                     </select>
                 </div>
                 <div class="col-md-5">Filter:
@@ -104,7 +98,7 @@
                 Update in progress...
             </div>
             <div class="col-md-12" ng-show="vm.filteredItems.length > 0">
-                <scrollable-table watch="vm.runType">
+                <scrollable-table watch="vm.activityType">
                     <table class="table table-bordered view-activities">
                         <thead>
                             <tr>
@@ -115,7 +109,7 @@
                                 <th ng-click="vm.setSort('distance');" class="c-int"><div class="c5">Km</div></th>
                                 <th ng-click="vm.setSort('elevation');" class="c-int"><div class="c6">D+</div></th>
                                 <th ng-click="vm.setSort('moving_time');" class="c-time"><div class="c7">Time</div></th>
-                                <th ng-click="vm.setSort('average_speed');" ng-switch="vm.runType" class="c-speed">
+                                <th ng-click="vm.setSort('average_speed');" ng-switch="vm.activityType" class="c-speed">
                                     <div ng-switch-when="Run|Hike" ng-switch-when-separator="|">Pace</div>
                                     <div ng-switch-default>Speed</div>
                                 </th>
@@ -124,7 +118,7 @@
                             </tr>
                         </thead>
                         <tbody>
-                            <tr ng-repeat-start="data in vm.filteredItems = (vm.list | filter:vm.narrowSearch(vm.searchRegex) | selectActivityTypeFilter : vm.runType : vm.withCommutes | dateRangeFilter : vm.startDate : vm.endDate | orderBy : vm.sortable(vm.predicate) : vm.reverse)">
+                            <tr ng-repeat-start="data in vm.filteredItems = (vm.list | filter:vm.narrowSearch(vm.searchRegex) | selectActivityTypeFilter : vm.activityType : vm.withCommutes | dateRangeFilter : vm.startDate : vm.endDate | orderBy : vm.sortable(vm.predicate) : vm.reverse)">
                                 <td>
                                     <a href="" ng-click="expanded = !expanded"><div ng-bind="expanded ? '-' : '+'" class="toggle-details"></div></a>
                                     <div class="name"> <a href="https://www.strava.com/activities/{{data.id}}">{{data.name}}</a></div>
@@ -135,7 +129,7 @@
                                 <td>{{data.distance}}</td>
                                 <td>{{data.elevation}}</td>
                                 <td>{{data.moving_time}}</td>
-                                <td ng-switch=vm.runType>
+                                <td ng-switch=vm.activityType>
                                     <div ng-switch-when="Run|Hike" ng-switch-when-separator="|">{{data.average_pace}}</div>
                                     <div ng-switch-default>{{data.average_speed}}</div>
                                 </td>
