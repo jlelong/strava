@@ -35,7 +35,7 @@
         <div class="panel-body">
             <div class="row">
                 <div class="col-md-2">Activity type:
-                    <select ng-model="vm.activityType" class="form-control" ng-options="x as x.label for x in vm.activityTypes track by x.id">
+                    <select ng-model="vm.activityType" class="form-control" ng-options="x as x.label for x in vm.activityTypes track by x.id" ng-change="vm.updateSelectedActivityType()">
                     </select>
                 </div>
                 <div class="col-md-5">Filter:
@@ -109,10 +109,7 @@
                                 <th ng-click="vm.setSort('distance');" class="c-int"><div class="c5">Km</div></th>
                                 <th ng-click="vm.setSort('elevation');" class="c-int"><div class="c6">D+</div></th>
                                 <th ng-click="vm.setSort('moving_time');" class="c-time"><div class="c7">Time</div></th>
-                                <th ng-click="vm.setSort('average_speed');" ng-switch="vm.activityType.label" class="c-speed">
-                                    <div ng-switch-when="Run|Hike" ng-switch-when-separator="|">Pace</div>
-                                    <div ng-switch-default>Speed</div>
-                                </th>
+                                <th ng-click="vm.setSort('average_speed');" ng-switch="vm.activityType.label" class="c-speed">{{vm.speedOrPace}}</th>
                                 <th ng-show="vm.is_premium" ng-click="vm.setSort('suffer_score');" class="c-int"><div class="c12">Score</div></th>
                                 <th ng-click="vm.setSort('average_heartrate');" class="c-int"><div class="c11">HR</div></th>
                             </tr>
@@ -130,8 +127,9 @@
                                 <td>{{data.elevation}}</td>
                                 <td>{{data.moving_time}}</td>
                                 <td ng-switch=vm.activityType.label>
-                                    <div ng-switch-when="Run|Hike" ng-switch-when-separator="|">{{data.average_pace}}</div>
-                                    <div ng-switch-default>{{data.average_speed}}</div>
+                                    <!-- <div ng-switch-when="Run|Hike" ng-switch-when-separator="|">{{data.average_pace}}</div>
+                                    <div ng-switch-default>{{data.average_speed}}</div> -->
+                                    {{vm.getSpeedOrPace(data)}}
                                 </td>
                                 <td ng-show="vm.is_premium">{{data.suffer_score}}</td>
                                 <td>{{data.average_heartrate}}</td>

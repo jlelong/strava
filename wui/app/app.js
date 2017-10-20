@@ -97,6 +97,7 @@ function StravaController($cookies, $scope, $window, $http, $timeout) {
     // Default order is by decreasing dates
     vm.predicate = 'date';
     vm.reverse = true;
+    vm.speedOrPace = "Speed";
 
     // The labels must match the one used in stravadb.ActivityTypes
     vm.activityTypes = [
@@ -123,6 +124,10 @@ function StravaController($cookies, $scope, $window, $http, $timeout) {
     vm.setSort = setSort;
     vm.sortable = sortable;
     vm.search = { field: getterSetterSearchField };
+    vm.updateSelectedActivityType = updateSelectedActivityType;
+    vm.getSpeed = function(data) { return data.average_speed; }
+    vm.getPace = function(data) { return data.average_pace; }
+    vm.getSpeedOrPace = vm.getSpeed;
 
 
     if (!vm.isConnected()) {
@@ -301,6 +306,16 @@ function StravaController($cookies, $scope, $window, $http, $timeout) {
         return { 'elevation': elevation, 'distance': distance.toFixed(2) };
     }
 
+
+    function updateSelectedActivityType() {
+        if (vm.activityType.id == HIKES || vm.activityType.id == RUNS) {
+            vm.speedOrPace = "Pace";
+            vm.getSpeedOrPace = vm.getPace;
+        } else {
+            vm.speedOrPace = "Speed";
+            vm.getSpeedOrPace = vm.getSpeed;
+        }
+    }
 
     // getterSetterSearchField;
     // We use this getterSetter to compute the regex filter only once and not for every line of the table.
