@@ -98,7 +98,7 @@
                 Update in progress...
             </div>
             <div class="col-md-12" ng-show="vm.filteredItems.length > 0">
-                <scrollable-table watch="vm.activityType">
+                <scrollable-table watch="[vm.searchRegex, vm.activityType, vm.startDate, vm.endDate]" >
                     <table class="table table-bordered view-activities">
                         <thead>
                             <tr>
