@@ -60,6 +60,7 @@ var MTB_RIDES = 3;
 var ROAD_RIDES = 4;
 var RUNS = 5;
 var HIKES = 6;
+var NORDICSKI = 7;
 
 
 // This filter handles both the activity type and the commute selector
@@ -99,7 +100,7 @@ function StravaController($cookies, $scope, $window, $http, $timeout) {
     vm.reverse = true;
     vm.speedOrPace = "Speed";
 
-    // The labels must match the one used in stravadb.ActivityTypes
+    // The labels must match the ones used in stravadb.ActivityTypes
     vm.activityTypes = [
         { 'id': ALL_ACTIVITIES, 'label': 'All' },
         { 'id': ALL_RIDES, 'label': 'Ride' },
@@ -107,6 +108,7 @@ function StravaController($cookies, $scope, $window, $http, $timeout) {
         { 'id': ROAD_RIDES, 'label': 'Road' },
         { 'id': HIKES, 'label': 'Hike' },
         { 'id': RUNS, 'label': 'Run' },
+        { 'id': NORDICSKI, 'label': 'NordicSki' },
     ];
     vm.activityType = vm.activityTypes[0];
 
@@ -170,7 +172,7 @@ function StravaController($cookies, $scope, $window, $http, $timeout) {
     /// @param activities is an array of activities
     function addPacetoActivities(activities) {
         angular.forEach(activities, function (obj) {
-            if (obj.activity_type == 'Run' | obj.activity_type == 'Hike') {
+            if (obj.activity_type == 'Run' | obj.activity_type == 'Hike' | obj.activity_type == 'NordicSki') {
                 if (obj.average_speed > 0) {
                     var pace = 60.0 / obj.average_speed; // pace in minutes
                     var minutes = Math.floor(pace);
@@ -308,7 +310,7 @@ function StravaController($cookies, $scope, $window, $http, $timeout) {
 
 
     function updateSelectedActivityType() {
-        if (vm.activityType.id == HIKES || vm.activityType.id == RUNS) {
+        if (vm.activityType.id == HIKES || vm.activityType.id == RUNS || vm.activityType.id == NORDICSKI) {
             vm.speedOrPace = "Pace";
             vm.getSpeedOrPace = vm.getPace;
         } else {

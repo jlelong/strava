@@ -3,14 +3,14 @@
 
 from __future__ import print_function
 
+import json
+import datetime
+import itertools
 import stravalib.client
 import stravalib.model
 import stravalib.unithelper
 import pymysql.cursors
 import pymysql.converters
-import json
-import datetime
-import itertools
 from geopy.geocoders import Nominatim
 from geopy.exc import GeocoderTimedOut
 
@@ -90,8 +90,9 @@ class ActivityTypes:
     RIDE = stravalib.model.Activity.RIDE
     HIKE = stravalib.model.Activity.HIKE
     RUN = stravalib.model.Activity.RUN
+    NORDICSKI = stravalib.model.Activity.NORDICSKI
     FRAME_TYPES = {0: "", 1: MTB, 3: ROAD, 2: CX, 4: TT}
-    ACTIVITY_TYPES = {HIKE, RUN, RIDE, ROAD, MTB, CX, TT}
+    ACTIVITY_TYPES = {HIKE, RUN, RIDE, ROAD, MTB, CX, TT, NORDICSKI}
 
 
 class StravaRequest:
@@ -235,11 +236,11 @@ class StravaView:
         description text COLLATE utf8mb4_bin DEFAULT NULL,
         commute tinyint(1) DEFAULT 0,
         calories float DEFAULT 0,
-        type enum(%s, %s, %s) DEFAULT NULL,
+        type enum(%s, %s, %s, %s) DEFAULT NULL,
         PRIMARY KEY (id),
         UNIQUE KEY strid_UNIQUE (id)
         ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_bin""".format(self.activities_table)
-        self.cursor.execute(sql, (self.activityTypes.RIDE, self.activityTypes.RUN, self.activityTypes.HIKE))
+        self.cursor.execute(sql, (self.activityTypes.RIDE, self.activityTypes.RUN, self.activityTypes.HIKE, self.activityTypes.NORDICSKI))
         self.connection.commit()
 
     def update_bikes(self, stravaRequest):
@@ -310,7 +311,7 @@ class StravaView:
             print("Activity '{}' was already in the local db. Updated.".format(activity.name.encode('utf-8')))
             return
 
-        if (activity.type != activity.RIDE and activity.type != activity.RUN and activity.type != activity.HIKE):
+        if (activity.type not in self.activityTypes.ACTIVITY_TYPES):
             print("Activity '%s' is not a ride nor a run" % (activity.name))
             return
 
@@ -536,7 +537,7 @@ class StravaView:
         IF(a.type='Ride', b.type, NULL) bike_type, b.name AS equipment_name
         FROM %s AS a LEFT JOIN %s AS b ON a.gear_id = b.id
         """ % (self.activities_table, self.gears_table)
-        if len(conds) > 0:
+        if conds:
             where = " AND ".join(conds)
             sql = sql + " WHERE " + where
         sql = sql + " ORDER BY date DESC"
