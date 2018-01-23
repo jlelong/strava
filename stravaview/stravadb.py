@@ -291,7 +291,7 @@ class StravaView:
         :param activity: an object of class:`stravalib.model.Activity`
         """
         # Check if activity is already in the table
-        sql = "SELECT name, elevation, gear_id FROM {} WHERE id=%s LIMIT 1".format(self.activities_table)
+        sql = "SELECT name, elevation, gear_id, commute FROM {} WHERE id=%s LIMIT 1".format(self.activities_table)
         if (self.cursor.execute(sql, activity.id) > 0):
             entry = self.cursor.fetchone()
             if entry['name'] != activity.name:
@@ -301,6 +301,10 @@ class StravaView:
             if entry['gear_id'] != activity.gear_id:
                 sql = "UPDATE {} SET gear_id=%s where id=%s".format(self.activities_table)
                 self.cursor.execute(sql, (activity.gear_id, activity.id))
+                self.connection.commit()
+            if entry['commute'] != activity.commute:
+                sql = "UPDATE {} SET commute=%s where id=%s".format(self.activities_table)
+                self.cursor.execute(sql, (activity.commute, activity.id))
                 self.connection.commit()
             if activity.total_elevation_gain is not None:
                 elevation = "%0.0f" % stravalib.unithelper.meters(activity.total_elevation_gain).get_num()
