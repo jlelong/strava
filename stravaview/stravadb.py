@@ -297,21 +297,18 @@ class StravaView:
             if entry['name'] != activity.name:
                 sql = "UPDATE {} SET name=%s where id=%s".format(self.activities_table)
                 self.cursor.execute(sql, (activity.name, activity.id))
-                self.connection.commit()
             if entry['gear_id'] != activity.gear_id:
                 sql = "UPDATE {} SET gear_id=%s where id=%s".format(self.activities_table)
                 self.cursor.execute(sql, (activity.gear_id, activity.id))
-                self.connection.commit()
             if entry['commute'] != activity.commute:
                 sql = "UPDATE {} SET commute=%s where id=%s".format(self.activities_table)
                 self.cursor.execute(sql, (activity.commute, activity.id))
-                self.connection.commit()
             if activity.total_elevation_gain is not None:
                 elevation = "%0.0f" % stravalib.unithelper.meters(activity.total_elevation_gain).get_num()
                 if entry['elevation'] != elevation:
                     sql = "UPDATE {} SET elevation=%s where id=%s".format(self.activities_table)
                     self.cursor.execute(sql, (elevation, activity.id))
-                    self.connection.commit()
+            self.connection.commit()
             print("Activity '{}' was already in the local db. Updated.".format(activity.name.encode('utf-8')))
             return
 
