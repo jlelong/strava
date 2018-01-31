@@ -313,7 +313,7 @@ class StravaView:
             return
 
         if (activity.type not in self.activityTypes.ACTIVITY_TYPES):
-            print("Activity '%s' is not a ride nor a run" % (activity.name))
+            print("Activity '%s' is not a ride nor a run" % (activity.name.encode('utf-8')))
             return
 
         # Default values
