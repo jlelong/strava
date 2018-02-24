@@ -11,8 +11,7 @@ import stravalib.model
 import stravalib.unithelper
 import pymysql.cursors
 import pymysql.converters
-from geopy.geocoders import Nominatim
-from geopy.exc import GeocoderTimedOut
+import geocoder
 
 
 def _format_timedelta(t):
@@ -27,11 +26,10 @@ def _format_timedelta(t):
         (hours, mins) = divmod(seconds, 3600)
         (minutes, seconds) = divmod(mins, 60)
         return "{0}:{1:02d}:{2:02d}".format(hours, minutes, seconds)
-    else:
-        return ""
+    return ""
 
 
-def _get_location(cords, geolocator):
+def _get_location(cords):
     """
     Return the city or village along with the department number corresponding
     to a pair of (latitude, longitude) coordinates
@@ -47,20 +45,21 @@ def _get_location(cords, geolocator):
     attempts = 0
     while True:
         try:
-            location = geolocator.reverse(cords)
-            if location.raw is None or 'address' not in location.raw:
+            # location = geolocator.reverse(cords)
+            location = geocoder.osm("{lat},{lon}".format(lat=cords.lat, lon=cords.lon))
+            if location.json is None:
                 return None
-            address = location.raw['address']
+            location_dict = location.json
             city = ""
             code = ""
             for key in ('hamlet', 'village', 'city', 'town', 'state'):
-                if key in address:
-                    city = address[key]
+                if key in location_dict:
+                    city = location_dict[key]
                     break
-            if address['country'] == 'France' and 'postcode' in address:
-                code = ' (' + address['postcode'][0:2] + ')'
+            if location_dict['country'] == 'France' and 'postal' in location_dict:
+                code = ' (' + location_dict['postal'][0:2] + ')'
             return city + code
-        except GeocoderTimedOut:
+        except:
             attempts += 1
             if attempts > max_attempts:
                 break
@@ -73,10 +72,9 @@ class ExtendedEncoder(json.JSONEncoder):
     def default(self, obj):
         if isinstance(obj, (datetime.datetime, datetime.date)):
             return "%s" % obj
-        elif isinstance(obj, datetime.timedelta):
+        if isinstance(obj, datetime.timedelta):
             return _format_timedelta(obj)
-        else:
-            return json.JSONEncoder.default(self, obj)
+        return json.JSONEncoder.default(self, obj)
 
 
 class ActivityTypes:
@@ -138,7 +136,7 @@ class StravaRequest:
             return 0
         try:
             zones = activity.zones
-            if len(zones) == 0:
+            if not zones:
                 return 0
             for z in zones:
                 if z.type == 'heartrate':
@@ -361,15 +359,13 @@ class StravaView:
                                   suffer_score, description, commute, activity_type, red_points, calories))
         self.connection.commit()
 
-    def update_activity_extra_fields(self, activity, stravaRequest, geolocator=None):
+    def update_activity_extra_fields(self, activity, stravaRequest):
         """
         Update a given activity already in the local db
 
         :param activity: a Strava activity
 
         :param stravaRequest: an instance of StravaRequest to send requests to the Strava API
-
-        :param geolocator:
         """
         sql = "SELECT location, description, red_points, suffer_score FROM {} WHERE id=%s".format(self.activities_table)
         self.cursor.execute(sql, activity.id)
@@ -386,7 +382,7 @@ class StravaView:
         new_description = description
         new_red_points = red_points
         # if location is None or location == "":
-        new_location = _get_location(activity.start_latlng, geolocator)
+        new_location = _get_location(activity.start_latlng)
         if red_points == 0 and suffer_score > 0:
             new_red_points = stravaRequest.get_points(activity)
         new_description = stravaRequest.get_description(activity)
@@ -396,7 +392,7 @@ class StravaView:
             self.connection.commit()
         print("Update the description, points and location of activity {} ".format(activity.id))
 
-    def update_activity(self, activity, stravaRequest, geolocator=None):
+    def update_activity(self, activity, stravaRequest):
         """
         Update a given activity already in the local db
 
@@ -407,9 +403,7 @@ class StravaView:
         :param geolocator:
         """
         self.push_activity(activity)
-        if geolocator is None:
-            geolocator = Nominatim()
-        self.update_activity_extra_fields(activity, stravaRequest, geolocator)
+        self.update_activity_extra_fields(activity, stravaRequest)
 
     def delete_activity(self, activity_id):
         """
@@ -437,14 +431,13 @@ class StravaView:
         else:
             after = self.cursor.fetchone()['date']
         new_activities = stravaRequest.client.get_activities(after=after)
-        geolocator = Nominatim()
         list_ids = []
         for activity in new_activities:
             self.push_activity(activity)
             print("{} - {}".format(activity.id, activity.name.encode('utf-8')))
             list_ids.append(activity.id)
         for activity in new_activities:
-            self.update_activity_extra_fields(activity, stravaRequest, geolocator)
+            self.update_activity_extra_fields(activity, stravaRequest)
         return list_ids
 
     def rebuild_activities(self, stravaRequest):
@@ -455,12 +448,11 @@ class StravaView:
         :param stravaRequest: an instance of StravaRequest to send requests to the Strava API
         """
         all_activities = stravaRequest.client.get_activities()
-        geolocator = Nominatim()
         for activity in all_activities:
             self.push_activity(activity)
             print("{} - {}".format(activity.id, activity.name.encode('utf-8')))
         for activity in all_activities:
-            self.update_activity_extra_fields(activity, stravaRequest, geolocator)
+            self.update_activity_extra_fields(activity, stravaRequest)
 
     def print_row(self, row):
         """
@@ -477,7 +469,7 @@ class StravaView:
         elapsed_time = row['elapsed_time']
         moving_time = row['moving_time']
         bike_type = row['bike_type']
-        print ("{7}: {1} | {2} | {3} | {4} | {5} | {6} | https://www.strava.com/activities/{0}".format(identifier, name, date, distance, elevation, moving_time, elapsed_time, bike_type))
+        print("{7}: {1} | {2} | {3} | {4} | {5} | {6} | https://www.strava.com/activities/{0}".format(identifier, name, date, distance, elevation, moving_time, elapsed_time, bike_type))
 
     def get_activities(self, before=None, after=None, name=None, activity_type=None, json_output=False):
         """
@@ -563,7 +555,7 @@ class StravaView:
         # Make sure we ot a list of ids
         if isinstance(list_ids, int):
             list_ids = [list_ids]
-        if len(list_ids) == 0:
+        if not list_ids:
             return json.dumps([])
 
         sql = """SELECT a.id, a.name, a.location, DATE(a.date) AS date, a.distance, a.elevation,
