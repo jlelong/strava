@@ -118,7 +118,7 @@
                             <tr ng-repeat-start="data in vm.filteredItems = (vm.list | filter:vm.narrowSearch(vm.searchRegex) | selectActivityTypeFilter : vm.activityType : vm.withCommutes | dateRangeFilter : vm.startDate : vm.endDate | orderBy : vm.sortable(vm.predicate) : vm.reverse)">
                                 <td>
                                     <a href="" ng-click="expanded = !expanded"><div ng-bind="expanded ? '-' : '+'" class="toggle-details"></div></a>
-                                    <div class="name"> <a href="https://www.strava.com/activities/{{data.id}}">{{data.name}}</a></div>
+                                    <div class="name"> <a href="https://www.strava.com/activities/{{data.id}}" target="_blank">{{data.name}}</a></div>
                                 </td>
                                 <td>{{data.location}}</td>
                                 <td>{{data.date}}</td>
