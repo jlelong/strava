@@ -178,9 +178,13 @@ class StravaUI(object):
         raise cherrypy.HTTPRedirect(authentification_url)
 
     @cherrypy.expose
-    def authorized(self, state=None, code=None):
+    def authorized(self, scope=None, state=None, code=None):
         """
         Echange code for a token and set token and athlete_id in the current session
+
+        :param scope: the scope variable passed to Strava authentification url and returned here.
+        We do not use it, so it is always None but we have to keep it in the argument list
+        as it is part of the url.
 
         :param state: the state variable passed to Strava authentification url and returned here.
         We do not use it, so it is always None but we have to keep it in the argument list
