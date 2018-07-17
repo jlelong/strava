@@ -169,7 +169,7 @@ class StravaUI(object):
         print("connect - {}".format(cherrypy.session.id))
         cherrypy.session[self.DUMMY] = 'MyStravaConnect'
         client = stravalib.Client()
-        redirect_url = cherrypy.url(path='/authorized', script_name='/')
+        redirect_url = cherrypy.url(path='/authorized', script_name='')
         print(redirect_url)
         authentification_url = client.authorization_url(
             client_id=self.config['client_id'], scope='view_private',
