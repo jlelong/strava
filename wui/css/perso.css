@@ -95,3 +95,8 @@ td + td {
     display: inline-block;
     width: 13em;
 }
+
+.description {
+	white-space: pre;
+	margin-bottom: 1em;
+}
