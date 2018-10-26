@@ -64,7 +64,7 @@
                                 <a class="mylink" href="">Update activities</a>
                             </li>
                             <li ng-click="vm.update_gears()">
-                                <a class="mylink" href="">Update Equipment</a>
+                                <a class="mylink" href="">Update gears</a>
                             </li>
                             <li ng-click="vm.rebuild_activities()">
                                 <a class="mylink" href="">Rebuild Activities</a>
@@ -136,8 +136,8 @@
                             </tr>
                             <tr ng-repeat-end ng-show="expanded" class="row-details">
                                 <td colspan="11"> 
-                                    <div ng-show="data.description"i class="description">{{data.description}}</div>
-                                    <div class="bike-name" ng-show="data.equipment_name">Equipment: {{data.equipment_name}} </div>
+                                    <div ng-show="data.description" class="description">{{data.description}}</div>
+                                    <div class="bike-name" ng-show="data.gear_name">Gear: {{data.gear_name}} </div>
                                     <div class="total-time"> Total time: {{data.elapsed_time}} </div>
                                     <div class="max-hr" ng-show="data.max_heartrate"> Max HR: {{data.max_heartrate}}</div>
                                     <div class="red-points" ng-show="data.red_points"> Red points: {{data.red_points}}</div>

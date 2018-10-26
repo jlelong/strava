@@ -527,7 +527,7 @@ class StravaView:
         sql = """SELECT a.id, a.name, a.location, DATE(a.date) AS date, a.distance, a.elevation,
         a.average_speed, a.elapsed_time, a.moving_time, a.suffer_score, a.red_points, a.calories,
         a.max_heartrate, a.average_heartrate, a.description, a.commute, a.type as activity_type,
-        IF(a.type='Ride', b.type, NULL) bike_type, b.name AS equipment_name
+        IF(a.type='Ride', b.type, NULL) bike_type, b.name AS gear_name
         FROM %s AS a LEFT JOIN %s AS b ON a.gear_id = b.id
         """ % (self.activities_table, self.gears_table)
         if conds:
@@ -561,7 +561,7 @@ class StravaView:
         sql = """SELECT a.id, a.name, a.location, DATE(a.date) AS date, a.distance, a.elevation,
         a.average_speed, a.elapsed_time, a.moving_time, a.suffer_score, a.red_points, a.calories,
         a.max_heartrate, a.average_heartrate, a.description, a.commute, a.type as activity_type,
-        IF(a.type='Ride', b.type, NULL) AS bike_type, b.name AS equipment_name
+        IF(a.type='Ride', b.type, NULL) AS bike_type, b.name AS gear_name
         FROM %s AS a LEFT JOIN %s AS b ON a.gear_id = b.id
         """ % (self.activities_table, self.gears_table)
 

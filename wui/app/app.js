@@ -335,7 +335,7 @@ function StravaController($cookies, $scope, $window, $http, $timeout) {
         return function (obj) {
             if (!regex)
                 return true;
-            return (removeAccents(obj.name + obj.location + obj.date + obj.equipment_name + obj.description).match(regex) !== null);
+            return (removeAccents(obj.name + obj.location + obj.date + obj.gear + obj.description).match(regex) !== null);
         };
     }
 
