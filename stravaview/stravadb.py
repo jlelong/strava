@@ -12,7 +12,7 @@ import stravalib.unithelper
 import pymysql.cursors
 import pymysql.converters
 import geocoder
-
+import time
 
 def _format_timedelta(t):
     """
@@ -115,6 +115,7 @@ class StravaRequest:
         self.with_description = config['with_description']
         self.client_id = config['client_id']
         self.client_secret = config['client_secret']
+
         try:
             self.athlete = self.client.get_athlete()
             self.athlete_id = self.athlete.id

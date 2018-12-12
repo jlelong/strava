@@ -5,6 +5,7 @@ import cherrypy
 import stravalib
 import json
 import requests
+import time
 
 WUI_DIR = os.path.join(os.path.dirname(os.path.abspath(sys.argv[0])), '..')
 SESSION_DIR = '/tmp/MyStrava'
@@ -20,12 +21,29 @@ class StravaUI(object):
     COOKIE_NAME = "MyStrava_AthleteID"
     ATHLETE_ID = 'athlete'
     ATHLETE_IS_PREMIUM = "is_premium"
-    TOKEN = 'token'
+    ACCESS_TOKEN = 'access_token'
     DUMMY = 'dummy'  # Used to keep session alive by writing data.
-
+    REFRESH_TOKEN = 'refresh_token'
+    EXPIRES_AT = 'deadline'
+    
     def __init__(self, rootdir):
         self.rootdir = rootdir
         self.config = read_config(os.path.join(APP_TOPLEVEL_DIR, 'setup.ini'))
+
+    def _getOrRefreshToken(self):
+        """
+        Check/Update for short-lived token
+        """
+        response = cherrypy.session[self.ACCESS_TOKEN]
+        if time.time() > cherrypy.session[self.EXPIRES_AT]:
+            new_auth_response = client.refresh_access_token(client_id=self.config['client_id'], client_secret=self.config['client_secret'],
+            refresh_token=cherrypy.session[self.REFRESH_TOKEN])
+            cherrypy.session[self.ACCESS_TOKEN] = new_auth_response['access_token']
+            #cherrypy.session['refresh_token'] = new_auth_response['refresh_token']
+            cherrypy.session[self.EXPIRES_AT] = new_auth_response['expires_at']
+            response = new_auth_response['access_token']
+
+        return response
 
     @cherrypy.expose
     def index(self):
@@ -35,7 +53,7 @@ class StravaUI(object):
         # Keep session alive
         cherrypy.session[self.DUMMY] = 'MyStrava'
         athlete_id = cherrypy.session.get(self.ATHLETE_ID)
-        if athlete_id is not None and cherrypy.session.get(self.TOKEN) is not None:
+        if athlete_id is not None and cherrypy.session.get(self.ACCESS_TOKEN) is not None:
             if not athletewhitelist.isauthorized(athlete_id):
                 return open(os.path.join(self.rootdir, 'forbid.html'))
             cookie = cherrypy.response.cookie
@@ -54,7 +72,7 @@ class StravaUI(object):
         cookie['connected'] = 0
         cookie['connected']['expires'] = 0
         cherrypy.session[self.ATHLETE_ID] = None
-        cherrypy.session[self.TOKEN] = None
+        cherrypy.session[self.ACCESS_TOKEN] = None
         cookie['session_id'] = 0
         cookie['session_id']['expires'] = 0
         cookie['is_premium'] = 0
@@ -87,7 +105,7 @@ class StravaUI(object):
         """
         cherrypy.session[self.DUMMY] = 'MyStravaGetRuns'
         cherrypy.response.headers["Content-Type"] = "text/html"
-        stravaInstance = StravaRequest(self.config, cherrypy.session.get(self.TOKEN))
+        stravaInstance = StravaRequest(self.config, self._getOrRefreshToken())
         profile = stravaInstance.athlete_profile
         return profile
 
@@ -98,7 +116,7 @@ class StravaUI(object):
         """
         cherrypy.session[self.DUMMY] = 'MyStravaUpdateActivities'
         view = StravaView(self.config, cherrypy.session.get(self.ATHLETE_ID))
-        stravaRequest = StravaRequest(self.config, cherrypy.session.get(self.TOKEN))
+        stravaRequest = StravaRequest(self.config, self._getOrRefreshToken())
         view.create_activities_table()
         list_ids = view.update_activities(stravaRequest)
         activities = view.get_list_activities(list_ids)
@@ -112,7 +130,7 @@ class StravaUI(object):
         Ajax query /updatelocaldb to update the database
         """
         view = StravaView(self.config, cherrypy.session.get(self.ATHLETE_ID))
-        stravaRequest = StravaRequest(self.config, cherrypy.session.get(self.TOKEN))
+        stravaRequest = StravaRequest(self.config, self._getOrRefreshToken())
         view.create_gears_table()
         view.update_bikes(stravaRequest)
         view.update_shoes(stravaRequest)
@@ -124,7 +142,7 @@ class StravaUI(object):
         Ajax query /upgradelocaldb to upgrade the database
         """
         view = StravaView(self.config, cherrypy.session.get(self.ATHLETE_ID))
-        stravaRequest = StravaRequest(self.config, cherrypy.session.get(self.TOKEN))
+        stravaRequest = StravaRequest(self.config, self._getOrRefreshToken())
         view.create_activities_table()
         view.rebuild_activities(stravaRequest)
         view.close()
@@ -136,7 +154,7 @@ class StravaUI(object):
         """
         cherrypy.session[self.DUMMY] = 'MyStravaUpdateActivity'
         view = StravaView(self.config, cherrypy.session.get(self.ATHLETE_ID))
-        stravaRequest = StravaRequest(self.config, cherrypy.session.get(self.TOKEN))
+        stravaRequest = StravaRequest(self.config, self._getOrRefreshToken())
         try:
             activity = stravaRequest.client.get_activity(id)
             view.update_activity(activity, stravaRequest)
@@ -172,9 +190,9 @@ class StravaUI(object):
         redirect_url = cherrypy.url(path='/authorized', script_name='')
         print(redirect_url)
         authentification_url = client.authorization_url(
-            client_id=self.config['client_id'], scope='view_private',
+                client_id=self.config['client_id'], scope=["activity:read_all","profile:read_all"],
             redirect_uri=redirect_url)
-        print(authentification_url)
+        #print(authentification_url)
         raise cherrypy.HTTPRedirect(authentification_url)
 
     @cherrypy.expose
@@ -198,16 +216,28 @@ class StravaUI(object):
         # Keep session alive
         cherrypy.session[self.DUMMY] = 'MyStravaAuthorized'
         client = stravalib.Client()
-        token = client.exchange_code_for_token(client_id=self.config['client_id'],
+        auth_response = client.exchange_code_for_token(client_id=self.config['client_id'],
                                                client_secret=self.config['client_secret'],
                                                code=code)
-        cherrypy.session[self.TOKEN] = token
+        token = auth_response['access_token']
+        refresh_token = auth_response['refresh_token']
+        expires_at = auth_response['expires_at']
+
+        cherrypy.session[self.ACCESS_TOKEN] = token
+        cherrypy.session[self.REFRESH_TOKEN] = refresh_token
+        cherrypy.session[self.EXPIRES_AT] = expires_at
+
         client = stravalib.Client(access_token=token)
         athlete = client.get_athlete()
         cherrypy.session[self.ATHLETE_ID] = athlete.id
         cherrypy.session[self.ATHLETE_IS_PREMIUM] = athlete.premium
+
         print("athlete: {}".format(cherrypy.session.get(self.ATHLETE_ID)))
-        print("token: {}".format(cherrypy.session.get(self.TOKEN)))
+        print("token: {}".format(cherrypy.session.get(self.ACCESS_TOKEN)))
+        print("refresh token: {}".format(cherrypy.session.get(self.REFRESH_TOKEN)))
+        print("expires at: {}".format(time.strftime('%Y-%m-%d %H:%M:%S', time.localtime(cherrypy.session.get(self.EXPIRES_AT)))))
+        print("Session ID : {}".format(cherrypy.session.id))
+
         raise cherrypy.HTTPRedirect(cherrypy.url(path='/', script_name=''))
 
 
