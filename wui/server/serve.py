@@ -36,6 +36,7 @@ class StravaUI(object):
         """
         response = cherrypy.session[self.ACCESS_TOKEN]
         if time.time() > cherrypy.session[self.EXPIRES_AT]:
+            client = stravalib.Client(access_token=response)
             new_auth_response = client.refresh_access_token(client_id=self.config['client_id'], client_secret=self.config['client_secret'],
             refresh_token=cherrypy.session[self.REFRESH_TOKEN])
             cherrypy.session[self.ACCESS_TOKEN] = new_auth_response['access_token']
@@ -116,7 +117,7 @@ class StravaUI(object):
         """
         cherrypy.session[self.DUMMY] = 'MyStravaUpdateActivities'
         view = StravaView(self.config, cherrypy.session.get(self.ATHLETE_ID))
-        stravaRequest = StravaRequest(self.config, self._getOrRefreshToken())
+        stravaRequest = StravaRequest(self.config, self._getOrRefreshToken()    )
         view.create_activities_table()
         list_ids = view.update_activities(stravaRequest)
         activities = view.get_list_activities(list_ids)
