@@ -40,7 +40,7 @@ class StravaUI(object):
             new_auth_response = client.refresh_access_token(client_id=self.config['client_id'], client_secret=self.config['client_secret'],
             refresh_token=cherrypy.session[self.REFRESH_TOKEN])
             cherrypy.session[self.ACCESS_TOKEN] = new_auth_response['access_token']
-            #cherrypy.session['refresh_token'] = new_auth_response['refresh_token']
+            cherrypy.session[self.REFRESH_TOKEN] = new_auth_response['refresh_token']
             cherrypy.session[self.EXPIRES_AT] = new_auth_response['expires_at']
             response = new_auth_response['access_token']
 
@@ -65,6 +65,12 @@ class StravaUI(object):
             cookie['is_premium'] = int(athlete_is_premium)
         else:
             self.disconnect()
+
+        #cookie = cherrypy.request.cookie
+        #print("SESSION ID : {}".format(cookie['session_id'].value))
+        #print("ACCESS TOKEN : {}".format(cherrypy.session.get(self.ACCESS_TOKEN)))
+        #print("REFRESH TOKEN : {}".format(cherrypy.session.get(self.REFRESH_TOKEN)))
+        #print("EXPIRES_AT : {}".format(time.strftime('%Y-%m-%d %H:%M:%S', time.localtime(cherrypy.session.get(self.EXPIRES_AT)))))
         return open(os.path.join(self.rootdir, 'index.html'))
 
     @cherrypy.expose
@@ -185,15 +191,15 @@ class StravaUI(object):
         Connect to Strava and grant authentification.
         """
         # Keep session alive
-        print("connect - {}".format(cherrypy.session.id))
+        print("Connect - Session ID : {}".format(cherrypy.session.id))
         cherrypy.session[self.DUMMY] = 'MyStravaConnect'
         client = stravalib.Client()
         redirect_url = cherrypy.url(path='/authorized', script_name='')
-        print(redirect_url)
+        #print(redirect_url)
         authentification_url = client.authorization_url(
-                client_id=self.config['client_id'], scope=["activity:read_all","profile:read_all"],
-            redirect_uri=redirect_url)
-        #print(authentification_url)
+                client_id=self.config['client_id'], scope=["read_all","activity:read_all","profile:read_all"], approval_prompt='auto',
+                redirect_uri=redirect_url)
+        print("Authentification_URL : {}".format(authentification_url))
         raise cherrypy.HTTPRedirect(authentification_url)
 
     @cherrypy.expose
@@ -233,11 +239,14 @@ class StravaUI(object):
         cherrypy.session[self.ATHLETE_ID] = athlete.id
         cherrypy.session[self.ATHLETE_IS_PREMIUM] = athlete.premium
 
+        print("-------")
         print("athlete: {}".format(cherrypy.session.get(self.ATHLETE_ID)))
         print("token: {}".format(cherrypy.session.get(self.ACCESS_TOKEN)))
         print("refresh token: {}".format(cherrypy.session.get(self.REFRESH_TOKEN)))
         print("expires at: {}".format(time.strftime('%Y-%m-%d %H:%M:%S', time.localtime(cherrypy.session.get(self.EXPIRES_AT)))))
         print("Session ID : {}".format(cherrypy.session.id))
+        print("Access code : {}".format(code))
+        print("-------")
 
         raise cherrypy.HTTPRedirect(cherrypy.url(path='/', script_name=''))
 
