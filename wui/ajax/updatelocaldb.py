@@ -17,4 +17,4 @@ strava_instance = Strava(config)
 strava_instance.update_bikes()
 strava_instance.update_activities()
 strava_instance.close()
-print 'Content-type: text/plain\n\n'
+print('Content-type: text/plain\n\n')

@@ -256,11 +256,11 @@ class StravaView:
             # Check if the gear already exists
             sql = "SELECT * FROM %s WHERE id='%s' LIMIT 1" % (self.gears_table, bike.id)
             if (self.cursor.execute(sql) > 0):
-                continue
-
-            sql = "INSERT INTO %s (id, name, type, frame_type) VALUES ('%s','%s', '%s', '%d')" % (
-                self.gears_table, desc.id, desc.name, self.activityTypes.FRAME_TYPES[desc.frame_type], desc.frame_type)
-            self.cursor.execute(sql)
+                sql = "UPDATE {} SET name=%s, type=%s, frame_type=%s where id=%s".format(self.gears_table)
+                self.cursor.execute(sql, (desc.name, self.activityTypes.FRAME_TYPES[desc.frame_type], desc.frame_type, desc.id))
+            else:
+                sql = "INSERT INTO {} (id, name, type, frame_type) VALUES ('%s','%s', '%s', '%s')".format(self.gears_table)
+                self.cursor.execute(sql, (desc.id, desc.name, self.activityTypes.FRAME_TYPES[desc.frame_type], desc.frame_type))
             self.connection.commit()
 
     def update_shoes(self, stravaRequest):
@@ -277,10 +277,11 @@ class StravaView:
             # Check if the gear already exists
             sql = "SELECT * FROM %s WHERE id='%s' LIMIT 1" % (self.gears_table, shoe.id)
             if (self.cursor.execute(sql) > 0):
-                continue
-
-            sql = "INSERT INTO %s (id, name, type) VALUES ('%s','%s', '%s')" % (self.gears_table, desc.id, desc.name, self.activityTypes.RUN)
-            self.cursor.execute(sql)
+                sql = "UPDATE {} SET name=%s where id=%s".format(self.gears_table)
+                self.cursor.execute(sql, (desc.name, desc.id))
+            else:
+                sql = "INSERT INTO {} (id, name, type) VALUES ('%s','%s', '%s')".format(self.gears_table)
+                self.cursor.execute(sql, (desc.id, desc.name, self.activityTypes.RUN))
             self.connection.commit()
 
     def push_activity(self, activity):
