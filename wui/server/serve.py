@@ -103,7 +103,7 @@ class StravaUI(object):
         # Cherrypy has a decorator to return a JSON object but as the get_activities method
         # already return a JSON object, we cannot rely on it.
         cherrypy.response.headers["Content-Type"] = "application/json"
-        return activities
+        return activities.encode('utf8')
 
     @cherrypy.expose
     def getAthleteProfile(self):
@@ -129,7 +129,7 @@ class StravaUI(object):
         activities = view.get_list_activities(list_ids)
         view.close()
         cherrypy.response.headers["Content-Type"] = "application/json"
-        return activities
+        return activities.encode('utf8')
 
     @cherrypy.expose
     def updategears(self):

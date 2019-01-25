@@ -259,7 +259,7 @@ class StravaView:
                 sql = "UPDATE {} SET name=%s, type=%s, frame_type=%s where id=%s".format(self.gears_table)
                 self.cursor.execute(sql, (desc.name, self.activityTypes.FRAME_TYPES[desc.frame_type], desc.frame_type, desc.id))
             else:
-                sql = "INSERT INTO {} (id, name, type, frame_type) VALUES ('%s','%s', '%s', '%s')".format(self.gears_table)
+                sql = "INSERT INTO {} (id, name, type, frame_type) VALUES (%s, %s, %s, %s)".format(self.gears_table)
                 self.cursor.execute(sql, (desc.id, desc.name, self.activityTypes.FRAME_TYPES[desc.frame_type], desc.frame_type))
             self.connection.commit()
 
@@ -280,7 +280,7 @@ class StravaView:
                 sql = "UPDATE {} SET name=%s where id=%s".format(self.gears_table)
                 self.cursor.execute(sql, (desc.name, desc.id))
             else:
-                sql = "INSERT INTO {} (id, name, type) VALUES ('%s','%s', '%s')".format(self.gears_table)
+                sql = "INSERT INTO {} (id, name, type) VALUES (%s, %s, %s)".format(self.gears_table)
                 self.cursor.execute(sql, (desc.id, desc.name, self.activityTypes.RUN))
             self.connection.commit()
 
