@@ -217,7 +217,7 @@ class StravaView:
             return
 
         sql = """CREATE TABLE {} (
-        id int(11) NOT NULL,
+        id bigint(20) NOT NULL,
         athlete int(11) DEFAULT 0,
         name varchar(256) COLLATE utf8mb4_bin DEFAULT NULL,
         location varchar(256) DEFAULT NULL,
