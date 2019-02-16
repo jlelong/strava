@@ -12,7 +12,6 @@ import stravalib.unithelper
 import pymysql.cursors
 import pymysql.converters
 import geocoder
-import time
 
 def _format_timedelta(t):
     """
@@ -144,6 +143,7 @@ class StravaRequest:
                     return z.points
         except:
             return 0
+        return 0
 
     def get_description(self, activity):
         """
