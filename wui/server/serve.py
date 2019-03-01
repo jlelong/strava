@@ -1,11 +1,12 @@
+# -*- coding: utf-8 -*-
 import os
 import os.path
 import sys
+import json
+import time
 import cherrypy
 import stravalib
-import json
 import requests
-import time
 
 WUI_DIR = os.path.join(os.path.dirname(os.path.abspath(sys.argv[0])), '..')
 SESSION_DIR = '/tmp/MyStrava'
@@ -42,7 +43,6 @@ class StravaUI(object):
             cherrypy.session[self.REFRESH_TOKEN] = new_auth_response['refresh_token']
             cherrypy.session[self.EXPIRES_AT] = new_auth_response['expires_at']
             response = new_auth_response['access_token']
-
         return response
 
     @cherrypy.expose
@@ -109,7 +109,7 @@ class StravaUI(object):
         """
         Get the url of the profile picture.
         """
-        cherrypy.session[self.DUMMY] = 'MyStravaGetRuns'
+        cherrypy.session[self.DUMMY] = 'MyStravaGetAthleteProfile'
         cherrypy.response.headers["Content-Type"] = "text/html"
         stravaInstance = StravaRequest(self.config, self._getOrRefreshToken())
         profile = stravaInstance.athlete_profile
