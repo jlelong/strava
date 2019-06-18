@@ -6,7 +6,8 @@ var accentsMap = {
     "à": "a",
     "â": "a",
     "ô": "o",
-    "ù": "u"
+    "ù": "u",
+    "û": "u"
 };
 
 function removeAccents(s)

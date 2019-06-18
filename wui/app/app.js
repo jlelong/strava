@@ -89,7 +89,7 @@ function StravaController($cookies, $scope, $window, $http, $timeout) {
     vm.connectLabel = "Connect to Strava";
     vm.update_response = "";
     vm.list = [];
-    vm.nTotalItems = -1; // This is a convention to hightlight that we have not yet requested the db.
+    vm.nTotalItems = -1; // This is a convention to highlight that we have not yet requested the db.
     vm.reverse = false;
     vm.update_in_progress = false;
     vm.searchField = "";
@@ -348,7 +348,7 @@ function StravaController($cookies, $scope, $window, $http, $timeout) {
         for (var i = 0; i < pattern.length; ++i) {
             var e = pattern[i];
             if (e == '"' && !quoteOpen) {
-                // Etnering a block
+                // Entering a block
                 quoteOpen = true;
             }
             else if (e == '"' && quoteOpen) {
