@@ -22,7 +22,10 @@
         <div class="container h1">
             <div class="row">
                 <div class="col-md-4 vmiddle">
-                    <a href="#">Strava Viewer</a> 
+                    <a href="#">Strava Viewer</a>
+                </div>
+                <div class="col-md-4 h3">
+                    <a href="#"><span ng-click="vm.alternate_tab()">{{vm.gears_or_activities}}</span></a>
                 </div>
                 <div class="col-md-4 right">
                     <img class="img-circle" ng-src="{{vm.profile_picture}}" alt="">
@@ -31,7 +34,7 @@
             </div>
         </div>
     </div>
-    <div class="container"><div class="panel panel-default">
+    <div class="container" ng-show="vm.gears_or_activities == vm.ACTIVITIES"><div class="panel panel-default">
         <div class="panel-body">
             <div class="row">
                 <div class="col-md-2">Activity type:
@@ -135,7 +138,7 @@
                                 <td>{{data.average_heartrate}}</td>
                             </tr>
                             <tr ng-repeat-end ng-show="expanded" class="row-details">
-                                <td colspan="11"> 
+                                <td colspan="11">
                                     <div ng-show="data.description" class="description">{{data.description}}</div>
                                     <div class="bike-name" ng-show="data.gear_name">Gear: {{data.gear_name}} </div>
                                     <div class="total-time"> Total time: {{data.elapsed_time}} </div>
@@ -158,6 +161,12 @@
             </div>
         </div>
     </div>
+
+    <div class="container" ng-show="vm.gears_or_activities == vm.GEARS">
+        Gears
+    </div>
+    
+
 </div>
 </body>
 </html>

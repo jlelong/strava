@@ -99,6 +99,7 @@ function StravaController($cookies, $scope, $window, $http, $timeout) {
     vm.predicate = 'date';
     vm.reverse = true;
     vm.speedOrPace = "Speed";
+    vm.alternate_tab = null;
 
     // The labels must match the ones used in stravadb.ActivityTypes
     vm.activityTypes = [
@@ -111,6 +112,9 @@ function StravaController($cookies, $scope, $window, $http, $timeout) {
         { 'id': NORDICSKI, 'label': 'NordicSki' },
     ];
     vm.activityType = vm.activityTypes[0];
+    vm.GEARS = 'Gears'
+    vm.ACTIVITIES = 'Activities'
+    vm.gears_or_activities = vm.ACTIVITIES;
 
     // Methods
     vm.isConnected = function () { return ($cookies.get('connected') !== undefined); };
@@ -130,6 +134,7 @@ function StravaController($cookies, $scope, $window, $http, $timeout) {
     vm.getSpeed = function(data) { return data.average_speed; }
     vm.getPace = function(data) { return data.average_pace; }
     vm.getSpeedOrPace = vm.getSpeed;
+    vm.alternate_tab = alternate_tab;
 
 
     if (!vm.isConnected()) {
@@ -404,5 +409,13 @@ function StravaController($cookies, $scope, $window, $http, $timeout) {
         var reg = new RegExp(tokensLogic.join("|"), 'gi');
         console.log(reg);
         return reg;
+    }
+
+    function alternate_tab() {
+        if (vm.gears_or_activities === vm.GEARS) {
+            vm.gears_or_activities = vm.ACTIVITIES
+        } else {
+            vm.gears_or_activities = vm.GEARS
+        }
     }
 }
