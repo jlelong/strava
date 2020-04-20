@@ -68,7 +68,7 @@ class ExtendedEncoder(json.JSONEncoder):
     """
     Extend the JSON encoding facilities from datetime objects
     """
-    def default(self, obj):
+    def default(self, obj): #pylint: disable=method-hidden
         if isinstance(obj, (datetime.datetime, datetime.date)):
             return "%s" % obj
         if isinstance(obj, datetime.timedelta):
