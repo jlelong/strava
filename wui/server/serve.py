@@ -105,6 +105,26 @@ class StravaUI(object):
         return activities.encode('utf8')
 
     @cherrypy.expose
+    def getGears(self):
+        """
+        Ajax query /getGears to extract gears from the database
+        """
+        # Keep session alive
+        cherrypy.session[self.DUMMY] = 'MyStravaGetGears'
+        athlete_id = cherrypy.session.get(self.ATHLETE_ID)
+        if athlete_id is None or not athletewhitelist.isauthorized(athlete_id):
+            activities = json.dumps("")
+        else:
+            view = StravaView(self.config, cherrypy.session.get(self.ATHLETE_ID))
+            activities = view.get_gears()
+            view.close()
+        # Cherrypy has a decorator to return a JSON object but as the get_activities method
+        # already return a JSON object, we cannot rely on it.
+        cherrypy.response.headers["Content-Type"] = "application/json"
+        return activities.encode('utf8')
+
+
+    @cherrypy.expose
     def getAthleteProfile(self):
         """
         Get the url of the profile picture.

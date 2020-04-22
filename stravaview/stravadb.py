@@ -554,7 +554,7 @@ class StravaView:
         sql = "SHOW TABLES LIKE %s"
         if (self.cursor.execute(sql, self.activities_table) == 0):
             return json.dumps([])
-        # Make sure we ot a list of ids
+        # Make sure we have a list of ids
         if isinstance(list_ids, int):
             list_ids = [list_ids]
         if not list_ids:
@@ -573,4 +573,16 @@ class StravaView:
         sql_args.append(self.athlete_id)
         sql_args.extend(list_ids)
         self.cursor.execute(sql, sql_args)
+        return json.dumps(self.cursor.fetchall(), cls=ExtendedEncoder)
+
+    def get_gears(self):
+        """
+        Return the jsonified list of gears
+        """
+        # Return if gear table does not exist
+        sql = "SHOW TABLES LIKE %s"
+        if (self.cursor.execute(sql, self.gears_table) == 0):
+            return json.dumps([])
+        sql = """SELECT name FROM %s""" % (self.gears_table)
+        self.cursor.execute(sql)
         return json.dumps(self.cursor.fetchall(), cls=ExtendedEncoder)
