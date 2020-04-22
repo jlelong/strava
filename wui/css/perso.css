@@ -39,7 +39,7 @@ body {
     font-weight: bold;
 }
 
-table.view-activities td {
+table.view-activities td, table.view-gears td {
     font-size: 12px;
 }
 
@@ -99,4 +99,12 @@ td + td {
 .description {
 	white-space: pre;
 	margin-bottom: 1em;
+}
+
+.view-gears>tbody>tr:nth-child(2n+1)>td {
+    background-color: #f9f9f9;
+}
+
+.view-gears>tbody>tr:nth-child(2n)>td {
+    background-color: white;
 }

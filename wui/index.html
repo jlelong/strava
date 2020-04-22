@@ -34,7 +34,7 @@
             </div>
         </div>
     </div>
-    <div class="container" ng-show="vm.gears_or_activities == vm.ACTIVITIES"><div class="panel panel-default">
+    <div class="container" ng-show="vm.gears_or_activities != vm.ACTIVITIES"><div class="panel panel-default">
         <div class="panel-body">
             <div class="row">
                 <div class="col-md-2">Activity type:
@@ -118,7 +118,7 @@
                             </tr>
                         </thead>
                         <tbody>
-                            <tr ng-repeat-start="data in vm.filteredItems = (vm.list | filter:vm.narrowSearch(vm.searchRegex) | selectActivityTypeFilter : vm.activityType : vm.withCommutes | dateRangeFilter : vm.startDate : vm.endDate | orderBy : vm.sortable(vm.predicate) : vm.reverse)">
+                            <tr ng-repeat-start="data in vm.filteredItems = (vm.activities | filter:vm.narrowSearch(vm.searchRegex) | selectActivityTypeFilter : vm.activityType : vm.withCommutes | dateRangeFilter : vm.startDate : vm.endDate | orderBy : vm.sortable(vm.predicate) : vm.reverse)">
                                 <td>
                                     <a href="" ng-click="expanded = !expanded"><div ng-bind="expanded ? '-' : '+'" class="toggle-details"></div></a>
                                     <div class="name"> <a href="https://www.strava.com/activities/{{data.id}}" target="_blank">{{data.name}}</a></div>
@@ -162,10 +162,24 @@
         </div>
     </div>
 
-    <div class="container" ng-show="vm.gears_or_activities == vm.GEARS">
-        Gears
+    <div class="container" ng-show="vm.gears_or_activities != vm.GEARS">
+        <table class="table table-bordered view-gears">
+            <thead>
+                <tr>
+                    <th ng-click="vm.setSort('name');" class="c-name"><div class="c1">Name</div></th>
+                    <th ng-click="vm.setSort('distance');" class="c-int"><div class="c5">Km</div></th>
+                    <th ng-click="vm.setSort('elevation');" class="c-int"><div class="c6">D+</div></th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr ng-repeat="data in gears = (vm.gears | orderBy : vm.sortable(vm.predicate) : vm.reverse)">
+                    <td>{{data.name}}</td>
+                    <td>{{data.distance}}</td>
+                    <td>{{data.elevation}}</td>
+                </tr>
+            </tbody>
+        </table>
     </div>
-    
 
 </div>
 </body>
