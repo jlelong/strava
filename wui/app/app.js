@@ -194,7 +194,7 @@ function StravaController($cookies, $scope, $window, $http, $timeout) {
         }
         vm.update_response = "Update in progress...";
         $http.get('updateactivities').then(function (response) {
-            vm.update_response = "Database successfuly updated.";
+            vm.update_response = "Database successfully updated.";
             addPacetoActivities(response.data);
             vm.list.push.apply(vm.list, response.data);
             vm.nTotalItems = vm.list.length;
@@ -210,7 +210,7 @@ function StravaController($cookies, $scope, $window, $http, $timeout) {
         }
         vm.update_response = "Update in progress...";
         $http.get('updategears').then(function (response) {
-            vm.update_response = "Database successfuly updated.";
+            vm.update_response = "Database successfully updated.";
         });
     }
 
@@ -224,7 +224,7 @@ function StravaController($cookies, $scope, $window, $http, $timeout) {
         vm.update_in_progress = true;
         $http.get('updategears').then(function (response) { });
         $http.get('updateactivities').then(function (response) {
-            vm.update_response = "Database successfuly updated.";
+            vm.update_response = "Database successfully updated.";
             addPacetoActivities(response.data);
             vm.list =  response.data;
             vm.nTotalItems = vm.list.length;
@@ -243,7 +243,7 @@ function StravaController($cookies, $scope, $window, $http, $timeout) {
         }
         vm.update_response = "Update in progress...";
         $http.get('updateactivity', { params: { id: id } }).then(function (response) {
-            vm.update_response = "Database successfuly updated.";
+            vm.update_response = "Database successfully updated.";
             addPacetoActivities(response.data);
             for (var i = 0; i < vm.list.length; i++) {
                 if (vm.list[i].id == id) {
@@ -263,7 +263,7 @@ function StravaController($cookies, $scope, $window, $http, $timeout) {
         }
         if (confirm("Are you sure?")) {
             $http.get('deleteactivity', { params: { id: id } }).then(function (response) {
-                vm.update_response = "Activity successfuly deleted.";
+                vm.update_response = "Activity successfully deleted.";
                 for (var i = 0; i < vm.list.length; i++) {
                     if (vm.list[i].id == id) {
                         vm.list.splice(i, 1);
@@ -282,7 +282,7 @@ function StravaController($cookies, $scope, $window, $http, $timeout) {
             return;
         }
         $http.get('rebuildactivities').then(function (response) {
-            vm.update_response = "Database successfuly rebuilt.";
+            vm.update_response = "Database successfully rebuilt.";
             query_data($http);
         });
     }
