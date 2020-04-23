@@ -89,7 +89,6 @@ function StravaController($cookies, $scope, $window, $http, $timeout) {
     vm.update_response = "";
     vm.activities = [];
     vm.gears = [];
-    vm.gear_stats = [];
     vm.nTotalItems = -1; // This is a convention to highlight that we have not yet requested the db.
     vm.reverse = false;
     vm.update_in_progress = false;
@@ -115,7 +114,7 @@ function StravaController($cookies, $scope, $window, $http, $timeout) {
     vm.activityType = vm.activityTypes[0];
     vm.GEARS = 'Gears'
     vm.ACTIVITIES = 'Activities'
-    vm.gears_or_activities = vm.GEARS;
+    vm.gears_or_activities = vm.ACTIVITIES;
 
     // Methods
     vm.isConnected = function () { return ($cookies.get('connected') !== undefined); };
@@ -310,24 +309,21 @@ function StravaController($cookies, $scope, $window, $http, $timeout) {
             get_activities();
         }
         $http.get('getGears').then(function (response) {
-            var gears = response.data;
             var stats = {};
-            angular.forEach(gears, g => {
-                stats[g.name] = {'distance': 0, 'elevation': 0};
+            angular.forEach(response.data, g => {
+                stats[g.name] = {'type': g.type, 'distance': 0, 'elevation': 0};
             });
             angular.forEach(vm.activities, activity => {
                 if (activity.gear_name in stats) {
-                    var gear_distance = stats[activity.gear_name]['distance'];
-                    var gear_elevation = stats[activity.gear_name]['elevation'];
-                    gear_distance += activity.distance;
-                    gear_elevation += activity.elevation;
-                    stats[activity.gear_name] = {'distance': gear_distance, 'elevation': gear_elevation};
+                    stats[activity.gear_name]['distance'] += activity.distance;
+                    stats[activity.gear_name]['elevation'] += activity.elevation;
                 }
             });
-            console.log(stats);
+            var gears = [];
             angular.forEach(Object.keys(stats), g => {
-                vm.gears.push({'name': g, 'distance': Math.round(stats[g]['distance']), 'elevation': stats[g]['elevation']});
+                gears.push({'name': g, 'type': stats[g]['type'],'distance': Math.round(stats[g]['distance']), 'elevation': stats[g]['elevation']});
             });
+            vm.gears = gears;
         });
     }
     // Compute the total distance and elevation.
@@ -335,7 +331,7 @@ function StravaController($cookies, $scope, $window, $http, $timeout) {
     function totals(items) {
         var elevation = 0.0;
         var distance = 0.0;
-        angular.forEach(items, function (obj) {
+        angular.forEach(items, obj => {
             elevation += obj.elevation;
             distance += obj.distance;
         });

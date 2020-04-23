@@ -583,6 +583,6 @@ class StravaView:
         sql = "SHOW TABLES LIKE %s"
         if (self.cursor.execute(sql, self.gears_table) == 0):
             return json.dumps([])
-        sql = """SELECT name FROM %s""" % (self.gears_table)
+        sql = """SELECT name, type FROM %s""" % (self.gears_table)
         self.cursor.execute(sql)
         return json.dumps(self.cursor.fetchall(), cls=ExtendedEncoder)
