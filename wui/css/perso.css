@@ -100,11 +100,3 @@ td + td {
 	white-space: pre;
 	margin-bottom: 1em;
 }
-
-.view-gears>tbody>tr:nth-child(2n+1)>td {
-    background-color: #f9f9f9;
-}
-
-.view-gears>tbody>tr:nth-child(2n)>td {
-    background-color: white;
-}

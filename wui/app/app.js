@@ -114,7 +114,7 @@ function StravaController($cookies, $scope, $window, $http, $timeout) {
     vm.activityType = vm.activityTypes[0];
     vm.GEARS = 'Gears'
     vm.ACTIVITIES = 'Activities'
-    vm.gears_or_activities = vm.ACTIVITIES;
+    vm.gears_or_activities = vm.GEARS;
 
     // Methods
     vm.isConnected = function () { return ($cookies.get('connected') !== undefined); };
@@ -321,7 +321,7 @@ function StravaController($cookies, $scope, $window, $http, $timeout) {
             });
             var gears = [];
             angular.forEach(Object.keys(stats), g => {
-                gears.push({'name': g, 'type': stats[g]['type'],'distance': Math.round(stats[g]['distance']), 'elevation': stats[g]['elevation']});
+                gears.push({'name': g, 'activity_type': stats[g]['type'],'distance': Math.round(stats[g]['distance']), 'elevation': stats[g]['elevation']});
             });
             vm.gears = gears;
         });
@@ -365,7 +365,7 @@ function StravaController($cookies, $scope, $window, $http, $timeout) {
         return function (obj) {
             if (!regex)
                 return true;
-            return (removeAccents([obj.name, obj.location, obj.date, obj.gear_name, obj.description].join(' ')).match(regex) !== null);
+            return (removeAccents([obj.name, obj.location, obj.activity_type, obj.date, obj.gear_name, obj.description].join(' ')).match(regex) !== null);
         };
     }
 
