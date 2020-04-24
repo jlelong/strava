@@ -22,7 +22,10 @@
         <div class="container h1">
             <div class="row">
                 <div class="col-md-4 vmiddle">
-                    <a href="#">Strava Viewer</a> 
+                    <a href="#">Strava Viewer</a>
+                </div>
+                <div class="col-md-4 h3">
+                    <a href="#"><span ng-click="vm.alternate_tab()">{{vm.gears_or_activities}}</span></a>
                 </div>
                 <div class="col-md-4 right">
                     <img class="img-circle" ng-src="{{vm.profile_picture}}" alt="">
@@ -31,7 +34,7 @@
             </div>
         </div>
     </div>
-    <div class="container"><div class="panel panel-default">
+    <div class="container" ng-show="vm.gears_or_activities != vm.ACTIVITIES"><div class="panel panel-default">
         <div class="panel-body">
             <div class="row">
                 <div class="col-md-2">Activity type:
@@ -115,7 +118,7 @@
                             </tr>
                         </thead>
                         <tbody>
-                            <tr ng-repeat-start="data in vm.filteredItems = (vm.list | filter:vm.narrowSearch(vm.searchRegex) | selectActivityTypeFilter : vm.activityType : vm.withCommutes | dateRangeFilter : vm.startDate : vm.endDate | orderBy : vm.sortable(vm.predicate) : vm.reverse)">
+                            <tr ng-repeat-start="data in vm.filteredItems = (vm.activities | filter:vm.narrowSearch(vm.searchRegex) | selectActivityTypeFilter : vm.activityType : vm.withCommutes | dateRangeFilter : vm.startDate : vm.endDate | orderBy : vm.sortable(vm.predicate) : vm.reverse)">
                                 <td>
                                     <a href="" ng-click="expanded = !expanded"><div ng-bind="expanded ? '-' : '+'" class="toggle-details"></div></a>
                                     <div class="name"> <a href="https://www.strava.com/activities/{{data.id}}" target="_blank">{{data.name}}</a></div>
@@ -135,7 +138,7 @@
                                 <td>{{data.average_heartrate}}</td>
                             </tr>
                             <tr ng-repeat-end ng-show="expanded" class="row-details">
-                                <td colspan="11"> 
+                                <td colspan="11">
                                     <div ng-show="data.description" class="description">{{data.description}}</div>
                                     <div class="bike-name" ng-show="data.gear_name">Gear: {{data.gear_name}} </div>
                                     <div class="total-time"> Total time: {{data.elapsed_time}} </div>
@@ -158,6 +161,40 @@
             </div>
         </div>
     </div>
+
+    <div class="container" ng-show="vm.gears_or_activities != vm.GEARS">
+        <div class="row">
+            <div class="col-md-5">
+                <input type="text" ng-model="vm.search.field" ng-model-options=" {getterSetter: true, debounce: 200 }" placeholder="Filter"
+                    title='To match a string with whitespaces enclose it into "...". Use AND to indicate you want to match all clauses.'
+                    class="form-control" />
+            </div>
+        </div>
+        <br/>
+        <div class="row">
+            <div class="col-md-10" >
+                <table class="table table-bordered table-striped view-gears">
+                    <thead>
+                        <tr>
+                            <th ng-click="vm.setSort('name');" class="c-name"><div class="c1">Name</div></th>
+                            <th ng-click="vm.setSort('activity_type');" class="c-rtype"><div class="c4">Activity</div></th>
+                            <th ng-click="vm.setSort('distance');" class="c-int"><div class="c5">Km</div></th>
+                            <th ng-click="vm.setSort('elevation');" class="c-int"><div class="c6">D+</div></th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr ng-repeat="data in gears = (vm.gears | filter:vm.narrowSearch(vm.searchRegex) | orderBy : vm.sortable(vm.predicate) : vm.reverse)">
+                            <td>{{data.name}}</td>
+                            <td>{{data.activity_type}}</td>
+                            <td>{{data.distance}}</td>
+                            <td>{{data.elevation}}</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
 </div>
 </body>
 </html>

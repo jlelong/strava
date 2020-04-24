@@ -39,7 +39,7 @@ body {
     font-weight: bold;
 }
 
-table.view-activities td {
+table.view-activities td, table.view-gears td {
     font-size: 12px;
 }
 
