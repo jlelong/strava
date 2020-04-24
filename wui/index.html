@@ -3,6 +3,7 @@
 <head>
     <meta charset="utf-8">
     <link href="css/bootstrap.min.css" rel="stylesheet">
+    <link href="css/angular-bootstrap-toggle.min.css" rel="stylesheet">
     <link href="css/scrollable-table.css" rel="stylesheet">
     <link href="css/perso.css" rel="stylesheet">
     <script src="js/jquery-3.2.1.min.js"></script>
@@ -10,6 +11,7 @@
     <script src="js/angular-cookies.js"></script>
     <script src="js/moment.js"></script>
     <script src="js/angular-scrollable-table.js"></script>
+    <script src="js/angular-bootstrap-toggle.min.js"></script>
     <script src="js/ui-bootstrap-tpls-2.5.0.min.js"></script>
     <script src="app/accent-folding.js"></script>
     <script src="app/app.js"></script>
@@ -21,11 +23,11 @@
     <div class="navbar navbar-default" id="navbar">
         <div class="container h1">
             <div class="row">
-                <div class="col-md-4 vmiddle">
-                    <a href="#">Strava Viewer</a>
+                <div class="col-md-4">
+                    <h1><a href="#">Strava Viewer</a></h1>
+                    <toggle ng-model="toggleValue" ng-change="vm.alternate_tab()" off-class="btn-primary" on-class="btn-default" off="{{vm.ACTIVITIES}}" on="{{vm.GEARS}}" size="btn-xs"></toggle>
                 </div>
                 <div class="col-md-4 h3">
-                    <a href="#"><span ng-click="vm.alternate_tab()">{{vm.gears_or_activities}}</span></a>
                 </div>
                 <div class="col-md-4 right">
                     <img class="img-circle" ng-src="{{vm.profile_picture}}" alt="">

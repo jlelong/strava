@@ -9,7 +9,7 @@ $(function() {
 
 
 // Angular stuff
-var app = angular.module('StravaViewer', ['ui.bootstrap', 'scrollable-table', 'ngCookies']);
+var app = angular.module('StravaViewer', ['ui.bootstrap', 'scrollable-table', 'ngCookies','ui.toggle']);
 app.controller('StravaController', StravaController);
 app.filter('selectActivityTypeFilter', selectActivityTypeFilter);
 app.filter('dateRangeFilter', dateRangeFilter);
