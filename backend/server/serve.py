@@ -9,7 +9,6 @@ import requests
 
 from backend.stravadb import StravaRequest
 from backend.stravadb import StravaView
-from backend.server import athletewhitelist
 
 class StravaUI(object):
     COOKIE_NAME = "MyStrava_AthleteID"
@@ -23,6 +22,21 @@ class StravaUI(object):
     def __init__(self, rootdir, config):
         self.rootdir = rootdir
         self.config = config
+        self.athlete_whitelist = config['athlete_whitelist']
+
+    def isAuthorized(self, athlete_id):
+        """
+        Return True if the athlete_id is authorized to use the application
+
+        :param athlete_id: a Strava athlete_id
+        """
+        # Empty list
+        if not self.athlete_whitelist:
+            return True
+        if athlete_id in self.athlete_whitelist:
+            return True
+        return False
+
 
     def _getOrRefreshToken(self):
         """
@@ -47,7 +61,7 @@ class StravaUI(object):
         cherrypy.session[self.DUMMY] = 'MyStrava'
         athlete_id = cherrypy.session.get(self.ATHLETE_ID)
         if athlete_id is not None and cherrypy.session.get(self.ACCESS_TOKEN) is not None:
-            if not athletewhitelist.isauthorized(athlete_id):
+            if not self.isAuthorized(athlete_id):
                 return open(os.path.join(self.rootdir, 'forbid.html'))
             cookie = cherrypy.response.cookie
             athlete_is_premium = cherrypy.session.get(self.ATHLETE_IS_PREMIUM)
@@ -86,7 +100,7 @@ class StravaUI(object):
         # Keep session alive
         cherrypy.session[self.DUMMY] = 'MyStravaGetRuns'
         athlete_id = cherrypy.session.get(self.ATHLETE_ID)
-        if athlete_id is None or not athletewhitelist.isauthorized(athlete_id):
+        if athlete_id is None or not self.isAuthorized(athlete_id):
             activities = json.dumps("")
         else:
             view = StravaView(self.config, cherrypy.session.get(self.ATHLETE_ID))
@@ -105,7 +119,7 @@ class StravaUI(object):
         # Keep session alive
         cherrypy.session[self.DUMMY] = 'MyStravaGetGears'
         athlete_id = cherrypy.session.get(self.ATHLETE_ID)
-        if athlete_id is None or not athletewhitelist.isauthorized(athlete_id):
+        if athlete_id is None or not self.isAuthorized(athlete_id):
             activities = json.dumps("")
         else:
             view = StravaView(self.config, cherrypy.session.get(self.ATHLETE_ID))

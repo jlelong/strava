@@ -75,4 +75,10 @@ def read_config(inifile):
         print("No session directory defined")
         sys.exit()
 
+    try:
+        config['athlete_whitelist'] = [int(x) for x in parser.get('server', 'athlete_whitelist').split('\n')]
+    except configparser.NoOptionError:
+        print('No athlete_whitelist provided.')
+        config['athlete_whitelist'] = ()
+
     return config

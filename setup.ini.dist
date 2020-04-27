@@ -24,4 +24,6 @@ with_points = no
 with_description = no
 
 [server]
-SESSION_DIR = /tmp/MyStrava
+session_dir = /tmp/MyStrava
+# List of athletes allowed to use the app. One entry per line
+athelete_whitelist = 
