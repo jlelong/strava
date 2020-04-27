@@ -1,0 +1,6 @@
+    configparser
+    geopy
+    pymysql
+    stravalib
+    cherrypy
+    pymysql
