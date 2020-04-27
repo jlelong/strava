@@ -4,92 +4,15 @@
 from __future__ import print_function
 
 import json
-import datetime
 import itertools
 import stravalib.client
 import stravalib.model
 import stravalib.unithelper
 import pymysql.cursors
 import pymysql.converters
-import geocoder
 
-def _format_timedelta(t):
-    """
-    Turn a timedelta object into a string representation "hh:mm:ss" with a resolution of one second.
-
-    :param t: a timedelta object
-    """
-    if (t is not None):
-        assert(isinstance(t, datetime.timedelta))
-        seconds = int(t.total_seconds())
-        (hours, mins) = divmod(seconds, 3600)
-        (minutes, seconds) = divmod(mins, 60)
-        return "{0}:{1:02d}:{2:02d}".format(hours, minutes, seconds)
-    return ""
-
-
-def _get_location(cords):
-    """
-    Return the city or village along with the department number corresponding
-    to a pair of (latitude, longitude) coordinates
-
-    :param cords: a pair of (latitude, longitude) coordinates
-    :type cords: a list or a tuple
-
-    :param geolocator: an instance of a geocoder capable of reverse locating
-    """
-    if cords is None:
-        return None
-    max_attempts = 4
-    attempts = 0
-    while True:
-        try:
-            # location = geolocator.reverse(cords)
-            location = geocoder.osm("{lat},{lon}".format(lat=cords.lat, lon=cords.lon))
-            if location.json is None:
-                return None
-            location_dict = location.json
-            city = ""
-            code = ""
-            for key in ('hamlet', 'village', 'city', 'town', 'state'):
-                if key in location_dict:
-                    city = location_dict[key]
-                    break
-            if location_dict['country'] == 'France' and 'postal' in location_dict:
-                code = ' (' + location_dict['postal'][0:2] + ')'
-            return city + code
-        except:
-            attempts += 1
-            if attempts > max_attempts:
-                break
-
-
-class ExtendedEncoder(json.JSONEncoder):
-    """
-    Extend the JSON encoding facilities from datetime objects
-    """
-    def default(self, obj): #pylint: disable=method-hidden
-        if isinstance(obj, (datetime.datetime, datetime.date)):
-            return "%s" % obj
-        if isinstance(obj, datetime.timedelta):
-            return _format_timedelta(obj)
-        return json.JSONEncoder.default(self, obj)
-
-
-class ActivityTypes:
-    """
-    This class acts as a dictionnary of the possible activity types
-    """
-    CX = 'CX'
-    TT = 'TT'
-    MTB = 'MTB'
-    ROAD = 'Road'
-    RIDE = stravalib.model.Activity.RIDE
-    HIKE = stravalib.model.Activity.HIKE
-    RUN = stravalib.model.Activity.RUN
-    NORDICSKI = stravalib.model.Activity.NORDICSKI
-    FRAME_TYPES = {0: "", 1: MTB, 3: ROAD, 2: CX, 4: TT}
-    ACTIVITY_TYPES = {HIKE, RUN, RIDE, ROAD, MTB, CX, TT, NORDICSKI}
+from stravaview.constants import ActivityTypes
+from stravaview.utils import format_timedelta, get_location, ExtendedEncoder
 
 
 class StravaRequest:
@@ -336,8 +259,8 @@ class StravaView:
         if activity.total_elevation_gain is not None:
             elevation = "%0.0f" % stravalib.unithelper.meters(activity.total_elevation_gain).get_num()
         date = activity.start_date_local
-        moving_time = _format_timedelta(activity.moving_time)
-        elapsed_time = _format_timedelta(activity.elapsed_time)
+        moving_time = format_timedelta(activity.moving_time)
+        elapsed_time = format_timedelta(activity.elapsed_time)
         gear_id = activity.gear_id
         if activity.average_speed is not None:
             average_speed = "%0.1f" % stravalib.unithelper.kilometers_per_hour(activity.average_speed).get_num()
@@ -384,7 +307,7 @@ class StravaView:
         new_description = description
         new_red_points = red_points
         # if location is None or location == "":
-        new_location = _get_location(activity.start_latlng)
+        new_location = get_location(activity.start_latlng)
         if red_points == 0 and suffer_score > 0:
             new_red_points = stravaRequest.get_points(activity)
         new_description = stravaRequest.get_description(activity)
