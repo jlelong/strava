@@ -11,8 +11,8 @@ import stravalib.unithelper
 import pymysql.cursors
 import pymysql.converters
 
-from stravaview.constants import ActivityTypes
-from stravaview.utils import format_timedelta, get_location, ExtendedEncoder
+from backend.constants import ActivityTypes
+from backend.utils import format_timedelta, get_location, ExtendedEncoder
 
 
 class StravaRequest:

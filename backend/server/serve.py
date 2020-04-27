@@ -1,22 +1,15 @@
 # -*- coding: utf-8 -*-
 import os
 import os.path
-import sys
 import json
 import time
 import cherrypy
 import stravalib
 import requests
 
-WUI_DIR = os.path.join(os.path.dirname(os.path.abspath(sys.argv[0])), '..')
-SESSION_DIR = '/tmp/MyStrava'
-APP_TOPLEVEL_DIR = os.path.join(WUI_DIR, '..')
-sys.path.append(APP_TOPLEVEL_DIR)
-from readconfig import read_config
-from stravaview.stravadb import StravaRequest
-from stravaview.stravadb import StravaView
-import athletewhitelist
-
+from backend.stravadb import StravaRequest
+from backend.stravadb import StravaView
+from backend.server import athletewhitelist
 
 class StravaUI(object):
     COOKIE_NAME = "MyStrava_AthleteID"
@@ -27,9 +20,9 @@ class StravaUI(object):
     REFRESH_TOKEN = 'refresh_token'
     EXPIRES_AT = 'deadline'
 
-    def __init__(self, rootdir):
+    def __init__(self, rootdir, config):
         self.rootdir = rootdir
-        self.config = read_config(os.path.join(APP_TOPLEVEL_DIR, 'setup.ini'))
+        self.config = config
 
     def _getOrRefreshToken(self):
         """
@@ -266,31 +259,3 @@ class StravaUI(object):
         print("-------")
 
         raise cherrypy.HTTPRedirect(cherrypy.url(path='/', script_name=''))
-
-
-if __name__ == '__main__':
-    if not os.path.exists(SESSION_DIR):
-        os.mkdir(SESSION_DIR)
-    conf = {
-        '/': {
-            # 'tools.proxy.on': True,
-            # 'tools.proxy.base': 'http://localhost/mystrava',
-            # 'tools.proxy.local': "",
-            'tools.encode.text_only': False,
-            'tools.sessions.on': True,
-            'tools.sessions.storage_class': cherrypy.lib.sessions.FileSession,
-            'tools.sessions.storage_path': SESSION_DIR,
-            'tools.sessions.timeout': 60 * 24 * 30,  # 1 month
-            'tools.staticdir.on': True,
-            'tools.staticdir.root': WUI_DIR,
-            'tools.staticdir.dir': '',
-            'tools.response_headers.on': True,
-            'log.access_file': "{0}/log/access.log".format(APP_TOPLEVEL_DIR),
-            'log.error_file': "{0}/log/error.log".format(APP_TOPLEVEL_DIR),
-        },
-    }
-
-print(conf['/'])
-cherrypy.config.update({'server.socket_host': '127.0.0.1', 'server.socket_port': 8080})
-# cherrypy.quickstart(StravaUI(WUI_DIR), '/mystrava', conf)
-cherrypy.quickstart(StravaUI(WUI_DIR), '/', conf)

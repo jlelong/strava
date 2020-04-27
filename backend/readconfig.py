@@ -69,4 +69,10 @@ def read_config(inifile):
     except (configparser.NoOptionError, ValueError):
         config['with_description'] = False
 
+    try:
+        config['session_dir'] = parser.get('server', 'session_dir')
+    except configparser.NoOptionError:
+        print("No session directory defined")
+        sys.exit()
+
     return config
