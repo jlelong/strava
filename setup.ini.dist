@@ -22,3 +22,10 @@ with_points = no
 # Do you want to retrieve the description for every activity. It induces one
 # extra http request per activity. Use "yes" or "no"
 with_description = no
+
+[server]
+session_dir = /tmp/MyStrava
+# List of athletes allowed to use the app. One entry per line
+athelete_whitelist = 
+# If needed, define a proxy
+base_proxy = 

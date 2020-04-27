@@ -69,4 +69,23 @@ def read_config(inifile):
     except (configparser.NoOptionError, ValueError):
         config['with_description'] = False
 
+    try:
+        config['session_dir'] = parser.get('server', 'session_dir')
+    except configparser.NoOptionError:
+        print("No session directory defined")
+        sys.exit()
+
+    try:
+        config['proxy_base'] = parser.get('server', 'base_proxy')
+    except configparser.NoOptionError:
+        config['proxy_base'] = None
+        print("No proxy defined")
+
+
+    try:
+        config['athlete_whitelist'] = [int(x) for x in parser.get('server', 'athlete_whitelist').split('\n')]
+    except configparser.NoOptionError:
+        print('No athlete_whitelist provided.')
+        config['athlete_whitelist'] = ()
+
     return config
