@@ -76,6 +76,13 @@ def read_config(inifile):
         sys.exit()
 
     try:
+        config['proxy_base'] = parser.get('server', 'base_proxy')
+    except configparser.NoOptionError:
+        config['proxy_base'] = None
+        print("No proxy defined")
+
+
+    try:
         config['athlete_whitelist'] = [int(x) for x in parser.get('server', 'athlete_whitelist').split('\n')]
     except configparser.NoOptionError:
         print('No athlete_whitelist provided.')

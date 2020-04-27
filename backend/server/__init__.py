@@ -28,6 +28,10 @@ def app(app_dir):
             'log.error_file': "{0}/log/error.log".format(app_dir),
         },
     }
+    if config['proxy_base']:
+        conf['/']['tools.proxy.on'] = True
+        conf['/']['tools.proxy.base'] = config['proxy_base']
+
 
     print(conf['/'])
     cherrypy.config.update({'server.socket_host': '127.0.0.1', 'server.socket_port': 8080})

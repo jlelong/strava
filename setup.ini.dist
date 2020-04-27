@@ -27,3 +27,5 @@ with_description = no
 session_dir = /tmp/MyStrava
 # List of athletes allowed to use the app. One entry per line
 athelete_whitelist = 
+# If needed, define a proxy
+base_proxy = 
