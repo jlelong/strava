@@ -152,7 +152,7 @@ class StravaUI(object):
         stravaRequest = StravaRequest(self.config, self._getOrRefreshToken())
         view.create_activities_table()
         list_ids = view.update_activities(stravaRequest)
-        activities = view.get_list_activities(list_ids)
+        activities = view.get_activities(list_ids=list_ids)
         view.close()
         cherrypy.response.headers["Content-Type"] = "application/json"
         return activities.encode('utf8')
@@ -191,7 +191,7 @@ class StravaUI(object):
         try:
             activity = stravaRequest.client.get_activity(id)
             view.update_activity(activity, stravaRequest)
-            activity = view.get_list_activities((id,))
+            activity = view.get_activities(list_ids=id)
         except requests.exceptions.HTTPError:
             # Page not found. Probably a deleted activity.
             activity = ""

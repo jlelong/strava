@@ -405,7 +405,7 @@ class StravaView:
         bike_type = row['bike_type']
         print("{7}: {1} | {2} | {3} | {4} | {5} | {6} | https://www.strava.com/activities/{0}".format(identifier, name, date, distance, elevation, moving_time, elapsed_time, bike_type))
 
-    def get_activities(self, before=None, after=None, name=None, activity_type=None):
+    def get_activities(self, before=None, after=None, name=None, activity_type=None, list_ids=None):
         """
         Get all the activities matching the criterions
 
@@ -421,8 +421,8 @@ class StravaView:
         :param activity_type: the type of activity. Can be 'Walk', 'Run', 'Ride', 'Road', 'MTB', 'CX', 'TT'.
         :type activity_type: str
 
-        :param json_output: do we return a JSON encoded result of the query
-        :type json_output: bool
+        :param list_ids: a list of activities ids
+        :type list_ids: a list or an integer
         """
         # sql = """SELECT a.id, a.name, a.location, DATE(a.date) AS date, a.distance, a.elevation,
         # a.average_speed, a.elapsed_time, a.moving_time, a.suffer_score, a.red_points, a.calories,
@@ -450,6 +450,10 @@ class StravaView:
                     query = query.filter(self.activities.type == activity_type)
                 else:
                     query = query.filter(self.gears.type == activity_type)
+        if list_ids is not None and isinstance(list_ids, int):
+            list_ids = [list_ids]
+        if list_ids is not None:
+            query = query.filter(self.activities.id.in_(list_ids))
         out = []
         for row in query.order_by(self.activities.date.desc()).all():
             ans = row[0].to_json()
@@ -458,37 +462,6 @@ class StravaView:
             out.append(ans)
         return out
 
-
-    def get_list_activities(self, list_ids):
-        """
-        Return the jsonified data corresponding to the activities with ids in list_ids
-
-        :param list_ids: a list of activities ids
-        """
-        # Return if activity table does not exist
-        sql = "SHOW TABLES LIKE %s"
-        if (self.cursor.execute(sql, self.activities_table) == 0):
-            return json.dumps([])
-        # Make sure we have a list of ids
-        if isinstance(list_ids, int):
-            list_ids = [list_ids]
-        if not list_ids:
-            return json.dumps([])
-
-        sql = """SELECT a.id, a.name, a.location, DATE(a.date) AS date, a.distance, a.elevation,
-        a.average_speed, a.elapsed_time, a.moving_time, a.suffer_score, a.red_points, a.calories,
-        a.max_heartrate, a.average_heartrate, a.description, a.commute, a.type as activity_type,
-        IF(a.type='Ride', b.type, NULL) AS bike_type, b.name AS gear_name
-        FROM %s AS a LEFT JOIN %s AS b ON a.gear_id = b.id
-        """ % (self.activities_table, self.gears_table)
-
-        in_ph = ', '.join(itertools.repeat('%s', len(list_ids)))
-        sql = sql + " WHERE a.athlete=%s AND a.id IN (" + in_ph + ")"
-        sql_args = []
-        sql_args.append(self.athlete_id)
-        sql_args.extend(list_ids)
-        self.cursor.execute(sql, sql_args)
-        return json.dumps(self.cursor.fetchall(), cls=ExtendedEncoder)
 
     def get_gears(self):
         """
