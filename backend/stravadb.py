@@ -3,8 +3,6 @@
 
 from __future__ import print_function
 
-import json
-import itertools
 import stravalib.client
 import stravalib.model
 import stravalib.unithelper
@@ -13,7 +11,7 @@ import pymysql.converters
 import sqlalchemy
 
 from backend.constants import ActivityTypes
-from backend.utils import format_timedelta, get_location, ExtendedEncoder
+from backend.utils import get_location
 from backend.models import CreateActivitiesTable, CreateGearsTable
 
 
@@ -102,8 +100,8 @@ class StravaView:
         """
         self.db_uri = 'mysql+pymysql://{user}:{passwd}@localhost/{base}'.format(user=config['mysql_user'], passwd=config['mysql_password'], base=config['mysql_base'])
         db_engine = sqlalchemy.create_engine(self.db_uri)
-        self.gears = CreateGearsTable(config['mysql_bikes_table'])
-        self.activities = CreateActivitiesTable(config['mysql_activities_table'])
+        self.Gear = CreateGearsTable(config['mysql_bikes_table'])
+        self.Activity = CreateActivitiesTable(config['mysql_activities_table'])
         self.session: sqlalchemy.orm.Session = sqlalchemy.orm.sessionmaker(bind=db_engine)()
 
         self.connection = pymysql.connect(host='localhost', user=config['mysql_user'], password=config['mysql_password'], db=config['mysql_base'], charset='utf8mb4')
@@ -431,15 +429,15 @@ class StravaView:
         # FROM %s AS a LEFT JOIN %s AS b ON a.gear_id = b.id
         # """ % (self.activities_table, self.gears_table)
 
-        query = self.session.query(self.activities, self.gears.name, self.gears.type) \
-            .outerjoin(self.gears, self.gears.id == self.activities.gear_id) \
-            .filter(self.activities.athlete == self.athlete_id)
+        query = self.session.query(self.Activity, self.Gear.name, self.Gear.type) \
+            .outerjoin(self.Gear, self.Gear.id == self.Activity.gear_id) \
+            .filter(self.Activity.athlete == self.athlete_id)
         if before is not None:
-            query = query.filter(self.activities.date <= before)
+            query = query.filter(self.Activity.date <= before)
         if after is not None:
-            query = query.filter(self.activities.date >= after)
+            query = query.filter(self.Activity.date >= after)
         if name is not None:
-            query = query.filter(self.activities.name.contains(name))
+            query = query.filter(self.Activity.name.contains(name))
         if activity_type is not None:
             # We consider FRAME_TYPES as activities on their owns.
             if not (activity_type in self.activityTypes.ACTIVITY_TYPES):
@@ -447,15 +445,15 @@ class StravaView:
                 activity_type = None
             else:
                 if activity_type in (self.activityTypes.HIKE, self.activityTypes.RUN, self.activityTypes.RIDE):
-                    query = query.filter(self.activities.type == activity_type)
+                    query = query.filter(self.Activity.type == activity_type)
                 else:
-                    query = query.filter(self.gears.type == activity_type)
+                    query = query.filter(self.Gear.type == activity_type)
         if list_ids is not None and isinstance(list_ids, int):
             list_ids = [list_ids]
         if list_ids is not None:
-            query = query.filter(self.activities.id.in_(list_ids))
+            query = query.filter(self.Activity.id.in_(list_ids))
         out = []
-        for row in query.order_by(self.activities.date.desc()).all():
+        for row in query.order_by(self.Activity.date.desc()).all():
             ans = row[0].to_json()
             ans['gear_name'] = row[1]
             ans['bike_type'] = row[2] if ans['activity_type'] == self.activityTypes.RIDE else ''
@@ -472,6 +470,6 @@ class StravaView:
         # sql = """SELECT name, type FROM %s""" % (self.gears_table)
         # self.cursor.execute(sql)
         # return json.dumps(self.cursor.fetchall(), cls=ExtendedEncoder)
-        gears = self.session.query(self.gears).all()
+        gears = self.session.query(self.Gear).all()
         return [g.to_json() for g in gears]
 

@@ -6,7 +6,7 @@ from backend.constants import ActivityTypes
 Base = declarative_base()
 
 def CreateGearsTable(tablename):
-    class Gears(Base):
+    class Gear(Base):
         __tablename__ = tablename
         id = db.Column(db.String(45), primary_key=True)
         name = db.Column(db.String(256), nullable=True)
@@ -21,10 +21,10 @@ def CreateGearsTable(tablename):
                 "frame_type": self.frame_type
             }
 
-    return Gears
+    return Gear
 
 def CreateActivitiesTable(tablename):
-    class Activities(Base):
+    class Activity(Base):
         __tablename__ = tablename
         id = db.Column(db.BigInteger, primary_key=True)
         athlete = db.Column(db.Integer, default=0)
@@ -70,4 +70,4 @@ def CreateActivitiesTable(tablename):
                 "activity_type": self.type
             }
 
-    return Activities
+    return Activity
