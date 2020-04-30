@@ -16,7 +16,7 @@ def CreateGearsTable(tablename):
         def to_json(self):
             return {
                 "id": self.id,
-                "name": self.name.encode('utf-8'),
+                "name": self.name,
                 "type": self.type,
                 "frame_type": self.frame_type
             }
@@ -51,7 +51,7 @@ def CreateActivitiesTable(tablename):
             return {
                 "id": self.id,
                 "athlete": self.athlete,
-                "name": self.name.encode('utf-8'),
+                "name": self.name,
                 "location": self.location,
                 "date": self.date.strftime("%Y-%m-%d"),
                 "distance": self.distance,
@@ -64,10 +64,10 @@ def CreateActivitiesTable(tablename):
                 "average_heartrate": self.average_heartrate,
                 "suffer_score": self.suffer_score,
                 "red_points": self.red_points,
-                "description": self.description.encode('utf-8'),
+                "description": self.description if self.description is not None else '',
                 "commute": self.commute,
                 "calories": self.calories,
-                "type": self.type
+                "activity_type": self.type
             }
 
     return Activities

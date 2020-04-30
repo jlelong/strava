@@ -104,7 +104,7 @@ class StravaView:
         db_engine = sqlalchemy.create_engine(self.db_uri)
         self.gears = CreateGearsTable(config['mysql_bikes_table'])
         self.activities = CreateActivitiesTable(config['mysql_activities_table'])
-        self.session = sqlalchemy.orm.sessionmaker(bind=db_engine)()
+        self.session: sqlalchemy.orm.Session = sqlalchemy.orm.sessionmaker(bind=db_engine)()
 
         self.connection = pymysql.connect(host='localhost', user=config['mysql_user'], password=config['mysql_password'], db=config['mysql_base'], charset='utf8mb4')
         self.cursor = self.connection.cursor(pymysql.cursors.DictCursor)
@@ -405,7 +405,7 @@ class StravaView:
         bike_type = row['bike_type']
         print("{7}: {1} | {2} | {3} | {4} | {5} | {6} | https://www.strava.com/activities/{0}".format(identifier, name, date, distance, elevation, moving_time, elapsed_time, bike_type))
 
-    def get_activities(self, before=None, after=None, name=None, activity_type=None, json_output=False):
+    def get_activities(self, before=None, after=None, name=None, activity_type=None):
         """
         Get all the activities matching the criterions
 
@@ -424,28 +424,22 @@ class StravaView:
         :param json_output: do we return a JSON encoded result of the query
         :type json_output: bool
         """
-        # Return if activity table does not exist
-        sql = "SHOW TABLES LIKE %s"
-        if (self.cursor.execute(sql, self.activities_table) == 0):
-            return json.dumps([])
+        # sql = """SELECT a.id, a.name, a.location, DATE(a.date) AS date, a.distance, a.elevation,
+        # a.average_speed, a.elapsed_time, a.moving_time, a.suffer_score, a.red_points, a.calories,
+        # a.max_heartrate, a.average_heartrate, a.description, a.commute, a.type as activity_type,
+        # IF(a.type='Ride', b.type, NULL) bike_type, b.name AS gear_name
+        # FROM %s AS a LEFT JOIN %s AS b ON a.gear_id = b.id
+        # """ % (self.activities_table, self.gears_table)
 
-        before_sql = ""
-        after_sql = ""
-        name_sql = ""
-        conds = list()
-        conds.append("athlete = '%s'" % self.athlete_id)
+        query = self.session.query(self.activities, self.gears.name, self.gears.type) \
+            .outerjoin(self.gears, self.gears.id == self.activities.gear_id) \
+            .filter(self.activities.athlete == self.athlete_id)
         if before is not None:
-            before_sql = "a.date <= '%s'" % before
-            conds.append(before_sql)
-
+            query = query.filter(self.activities.date <= before)
         if after is not None:
-            after_sql = "a.date >= '%s'" % after
-            conds.append(after_sql)
-
+            query = query.filter(self.activities.date >= after)
         if name is not None:
-            name_sql = "a.name LIKE '%%%s%%'" % name
-            conds.append(name_sql)
-
+            query = query.filter(self.activities.name.contains(name))
         if activity_type is not None:
             # We consider FRAME_TYPES as activities on their owns.
             if not (activity_type in self.activityTypes.ACTIVITY_TYPES):
@@ -453,28 +447,17 @@ class StravaView:
                 activity_type = None
             else:
                 if activity_type in (self.activityTypes.HIKE, self.activityTypes.RUN, self.activityTypes.RIDE):
-                    activity_type_sql = "a.type = '%s'" % activity_type
+                    query = query.filter(self.activities.type == activity_type)
                 else:
-                    activity_type_sql = "b.type = '%s'" % activity_type
-                conds.append(activity_type_sql)
+                    query = query.filter(self.gears.type == activity_type)
+        out = []
+        for row in query.order_by(self.activities.date.desc()).all():
+            ans = row[0].to_json()
+            ans['gear_name'] = row[1]
+            ans['bike_type'] = row[2] if ans['activity_type'] == self.activityTypes.RIDE else ''
+            out.append(ans)
+        return out
 
-        sql = """SELECT a.id, a.name, a.location, DATE(a.date) AS date, a.distance, a.elevation,
-        a.average_speed, a.elapsed_time, a.moving_time, a.suffer_score, a.red_points, a.calories,
-        a.max_heartrate, a.average_heartrate, a.description, a.commute, a.type as activity_type,
-        IF(a.type='Ride', b.type, NULL) bike_type, b.name AS gear_name
-        FROM %s AS a LEFT JOIN %s AS b ON a.gear_id = b.id
-        """ % (self.activities_table, self.gears_table)
-        if conds:
-            where = " AND ".join(conds)
-            sql = sql + " WHERE " + where
-        sql = sql + " ORDER BY date DESC"
-        # print(sql + "\n")
-        self.cursor.execute(sql)
-        if json_output:
-            return json.dumps(self.cursor.fetchall(), cls=ExtendedEncoder)
-        else:
-            for row in self.cursor.fetchall():
-                self.print_row(row)
 
     def get_list_activities(self, list_ids):
         """
@@ -511,10 +494,11 @@ class StravaView:
         """
         Return the jsonified list of gears
         """
-        # Return if gear table does not exist
-        sql = "SHOW TABLES LIKE %s"
-        if (self.cursor.execute(sql, self.gears_table) == 0):
-            return json.dumps([])
-        sql = """SELECT name, type FROM %s""" % (self.gears_table)
-        self.cursor.execute(sql)
-        return json.dumps(self.cursor.fetchall(), cls=ExtendedEncoder)
+        # sql = "SHOW TABLES LIKE %s"
+        # if (self.cursor.execute(sql, self.gears_table) == 0):
+        # sql = """SELECT name, type FROM %s""" % (self.gears_table)
+        # self.cursor.execute(sql)
+        # return json.dumps(self.cursor.fetchall(), cls=ExtendedEncoder)
+        gears = self.session.query(self.gears).all()
+        return [g.to_json() for g in gears]
+
