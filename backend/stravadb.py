@@ -10,9 +10,11 @@ import stravalib.model
 import stravalib.unithelper
 import pymysql.cursors
 import pymysql.converters
+import sqlalchemy
 
 from backend.constants import ActivityTypes
 from backend.utils import format_timedelta, get_location, ExtendedEncoder
+from backend.models import CreateActivitiesTable, CreateGearsTable
 
 
 class StravaRequest:
@@ -98,6 +100,12 @@ class StravaView:
 
         :param athlete: the strava id of the athlete logged in
         """
+        self.db_uri = 'mysql+pymysql://{user}:{passwd}@localhost/{base}'.format(user=config['mysql_user'], passwd=config['mysql_password'], base=config['mysql_base'])
+        db_engine = sqlalchemy.create_engine(self.db_uri)
+        self.gears = CreateGearsTable(config['mysql_bikes_table'])
+        self.activities = CreateActivitiesTable(config['mysql_activities_table'])
+        self.session = sqlalchemy.orm.sessionmaker(bind=db_engine)()
+
         self.connection = pymysql.connect(host='localhost', user=config['mysql_user'], password=config['mysql_password'], db=config['mysql_base'], charset='utf8mb4')
         self.cursor = self.connection.cursor(pymysql.cursors.DictCursor)
         self.activities_table = config['mysql_activities_table']
@@ -107,6 +115,7 @@ class StravaView:
     def close(self):
         self.cursor.close()
         self.connection.close()
+        self.session.close()
 
     def create_gears_table(self):
         """
