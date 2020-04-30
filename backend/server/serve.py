@@ -104,7 +104,7 @@ class StravaUI(object):
             activities = json.dumps("")
         else:
             view = StravaView(self.config, cherrypy.session.get(self.ATHLETE_ID))
-            activities = view.get_activities(json_output=True)
+            activities = view.get_activities()
             view.close()
         # Cherrypy has a decorator to return a JSON object but as the get_activities method
         # already return a JSON object, we cannot rely on it.
