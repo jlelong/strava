@@ -129,7 +129,9 @@ class StravaView:
             new_bike = self.Gear(name=desc.name, id=desc.id, type=self.activityTypes.FRAME_TYPES[desc.frame_type], frame_type=desc.frame_type)
             old_bike = self.session.query(self.Gear).filter_by(id=bike.id).first()
             if old_bike is not None:
-                old_bike = new_bike
+                old_bike.name = desc.name
+                old_bike.frame_type = desc.frame_type
+                old_bike.type = self.activityTypes.FRAME_TYPES[desc.frame_type]
             else:
                 self.session.add(new_bike)
             self.session.commit()
@@ -139,52 +141,12 @@ class StravaView:
             new_shoe = self.Gear(name=desc.name, id=desc.id, type=self.activityTypes.RUN)
             old_shoe = self.session.query(self.Gear).filter_by(id=shoe.id).first()
             if old_shoe is not None:
-                old_shoe = new_shoe
+                old_shoe.name = desc.name
+                old_shoe.type = self.activityTypes.RUN
             else:
                 self.session.add(new_shoe)
             self.session.commit()
 
-    def update_bikes(self, stravaRequest):
-        """
-        Update the gears table with bikes
-
-        :param stravaRequest: an instance of StravaRequest to send requests to the Strava API
-        """
-        # Connect to the database
-        bikes = stravaRequest.athlete.bikes
-        for bike in bikes:
-            desc = stravaRequest.client.get_gear(bike.id)
-
-            # Check if the gear already exists
-            sql = "SELECT * FROM %s WHERE id='%s' LIMIT 1" % (self.gears_table, bike.id)
-            if (self.cursor.execute(sql) > 0):
-                sql = "UPDATE {} SET name=%s, type=%s, frame_type=%s where id=%s".format(self.gears_table)
-                self.cursor.execute(sql, (desc.name, self.activityTypes.FRAME_TYPES[desc.frame_type], desc.frame_type, desc.id))
-            else:
-                sql = "INSERT INTO {} (id, name, type, frame_type) VALUES (%s, %s, %s, %s)".format(self.gears_table)
-                self.cursor.execute(sql, (desc.id, desc.name, self.activityTypes.FRAME_TYPES[desc.frame_type], desc.frame_type))
-            self.connection.commit()
-
-    def update_shoes(self, stravaRequest):
-        """
-        Update the gears table with shoes
-
-        :param stravaRequest: an instance of StravaRequest to send requests to the Strava API
-        """
-        # Connect to the database
-        shoes = stravaRequest.athlete.shoes
-        for shoe in shoes:
-            desc = stravaRequest.client.get_gear(shoe.id)
-
-            # Check if the gear already exists
-            sql = "SELECT * FROM %s WHERE id='%s' LIMIT 1" % (self.gears_table, shoe.id)
-            if (self.cursor.execute(sql) > 0):
-                sql = "UPDATE {} SET name=%s where id=%s".format(self.gears_table)
-                self.cursor.execute(sql, (desc.name, desc.id))
-            else:
-                sql = "INSERT INTO {} (id, name, type) VALUES (%s, %s, %s)".format(self.gears_table)
-                self.cursor.execute(sql, (desc.id, desc.name, self.activityTypes.RUN))
-            self.connection.commit()
 
     def push_activity(self, activity):
         """
