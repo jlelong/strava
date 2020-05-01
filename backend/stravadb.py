@@ -12,7 +12,7 @@ import sqlalchemy
 
 from backend.constants import ActivityTypes
 from backend.utils import get_location
-from backend.models import CreateActivitiesTable, CreateGearsTable
+from backend.models import Base
 
 
 class StravaRequest:
@@ -88,7 +88,7 @@ class StravaView:
     """
     activityTypes = ActivityTypes()
 
-    def __init__(self, config, athlete_id):
+    def __init__(self, config, athlete_id, Gear, Activity):
         """
         Initialize the StravaView class.
 
@@ -100,77 +100,49 @@ class StravaView:
         """
         self.db_uri = 'mysql+pymysql://{user}:{passwd}@localhost/{base}'.format(user=config['mysql_user'], passwd=config['mysql_password'], base=config['mysql_base'])
         db_engine = sqlalchemy.create_engine(self.db_uri)
-        self.Gear = CreateGearsTable(config['mysql_bikes_table'])
-        self.Activity = CreateActivitiesTable(config['mysql_activities_table'])
+        self.Gear = Gear
+        self.Activity = Activity
+        # Create the table if they do not exist
+        Base.metadata.create_all(db_engine)
         self.session: sqlalchemy.orm.Session = sqlalchemy.orm.sessionmaker(bind=db_engine)()
 
-        self.connection = pymysql.connect(host='localhost', user=config['mysql_user'], password=config['mysql_password'], db=config['mysql_base'], charset='utf8mb4')
-        self.cursor = self.connection.cursor(pymysql.cursors.DictCursor)
-        self.activities_table = config['mysql_activities_table']
-        self.gears_table = config['mysql_bikes_table']
+        self.connection = None
+        self.cursor = None
+        self.activities_table = None
+        self.gears_table = None
         self.athlete_id = athlete_id
 
     def close(self):
-        self.cursor.close()
-        self.connection.close()
         self.session.close()
 
-    def create_gears_table(self):
+    def update_gears(self, stravaRequest: StravaRequest):
         """
-        Create the gears table if it does not already exist
-        """
-        # Check if table already exists
-        sql = "SHOW TABLES LIKE %s"
-        if (self.cursor.execute(sql, self.gears_table) > 0):
-            print("The table '%s' already exists" % self.gears_table)
-            return
+        Update the gears table with bikes and shoes
 
-        sql = """CREATE TABLE {} (
-        id varchar(45) NOT NULL,
-        name varchar(256) DEFAULT NULL,
-        type enum(%s,%s,%s,%s,%s,%s) DEFAULT NULL,
-        frame_type int(11) DEFAULT 0,
-        PRIMARY KEY (id),
-        UNIQUE KEY strid_UNIQUE (id)
-        ) ENGINE=InnoDB DEFAULT CHARSET=utf8""".format(self.gears_table)
-        self.cursor.execute(sql, (self.activityTypes.HIKE, self.activityTypes.RUN, self.activityTypes.ROAD, self.activityTypes.MTB, self.activityTypes.CX, self.activityTypes.TT))
-        self.connection.commit()
-
-    def create_activities_table(self):
+        :param stravaRequest: an instance of StravaRequest to send requests to the Strava API
         """
-        Create the activities table if it does not already exist
-        """
-        # Check if table already exists
-        sql = "SHOW TABLES LIKE %s"
-        if (self.cursor.execute(sql, self.activities_table) > 0):
-            print("The table '%s' already exists" % self.activities_table)
-            return
+        gears = list(stravaRequest.athlete.bikes)
+        gears.extend(list(stravaRequest.athlete.shoes))
 
-        sql = """CREATE TABLE {} (
-        id bigint(20) NOT NULL,
-        athlete int(11) DEFAULT 0,
-        name varchar(256) COLLATE utf8mb4_bin DEFAULT NULL,
-        location varchar(256) DEFAULT NULL,
-        date datetime DEFAULT NULL,
-        distance float DEFAULT 0,
-        elevation float DEFAULT 0,
-        moving_time time DEFAULT 0,
-        elapsed_time time DEFAULT 0,
-        gear_id varchar(45) DEFAULT NULL,
-        average_speed float DEFAULT 0,
-        max_heartrate int DEFAULT 0,
-        average_heartrate float DEFAULT 0,
-        suffer_score int DEFAULT 0,
-        red_points int DEFAULT 0,
-        description text COLLATE utf8mb4_bin DEFAULT NULL,
-        commute tinyint(1) DEFAULT 0,
-        calories float DEFAULT 0,
-        type enum(%s, %s, %s, %s) DEFAULT NULL,
-        PRIMARY KEY (id),
-        UNIQUE KEY strid_UNIQUE (id)
-        ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_bin""".format(self.activities_table)
-        self.cursor.execute(sql, (self.activityTypes.RIDE, self.activityTypes.RUN, self.activityTypes.HIKE, self.activityTypes.NORDICSKI))
-        self.connection.commit()
+        for bike in stravaRequest.athlete.bikes:
+            desc = stravaRequest.client.get_gear(bike.id)
+            new_bike = self.Gear(name=desc.name, id=desc.id, type=self.activityTypes.FRAME_TYPES[desc.frame_type], frame_type=desc.frame_type)
+            old_bike = self.session.query(self.Gear).filter_by(id=bike.id).first()
+            if old_bike is not None:
+                old_bike = new_bike
+            else:
+                self.session.add(new_bike)
+            self.session.commit()
+
+        for shoe in stravaRequest.athlete.shoes:
+            desc = stravaRequest.client.get_gear(shoe.id)
+            new_shoe = self.Gear(name=desc.name, id=desc.id, type=self.activityTypes.RUN)
+            old_shoe = self.session.query(self.Gear).filter_by(id=shoe.id).first()
+            if old_shoe is not None:
+                old_shoe = new_shoe
+            else:
+                self.session.add(new_shoe)
+            self.session.commit()
 
     def update_bikes(self, stravaRequest):
         """
