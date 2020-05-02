@@ -308,13 +308,6 @@ class StravaView:
         :param list_ids: a list of activities ids
         :type list_ids: a list or an integer
         """
-        # sql = """SELECT a.id, a.name, a.location, DATE(a.date) AS date, a.distance, a.elevation,
-        # a.average_speed, a.elapsed_time, a.moving_time, a.suffer_score, a.red_points, a.calories,
-        # a.max_heartrate, a.average_heartrate, a.description, a.commute, a.type as activity_type,
-        # IF(a.type='Ride', b.type, NULL) bike_type, b.name AS gear_name
-        # FROM %s AS a LEFT JOIN %s AS b ON a.gear_id = b.id
-        # """ % (self.activities_table, self.gears_table)
-
         query = self.session.query(self.Activity, self.Gear.name, self.Gear.type) \
             .outerjoin(self.Gear, self.Gear.id == self.Activity.gear_id) \
             .filter(self.Activity.athlete == self.athlete_id)
@@ -351,11 +344,6 @@ class StravaView:
         """
         Return the jsonified list of gears
         """
-        # sql = "SHOW TABLES LIKE %s"
-        # if (self.cursor.execute(sql, self.gears_table) == 0):
-        # sql = """SELECT name, type FROM %s""" % (self.gears_table)
-        # self.cursor.execute(sql)
-        # return json.dumps(self.cursor.fetchall(), cls=ExtendedEncoder)
         gears = self.session.query(self.Gear).all()
         return [g.to_json() for g in gears]
 
