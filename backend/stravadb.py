@@ -97,7 +97,8 @@ class StravaView:
         :param athlete: the strava id of the athlete logged in
         """
         self.athlete_id = athlete_id
-        self.db_uri = 'mysql+pymysql://{user}:{passwd}@localhost/{base}?charset=utf8mb4'.format(user=config['mysql_user'], passwd=config['mysql_password'], base=config['mysql_base'])
+        self.db_uri = 'mysql+pymysql://{user}:{passwd}@localhost/{base}?charset=utf8mb4'\
+            .format(user=config['mysql_user'], passwd=config['mysql_password'], base=config['mysql_base'])
         db_engine = sqlalchemy.create_engine(self.db_uri)
         self.Gear = Gear
         self.Activity = Activity
@@ -259,7 +260,8 @@ class StravaView:
         :param stravaRequest: an instance of StravaRequest to send requests to the Strava API
         """
         # Get the most recent activity
-        last_activity = self.session.query(self.Activity.date).filter_by(athlete=self.athlete_id).order_by(self.Activity.date.desc()).first()
+        last_activity = self.session.query(self.Activity.date).filter_by(athlete=self.athlete_id)\
+            .order_by(self.Activity.date.desc()).first()
         if last_activity is not None:
             after = last_activity.date
         else:
@@ -320,7 +322,8 @@ class StravaView:
         if activity_type is not None:
             # We consider FRAME_TYPES as activities on their owns.
             if not (activity_type in self.activityTypes.ACTIVITY_TYPES):
-                print("{0} is not a valid activity. Use {1}".format(activity_type, ", ".join(self.activityTypes.ACTIVITY_TYPES)))
+                print("{0} is not a valid activity. Use {1}"\
+                    .format(activity_type, ", ".join(self.activityTypes.ACTIVITY_TYPES)))
                 activity_type = None
             else:
                 if activity_type in (self.activityTypes.HIKE, self.activityTypes.RUN, self.activityTypes.RIDE):
