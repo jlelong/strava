@@ -6,8 +6,6 @@ from __future__ import print_function
 import stravalib.client
 import stravalib.model
 import stravalib.unithelper
-import pymysql.cursors
-import pymysql.converters
 import sqlalchemy
 
 from backend.constants import ActivityTypes
@@ -98,7 +96,8 @@ class StravaView:
 
         :param athlete: the strava id of the athlete logged in
         """
-        self.db_uri = 'mysql+pymysql://{user}:{passwd}@localhost/{base}'.format(user=config['mysql_user'], passwd=config['mysql_password'], base=config['mysql_base'])
+        self.athlete_id = athlete_id
+        self.db_uri = 'mysql+pymysql://{user}:{passwd}@localhost/{base}?charset=utf8mb4'.format(user=config['mysql_user'], passwd=config['mysql_password'], base=config['mysql_base'])
         db_engine = sqlalchemy.create_engine(self.db_uri)
         self.Gear = Gear
         self.Activity = Activity
@@ -106,11 +105,6 @@ class StravaView:
         Base.metadata.create_all(db_engine)
         self.session: sqlalchemy.orm.Session = sqlalchemy.orm.sessionmaker(bind=db_engine)()
 
-        self.connection = None
-        self.cursor = None
-        self.activities_table = None
-        self.gears_table = None
-        self.athlete_id = athlete_id
 
     def close(self):
         self.session.close()
@@ -155,24 +149,15 @@ class StravaView:
         :param activity: an object of class:`stravalib.model.Activity`
         """
         # Check if activity is already in the table
-        sql = "SELECT name, elevation, gear_id, commute FROM {} WHERE id=%s LIMIT 1".format(self.activities_table)
-        if (self.cursor.execute(sql, activity.id) > 0):
-            entry = self.cursor.fetchone()
-            if entry['name'] != activity.name:
-                sql = "UPDATE {} SET name=%s where id=%s".format(self.activities_table)
-                self.cursor.execute(sql, (activity.name, activity.id))
-            if entry['gear_id'] != activity.gear_id:
-                sql = "UPDATE {} SET gear_id=%s where id=%s".format(self.activities_table)
-                self.cursor.execute(sql, (activity.gear_id, activity.id))
-            if entry['commute'] != activity.commute:
-                sql = "UPDATE {} SET commute=%s where id=%s".format(self.activities_table)
-                self.cursor.execute(sql, (activity.commute, activity.id))
+        old_activity = self.session.query(self.Activity).filter_by(id=activity.id).first()
+        if old_activity is not None:
+            old_activity.name = activity.name
+            old_activity.gear_id = activity.gear_id
+            old_activity.commute = activity.commute
             if activity.total_elevation_gain is not None:
                 elevation = "%0.0f" % stravalib.unithelper.meters(activity.total_elevation_gain).get_num()
-                if entry['elevation'] != elevation:
-                    sql = "UPDATE {} SET elevation=%s where id=%s".format(self.activities_table)
-                    self.cursor.execute(sql, (elevation, activity.id))
-            self.connection.commit()
+                old_activity.elevation = elevation
+            self.session.commit()
             print("Activity '{}' was already in the local db. Updated.".format(activity.name.encode('utf-8')))
             return
 
@@ -189,19 +174,16 @@ class StravaView:
         suffer_score = 0
         red_points = 0
         calories = 0
-        location = None
-        description = None
 
         # Get the real values
-        name = activity.name
         athlete_id = activity.athlete.id
         if activity.distance is not None:
             distance = "%0.2f" % stravalib.unithelper.kilometers(activity.distance).get_num()
         if activity.total_elevation_gain is not None:
             elevation = "%0.0f" % stravalib.unithelper.meters(activity.total_elevation_gain).get_num()
         date = activity.start_date_local
-        moving_time = format_timedelta(activity.moving_time)
-        elapsed_time = format_timedelta(activity.elapsed_time)
+        moving_time = activity.moving_time
+        elapsed_time = activity.elapsed_time
         gear_id = activity.gear_id
         if activity.average_speed is not None:
             average_speed = "%0.1f" % stravalib.unithelper.kilometers_per_hour(activity.average_speed).get_num()
@@ -215,15 +197,9 @@ class StravaView:
         commute = int(activity.commute)
         activity_type = activity.type
 
-        sql = """INSERT INTO {} (id, athlete, name, distance, elevation, date, location, moving_time,
-        elapsed_time, gear_id, average_speed, average_heartrate, max_heartrate, suffer_score,
-        description, commute, type, red_points, calories) VALUES (%s, %s, %s, %s, %s, %s,
-        %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)
-        """.format(self.activities_table)
-        self.cursor.execute(sql, (activity.id, athlete_id, name, distance, elevation, date, location,
-                                  moving_time, elapsed_time, gear_id, average_speed, average_heartrate, max_heartrate,
-                                  suffer_score, description, commute, activity_type, red_points, calories))
-        self.connection.commit()
+        new_activity = self.Activity(id=activity.id, athlete=athlete_id, name=activity.name, distance=distance, elevation=elevation, date=date, moving_time=moving_time, elapsed_time=elapsed_time, gear_id=gear_id, average_speed=average_speed, average_heartrate=average_heartrate, max_heartrate=max_heartrate, suffer_score=suffer_score, commute=commute, type=activity_type, red_points=red_points, calories=calories)
+        self.session.add(new_activity)
+        self.session.commit()
 
     def update_activity_extra_fields(self, activity, stravaRequest):
         """
@@ -233,29 +209,22 @@ class StravaView:
 
         :param stravaRequest: an instance of StravaRequest to send requests to the Strava API
         """
-        sql = "SELECT location, description, red_points, suffer_score FROM {} WHERE id=%s".format(self.activities_table)
-        self.cursor.execute(sql, activity.id)
-        self.connection.commit()
-        entry = self.cursor.fetchone()
-        # Drop activities which are not rides or runs.
-        if entry is None:
+        old_activity = self.session.query(self.Activity).filter_by(id=activity.id).first()
+        # Drop activity if they are not already in DB
+        if old_activity is None:
             return
-        location = entry.get('location')
-        red_points = entry.get('red_points')
-        suffer_score = entry.get('suffer_score')
-        description = entry.get('description')
-        new_location = location
-        new_description = description
-        new_red_points = red_points
+        red_points = old_activity.red_points
+        suffer_score = old_activity.suffer_score
         # if location is None or location == "":
-        new_location = get_location(activity.start_latlng)
+        location = get_location(activity.start_latlng)
         if red_points == 0 and suffer_score > 0:
-            new_red_points = stravaRequest.get_points(activity)
-        new_description = stravaRequest.get_description(activity)
-        if (new_location != location or new_description != description or new_red_points != red_points):
-            sql = "UPDATE {} SET location=%s, description=%s, red_points=%s where id=%s".format(self.activities_table)
-            self.cursor.execute(sql, (new_location, new_description, new_red_points, activity.id))
-            self.connection.commit()
+            red_points = stravaRequest.get_points(activity)
+        description = stravaRequest.get_description(activity)
+
+        old_activity.red_points = red_points
+        old_activity.location = location
+        old_activity.description = description
+        self.session.commit()
         print("Update the description, points and location of activity {} ".format(activity.id))
 
     def update_activity(self, activity, stravaRequest):
@@ -279,9 +248,8 @@ class StravaView:
         """
         if activity_id is None:
             return
-        sql = "DELETE FROM {} WHERE id=%s".format(self.activities_table)
-        self.cursor.execute(sql, activity_id)
-        self.connection.commit()
+        self.session.query(self.Activity).filter_by(id=activity_id).delete()
+        self.session.commit()
         print("Activity deleted")
 
     def update_activities(self, stravaRequest):
@@ -291,11 +259,11 @@ class StravaView:
         :param stravaRequest: an instance of StravaRequest to send requests to the Strava API
         """
         # Get the most recent activity
-        sql = "SELECT date FROM {} WHERE athlete = %s ORDER BY date DESC LIMIT 1".format(self.activities_table)
-        if (self.cursor.execute(sql, (self.athlete_id)) == 0):
-            after = None
+        last_activity = self.session.query(self.Activity.date).filter_by(athlete=self.athlete_id).order_by(self.Activity.date.desc()).first()
+        if last_activity is not None:
+            after = last_activity.date
         else:
-            after = self.cursor.fetchone()['date']
+            after = None
         new_activities = stravaRequest.client.get_activities(after=after)
         list_ids = []
         for activity in new_activities:
@@ -320,22 +288,6 @@ class StravaView:
         for activity in all_activities:
             self.update_activity_extra_fields(activity, stravaRequest)
 
-    def print_row(self, row):
-        """
-        Print a row retrieved from the activities table
-
-        :param row: a result from a SQL fetch function
-        :type row: a dictionnary
-        """
-        name = row['name'].encode('utf-8')
-        identifier = row['id']
-        date = row['date']
-        distance = row['distance']
-        elevation = row['elevation']
-        elapsed_time = row['elapsed_time']
-        moving_time = row['moving_time']
-        bike_type = row['bike_type']
-        print("{7}: {1} | {2} | {3} | {4} | {5} | {6} | https://www.strava.com/activities/{0}".format(identifier, name, date, distance, elevation, moving_time, elapsed_time, bike_type))
 
     def get_activities(self, before=None, after=None, name=None, activity_type=None, list_ids=None):
         """

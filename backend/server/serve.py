@@ -176,7 +176,7 @@ class StravaUI(object):
         view.close()
 
     @cherrypy.expose
-    def updateactivity(self, id):
+    def updateactivity(self, activity_id):
         """
         Ajax query /updateactivity to update a single activity from its id
         """
@@ -184,9 +184,9 @@ class StravaUI(object):
         view = StravaView(self.config, cherrypy.session.get(self.ATHLETE_ID), self.Gear, self.Activity)
         stravaRequest = StravaRequest(self.config, self._getOrRefreshToken())
         try:
-            activity = stravaRequest.client.get_activity(id)
+            activity = stravaRequest.client.get_activity(activity_id)
             view.update_activity(activity, stravaRequest)
-            activity = view.get_activities(list_ids=id)
+            activity = view.get_activities(list_ids=activity_id)
         except requests.exceptions.HTTPError:
             # Page not found. Probably a deleted activity.
             activity = ""
@@ -195,13 +195,13 @@ class StravaUI(object):
         return activity
 
     @cherrypy.expose
-    def deleteactivity(self, id):
+    def deleteactivity(self, activity_id):
         """
         Ajax query /deleteactivity to delete a single activity using its id
         """
         cherrypy.session[self.DUMMY] = 'MyStravaDeleteActivity'
         view = StravaView(self.config, cherrypy.session.get(self.ATHLETE_ID), self.Gear, self.Activity)
-        view.delete_activity(id)
+        view.delete_activity(activity_id)
         view.close()
         cherrypy.response.headers["Content-Type"] = "text/html"
         return "Activity deleted"

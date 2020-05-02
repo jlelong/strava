@@ -30,7 +30,7 @@ def CreateActivitiesTable(tablename):
         athlete = db.Column(db.Integer, default=0)
         name = db.Column(db.String(256), default='') # COLLATE utf8mb4_bin DEFAULT NULL,
         location = db.Column(db.String(256), default='')
-        date = db.Column(db.DateTime, default='')
+        date = db.Column(db.DateTime, nullable=True)
         distance = db.Column(db.Float, default=0)
         elevation = db.Column(db.Float, default=0)
         moving_time = db.Column(db.Time, default=0)
