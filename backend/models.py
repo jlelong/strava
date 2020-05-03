@@ -12,13 +12,15 @@ def make_gear_model(tablename):
         name = db.Column(db.String(256), nullable=True)
         type = db.Column(db.Enum(ActivityTypes.HIKE, ActivityTypes.RUN, ActivityTypes.ROAD, ActivityTypes.MTB, ActivityTypes.CX, ActivityTypes.TT), nullable=True)
         frame_type = db.Column(db.Integer, default=0)
+        athlete = db.Column(db.Integer, default=0)
 
         def to_json(self):
             return {
                 "id": self.id,
                 "name": self.name,
                 "type": self.type,
-                "frame_type": self.frame_type
+                "frame_type": self.frame_type,
+                "athlete": self.athlete
             }
 
     return GearModel
