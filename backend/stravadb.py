@@ -84,7 +84,6 @@ class StravaView:
     """
     Interact with the local database containing gears and activities.
     """
-    activityTypes = ActivityTypes()
 
     def __init__(self, config, athlete_id):
         """
@@ -119,23 +118,23 @@ class StravaView:
 
         for bike in stravaRequest.athlete.bikes:
             desc = stravaRequest.client.get_gear(bike.id)
-            new_bike = Gear(name=desc.name, id=desc.id, type=self.activityTypes.FRAME_TYPES[desc.frame_type], frame_type=desc.frame_type)
+            new_bike = Gear(name=desc.name, id=desc.id, type=ActivityTypes.FRAME_TYPES[desc.frame_type], frame_type=desc.frame_type)
             old_bike = self.session.query(Gear).filter_by(id=bike.id).first()
             if old_bike is not None:
                 old_bike.name = desc.name
                 old_bike.frame_type = desc.frame_type
-                old_bike.type = self.activityTypes.FRAME_TYPES[desc.frame_type]
+                old_bike.type = ActivityTypes.FRAME_TYPES[desc.frame_type]
             else:
                 self.session.add(new_bike)
             self.session.commit()
 
         for shoe in stravaRequest.athlete.shoes:
             desc = stravaRequest.client.get_gear(shoe.id)
-            new_shoe = Gear(name=desc.name, id=desc.id, type=self.activityTypes.RUN)
+            new_shoe = Gear(name=desc.name, id=desc.id, type=ActivityTypes.RUN)
             old_shoe = self.session.query(Gear).filter_by(id=shoe.id).first()
             if old_shoe is not None:
                 old_shoe.name = desc.name
-                old_shoe.type = self.activityTypes.RUN
+                old_shoe.type = ActivityTypes.RUN
             else:
                 self.session.add(new_shoe)
             self.session.commit()
@@ -160,7 +159,7 @@ class StravaView:
             print("Activity '{}' was already in the local db. Updated.".format(activity.name.encode('utf-8')))
             return
 
-        if (activity.type not in self.activityTypes.ACTIVITY_TYPES):
+        if (activity.type not in ActivityTypes.ACTIVITY_TYPES):
             print("Activity '%s' is not a ride nor a run" % (activity.name.encode('utf-8')))
             return
 
@@ -321,10 +320,10 @@ class StravaView:
             # We consider FRAME_TYPES as activities on their owns.
             if not (activity_type in ActivityTypes.ACTIVITY_TYPES):
                 print("{0} is not a valid activity. Use {1}"\
-                    .format(activity_type, ", ".join(self.activityTypes.ACTIVITY_TYPES)))
+                    .format(activity_type, ", ".join(ActivityTypes.ACTIVITY_TYPES)))
                 activity_type = None
             else:
-                if activity_type in (self.activityTypes.HIKE, self.activityTypes.RUN, self.activityTypes.RIDE):
+                if activity_type in (ActivityTypes.HIKE, ActivityTypes.RUN, ActivityTypes.RIDE):
                     query = query.filter(Activity.type == activity_type)
                 else:
                     query = query.filter(Gear.type == activity_type)
@@ -336,7 +335,7 @@ class StravaView:
         for row in query.order_by(Activity.date.desc()).all():
             ans = row[0].to_json()
             ans['gear_name'] = row[1]
-            ans['bike_type'] = row[2] if ans['activity_type'] == self.activityTypes.RIDE else ''
+            ans['bike_type'] = row[2] if ans['activity_type'] == ActivityTypes.RIDE else ''
             out.append(ans)
         return out
 
