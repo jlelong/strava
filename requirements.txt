@@ -1,5 +1,7 @@
     configparser
     geopy
+	geocoder
+	sqlalchemy
     pymysql
     stravalib
     cherrypy
