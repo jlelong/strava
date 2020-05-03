@@ -7,7 +7,6 @@ import stravalib
 import requests
 
 from backend.stravadb import StravaRequest, StravaView
-from backend.models import make_activity_model, make_gear_model
 
 
 class StravaUI(object):
@@ -23,8 +22,6 @@ class StravaUI(object):
         self.rootdir = rootdir
         self.config = config
         self.athlete_whitelist = config['athlete_whitelist']
-        self.Gear = make_gear_model(config['mysql_bikes_table'])
-        self.Activity = make_activity_model(config['mysql_activities_table'])
 
     def isAuthorized(self, athlete_id):
         """
@@ -106,7 +103,7 @@ class StravaUI(object):
         if athlete_id is None or not self.isAuthorized(athlete_id):
             activities = ""
         else:
-            view = StravaView(self.config, cherrypy.session.get(self.ATHLETE_ID), self.Gear, self.Activity)
+            view = StravaView(self.config, cherrypy.session.get(self.ATHLETE_ID))
             activities = view.get_activities()
             view.close()
         return activities
@@ -123,7 +120,7 @@ class StravaUI(object):
         if athlete_id is None or not self.isAuthorized(athlete_id):
             gears = ""
         else:
-            view = StravaView(self.config, cherrypy.session.get(self.ATHLETE_ID), self.Gear, self.Activity)
+            view = StravaView(self.config, cherrypy.session.get(self.ATHLETE_ID))
             gears = view.get_gears()
             view.close()
         return gears
@@ -147,7 +144,7 @@ class StravaUI(object):
         Ajax query /updateactivities to update the activities database
         """
         cherrypy.session[self.DUMMY] = 'MyStravaUpdateActivities'
-        view = StravaView(self.config, cherrypy.session.get(self.ATHLETE_ID), self.Gear, self.Activity)
+        view = StravaView(self.config, cherrypy.session.get(self.ATHLETE_ID))
         stravaRequest = StravaRequest(self.config, self._getOrRefreshToken())
         # view.create_activities_table()
         list_ids = view.update_activities(stravaRequest)
@@ -160,7 +157,7 @@ class StravaUI(object):
         """
         Ajax query /updatelocaldb to update the database
         """
-        view = StravaView(self.config, cherrypy.session.get(self.ATHLETE_ID), self.Gear, self.Activity)
+        view = StravaView(self.config, cherrypy.session.get(self.ATHLETE_ID))
         stravaRequest = StravaRequest(self.config, self._getOrRefreshToken())
         view.update_gears(stravaRequest)
         view.close()
@@ -170,7 +167,7 @@ class StravaUI(object):
         """
         Ajax query /upgradelocaldb to upgrade the database
         """
-        view = StravaView(self.config, cherrypy.session.get(self.ATHLETE_ID), self.Gear, self.Activity)
+        view = StravaView(self.config, cherrypy.session.get(self.ATHLETE_ID))
         stravaRequest = StravaRequest(self.config, self._getOrRefreshToken())
         view.rebuild_activities(stravaRequest)
         view.close()
@@ -181,7 +178,7 @@ class StravaUI(object):
         Ajax query /updateactivity to update a single activity from its id
         """
         cherrypy.session[self.DUMMY] = 'MyStravaUpdateActivity'
-        view = StravaView(self.config, cherrypy.session.get(self.ATHLETE_ID), self.Gear, self.Activity)
+        view = StravaView(self.config, cherrypy.session.get(self.ATHLETE_ID))
         stravaRequest = StravaRequest(self.config, self._getOrRefreshToken())
         try:
             activity = stravaRequest.client.get_activity(activity_id)
@@ -200,7 +197,7 @@ class StravaUI(object):
         Ajax query /deleteactivity to delete a single activity using its id
         """
         cherrypy.session[self.DUMMY] = 'MyStravaDeleteActivity'
-        view = StravaView(self.config, cherrypy.session.get(self.ATHLETE_ID), self.Gear, self.Activity)
+        view = StravaView(self.config, cherrypy.session.get(self.ATHLETE_ID))
         view.delete_activity(activity_id)
         view.close()
         cherrypy.response.headers["Content-Type"] = "text/html"

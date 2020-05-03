@@ -1,12 +1,12 @@
 import sqlalchemy as db
 from sqlalchemy.ext.declarative import declarative_base
-
+from backend import config
 from backend.constants import ActivityTypes
 
 Base = declarative_base()
 
 def make_gear_model(tablename):
-    class Gear(Base):
+    class GearModel(Base):
         __tablename__ = tablename
         id = db.Column(db.String(45), primary_key=True)
         name = db.Column(db.String(256), nullable=True)
@@ -21,10 +21,10 @@ def make_gear_model(tablename):
                 "frame_type": self.frame_type
             }
 
-    return Gear
+    return GearModel
 
 def make_activity_model(tablename):
-    class Activity(Base):
+    class ActivityModel(Base):
         __tablename__ = tablename
         id = db.Column(db.BigInteger, primary_key=True)
         athlete = db.Column(db.Integer, default=0)
@@ -69,4 +69,7 @@ def make_activity_model(tablename):
                 "activity_type": self.type
             }
 
-    return Activity
+    return ActivityModel
+
+Gear = make_gear_model(config['mysql_bikes_table'])
+Activity = make_activity_model(config['mysql_activities_table'])

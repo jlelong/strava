@@ -1,11 +1,10 @@
 import os
 import cherrypy
 from backend.server.serve import StravaUI
-from backend import readconfig
+from backend import config, app_dir
 
 
-def app(app_dir):
-    config = readconfig.read_config(os.path.join(app_dir, 'setup.ini'))
+def app():
     session_dir = config['session_dir']
     frontend_dir = os.path.join(app_dir, 'frontend')
     if not os.path.exists(session_dir):
@@ -35,5 +34,4 @@ def app(app_dir):
 
     print(conf['/'])
     cherrypy.config.update({'server.socket_host': '127.0.0.1', 'server.socket_port': 8080})
-    # cherrypy.quickstart(StravaUI(WUI_DIR), '/mystrava', conf)
     cherrypy.quickstart(StravaUI(frontend_dir, config), '/', conf)

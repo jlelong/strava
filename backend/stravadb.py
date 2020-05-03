@@ -10,7 +10,7 @@ import sqlalchemy
 
 from backend.constants import ActivityTypes
 from backend.utils import get_location
-from backend.models import Base
+from backend.models import Base, Activity, Gear
 
 
 class StravaRequest:
@@ -86,7 +86,7 @@ class StravaView:
     """
     activityTypes = ActivityTypes()
 
-    def __init__(self, config, athlete_id, Gear, Activity):
+    def __init__(self, config, athlete_id):
         """
         Initialize the StravaView class.
 
@@ -100,8 +100,6 @@ class StravaView:
         self.db_uri = 'mysql+pymysql://{user}:{passwd}@localhost/{base}?charset=utf8mb4'\
             .format(user=config['mysql_user'], passwd=config['mysql_password'], base=config['mysql_base'])
         db_engine = sqlalchemy.create_engine(self.db_uri)
-        self.Gear = Gear
-        self.Activity = Activity
         # Create the table if they do not exist
         Base.metadata.create_all(db_engine)
         self.session: sqlalchemy.orm.Session = sqlalchemy.orm.sessionmaker(bind=db_engine)()
@@ -121,8 +119,8 @@ class StravaView:
 
         for bike in stravaRequest.athlete.bikes:
             desc = stravaRequest.client.get_gear(bike.id)
-            new_bike = self.Gear(name=desc.name, id=desc.id, type=self.activityTypes.FRAME_TYPES[desc.frame_type], frame_type=desc.frame_type)
-            old_bike = self.session.query(self.Gear).filter_by(id=bike.id).first()
+            new_bike = Gear(name=desc.name, id=desc.id, type=self.activityTypes.FRAME_TYPES[desc.frame_type], frame_type=desc.frame_type)
+            old_bike = self.session.query(Gear).filter_by(id=bike.id).first()
             if old_bike is not None:
                 old_bike.name = desc.name
                 old_bike.frame_type = desc.frame_type
@@ -133,8 +131,8 @@ class StravaView:
 
         for shoe in stravaRequest.athlete.shoes:
             desc = stravaRequest.client.get_gear(shoe.id)
-            new_shoe = self.Gear(name=desc.name, id=desc.id, type=self.activityTypes.RUN)
-            old_shoe = self.session.query(self.Gear).filter_by(id=shoe.id).first()
+            new_shoe = Gear(name=desc.name, id=desc.id, type=self.activityTypes.RUN)
+            old_shoe = self.session.query(Gear).filter_by(id=shoe.id).first()
             if old_shoe is not None:
                 old_shoe.name = desc.name
                 old_shoe.type = self.activityTypes.RUN
@@ -150,7 +148,7 @@ class StravaView:
         :param activity: an object of class:`stravalib.model.Activity`
         """
         # Check if activity is already in the table
-        old_activity = self.session.query(self.Activity).filter_by(id=activity.id).first()
+        old_activity = self.session.query(Activity).filter_by(id=activity.id).first()
         if old_activity is not None:
             old_activity.name = activity.name
             old_activity.gear_id = activity.gear_id
@@ -198,7 +196,7 @@ class StravaView:
         commute = int(activity.commute)
         activity_type = activity.type
 
-        new_activity = self.Activity(id=activity.id, athlete=athlete_id, name=activity.name, distance=distance, elevation=elevation, date=date, moving_time=moving_time, elapsed_time=elapsed_time, gear_id=gear_id, average_speed=average_speed, average_heartrate=average_heartrate, max_heartrate=max_heartrate, suffer_score=suffer_score, commute=commute, type=activity_type, red_points=red_points, calories=calories)
+        new_activity = Activity(id=activity.id, athlete=athlete_id, name=activity.name, distance=distance, elevation=elevation, date=date, moving_time=moving_time, elapsed_time=elapsed_time, gear_id=gear_id, average_speed=average_speed, average_heartrate=average_heartrate, max_heartrate=max_heartrate, suffer_score=suffer_score, commute=commute, type=activity_type, red_points=red_points, calories=calories)
         self.session.add(new_activity)
         self.session.commit()
 
@@ -210,7 +208,7 @@ class StravaView:
 
         :param stravaRequest: an instance of StravaRequest to send requests to the Strava API
         """
-        old_activity = self.session.query(self.Activity).filter_by(id=activity.id).first()
+        old_activity = self.session.query(Activity).filter_by(id=activity.id).first()
         # Drop activity if they are not already in DB
         if old_activity is None:
             return
@@ -249,7 +247,7 @@ class StravaView:
         """
         if activity_id is None:
             return
-        self.session.query(self.Activity).filter_by(id=activity_id).delete()
+        self.session.query(Activity).filter_by(id=activity_id).delete()
         self.session.commit()
         print("Activity deleted")
 
@@ -260,8 +258,8 @@ class StravaView:
         :param stravaRequest: an instance of StravaRequest to send requests to the Strava API
         """
         # Get the most recent activity
-        last_activity = self.session.query(self.Activity.date).filter_by(athlete=self.athlete_id)\
-            .order_by(self.Activity.date.desc()).first()
+        last_activity = self.session.query(Activity.date).filter_by(athlete=self.athlete_id)\
+            .order_by(Activity.date.desc()).first()
         if last_activity is not None:
             after = last_activity.date
         else:
@@ -310,32 +308,32 @@ class StravaView:
         :param list_ids: a list of activities ids
         :type list_ids: a list or an integer
         """
-        query = self.session.query(self.Activity, self.Gear.name, self.Gear.type) \
-            .outerjoin(self.Gear, self.Gear.id == self.Activity.gear_id) \
-            .filter(self.Activity.athlete == self.athlete_id)
+        query = self.session.query(Activity, Gear.name, Gear.type) \
+            .outerjoin(Gear, Gear.id == Activity.gear_id) \
+            .filter(Activity.athlete == self.athlete_id)
         if before is not None:
-            query = query.filter(self.Activity.date <= before)
+            query = query.filter(Activity.date <= before)
         if after is not None:
-            query = query.filter(self.Activity.date >= after)
+            query = query.filter(Activity.date >= after)
         if name is not None:
-            query = query.filter(self.Activity.name.contains(name))
+            query = query.filter(Activity.name.contains(name))
         if activity_type is not None:
             # We consider FRAME_TYPES as activities on their owns.
-            if not (activity_type in self.activityTypes.ACTIVITY_TYPES):
+            if not (activity_type in ActivityTypes.ACTIVITY_TYPES):
                 print("{0} is not a valid activity. Use {1}"\
                     .format(activity_type, ", ".join(self.activityTypes.ACTIVITY_TYPES)))
                 activity_type = None
             else:
                 if activity_type in (self.activityTypes.HIKE, self.activityTypes.RUN, self.activityTypes.RIDE):
-                    query = query.filter(self.Activity.type == activity_type)
+                    query = query.filter(Activity.type == activity_type)
                 else:
-                    query = query.filter(self.Gear.type == activity_type)
+                    query = query.filter(Gear.type == activity_type)
         if list_ids is not None and isinstance(list_ids, int):
             list_ids = [list_ids]
         if list_ids is not None:
-            query = query.filter(self.Activity.id.in_(list_ids))
+            query = query.filter(Activity.id.in_(list_ids))
         out = []
-        for row in query.order_by(self.Activity.date.desc()).all():
+        for row in query.order_by(Activity.date.desc()).all():
             ans = row[0].to_json()
             ans['gear_name'] = row[1]
             ans['bike_type'] = row[2] if ans['activity_type'] == self.activityTypes.RIDE else ''
@@ -347,6 +345,6 @@ class StravaView:
         """
         Return the jsonified list of gears
         """
-        gears = self.session.query(self.Gear).all()
+        gears = self.session.query(Gear).all()
         return [g.to_json() for g in gears]
 
