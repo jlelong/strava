@@ -3,16 +3,14 @@
 
 from __future__ import print_function
 
-import json
-import itertools
 import stravalib.client
 import stravalib.model
 import stravalib.unithelper
-import pymysql.cursors
-import pymysql.converters
+import sqlalchemy
 
 from backend.constants import ActivityTypes
-from backend.utils import format_timedelta, get_location, ExtendedEncoder
+from backend.utils import get_location
+from backend.models import Base, Activity, Gear
 
 
 class StravaRequest:
@@ -86,7 +84,6 @@ class StravaView:
     """
     Interact with the local database containing gears and activities.
     """
-    activityTypes = ActivityTypes()
 
     def __init__(self, config, athlete_id):
         """
@@ -98,114 +95,50 @@ class StravaView:
 
         :param athlete: the strava id of the athlete logged in
         """
-        self.connection = pymysql.connect(host='localhost', user=config['mysql_user'], password=config['mysql_password'], db=config['mysql_base'], charset='utf8mb4')
-        self.cursor = self.connection.cursor(pymysql.cursors.DictCursor)
-        self.activities_table = config['mysql_activities_table']
-        self.gears_table = config['mysql_bikes_table']
         self.athlete_id = athlete_id
+        self.db_uri = 'mysql+pymysql://{user}:{passwd}@localhost/{base}?charset=utf8mb4'\
+            .format(user=config['mysql_user'], passwd=config['mysql_password'], base=config['mysql_base'])
+        db_engine = sqlalchemy.create_engine(self.db_uri)
+        # Create the table if they do not exist
+        Base.metadata.create_all(db_engine)
+        self.session: sqlalchemy.orm.Session = sqlalchemy.orm.sessionmaker(bind=db_engine)()
+
 
     def close(self):
-        self.cursor.close()
-        self.connection.close()
+        self.session.close()
 
-    def create_gears_table(self):
+    def update_gears(self, stravaRequest: StravaRequest):
         """
-        Create the gears table if it does not already exist
-        """
-        # Check if table already exists
-        sql = "SHOW TABLES LIKE %s"
-        if (self.cursor.execute(sql, self.gears_table) > 0):
-            print("The table '%s' already exists" % self.gears_table)
-            return
-
-        sql = """CREATE TABLE {} (
-        id varchar(45) NOT NULL,
-        name varchar(256) DEFAULT NULL,
-        type enum(%s,%s,%s,%s,%s,%s) DEFAULT NULL,
-        frame_type int(11) DEFAULT 0,
-        PRIMARY KEY (id),
-        UNIQUE KEY strid_UNIQUE (id)
-        ) ENGINE=InnoDB DEFAULT CHARSET=utf8""".format(self.gears_table)
-        self.cursor.execute(sql, (self.activityTypes.HIKE, self.activityTypes.RUN, self.activityTypes.ROAD, self.activityTypes.MTB, self.activityTypes.CX, self.activityTypes.TT))
-        self.connection.commit()
-
-    def create_activities_table(self):
-        """
-        Create the activities table if it does not already exist
-        """
-        # Check if table already exists
-        sql = "SHOW TABLES LIKE %s"
-        if (self.cursor.execute(sql, self.activities_table) > 0):
-            print("The table '%s' already exists" % self.activities_table)
-            return
-
-        sql = """CREATE TABLE {} (
-        id bigint(20) NOT NULL,
-        athlete int(11) DEFAULT 0,
-        name varchar(256) COLLATE utf8mb4_bin DEFAULT NULL,
-        location varchar(256) DEFAULT NULL,
-        date datetime DEFAULT NULL,
-        distance float DEFAULT 0,
-        elevation float DEFAULT 0,
-        moving_time time DEFAULT 0,
-        elapsed_time time DEFAULT 0,
-        gear_id varchar(45) DEFAULT NULL,
-        average_speed float DEFAULT 0,
-        max_heartrate int DEFAULT 0,
-        average_heartrate float DEFAULT 0,
-        suffer_score int DEFAULT 0,
-        red_points int DEFAULT 0,
-        description text COLLATE utf8mb4_bin DEFAULT NULL,
-        commute tinyint(1) DEFAULT 0,
-        calories float DEFAULT 0,
-        type enum(%s, %s, %s, %s) DEFAULT NULL,
-        PRIMARY KEY (id),
-        UNIQUE KEY strid_UNIQUE (id)
-        ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_bin""".format(self.activities_table)
-        self.cursor.execute(sql, (self.activityTypes.RIDE, self.activityTypes.RUN, self.activityTypes.HIKE, self.activityTypes.NORDICSKI))
-        self.connection.commit()
-
-    def update_bikes(self, stravaRequest):
-        """
-        Update the gears table with bikes
+        Update the gears table with bikes and shoes
 
         :param stravaRequest: an instance of StravaRequest to send requests to the Strava API
         """
-        # Connect to the database
-        bikes = stravaRequest.athlete.bikes
-        for bike in bikes:
+        gears = list(stravaRequest.athlete.bikes)
+        gears.extend(list(stravaRequest.athlete.shoes))
+
+        for bike in stravaRequest.athlete.bikes:
             desc = stravaRequest.client.get_gear(bike.id)
-
-            # Check if the gear already exists
-            sql = "SELECT * FROM %s WHERE id='%s' LIMIT 1" % (self.gears_table, bike.id)
-            if (self.cursor.execute(sql) > 0):
-                sql = "UPDATE {} SET name=%s, type=%s, frame_type=%s where id=%s".format(self.gears_table)
-                self.cursor.execute(sql, (desc.name, self.activityTypes.FRAME_TYPES[desc.frame_type], desc.frame_type, desc.id))
+            new_bike = Gear(name=desc.name, id=desc.id, type=ActivityTypes.FRAME_TYPES[desc.frame_type], frame_type=desc.frame_type)
+            old_bike = self.session.query(Gear).filter_by(id=bike.id).first()
+            if old_bike is not None:
+                old_bike.name = desc.name
+                old_bike.frame_type = desc.frame_type
+                old_bike.type = ActivityTypes.FRAME_TYPES[desc.frame_type]
             else:
-                sql = "INSERT INTO {} (id, name, type, frame_type) VALUES (%s, %s, %s, %s)".format(self.gears_table)
-                self.cursor.execute(sql, (desc.id, desc.name, self.activityTypes.FRAME_TYPES[desc.frame_type], desc.frame_type))
-            self.connection.commit()
+                self.session.add(new_bike)
+            self.session.commit()
 
-    def update_shoes(self, stravaRequest):
-        """
-        Update the gears table with shoes
-
-        :param stravaRequest: an instance of StravaRequest to send requests to the Strava API
-        """
-        # Connect to the database
-        shoes = stravaRequest.athlete.shoes
-        for shoe in shoes:
+        for shoe in stravaRequest.athlete.shoes:
             desc = stravaRequest.client.get_gear(shoe.id)
-
-            # Check if the gear already exists
-            sql = "SELECT * FROM %s WHERE id='%s' LIMIT 1" % (self.gears_table, shoe.id)
-            if (self.cursor.execute(sql) > 0):
-                sql = "UPDATE {} SET name=%s where id=%s".format(self.gears_table)
-                self.cursor.execute(sql, (desc.name, desc.id))
+            new_shoe = Gear(name=desc.name, id=desc.id, type=ActivityTypes.RUN)
+            old_shoe = self.session.query(Gear).filter_by(id=shoe.id).first()
+            if old_shoe is not None:
+                old_shoe.name = desc.name
+                old_shoe.type = ActivityTypes.RUN
             else:
-                sql = "INSERT INTO {} (id, name, type) VALUES (%s, %s, %s)".format(self.gears_table)
-                self.cursor.execute(sql, (desc.id, desc.name, self.activityTypes.RUN))
-            self.connection.commit()
+                self.session.add(new_shoe)
+            self.session.commit()
+
 
     def push_activity(self, activity):
         """
@@ -214,28 +147,19 @@ class StravaView:
         :param activity: an object of class:`stravalib.model.Activity`
         """
         # Check if activity is already in the table
-        sql = "SELECT name, elevation, gear_id, commute FROM {} WHERE id=%s LIMIT 1".format(self.activities_table)
-        if (self.cursor.execute(sql, activity.id) > 0):
-            entry = self.cursor.fetchone()
-            if entry['name'] != activity.name:
-                sql = "UPDATE {} SET name=%s where id=%s".format(self.activities_table)
-                self.cursor.execute(sql, (activity.name, activity.id))
-            if entry['gear_id'] != activity.gear_id:
-                sql = "UPDATE {} SET gear_id=%s where id=%s".format(self.activities_table)
-                self.cursor.execute(sql, (activity.gear_id, activity.id))
-            if entry['commute'] != activity.commute:
-                sql = "UPDATE {} SET commute=%s where id=%s".format(self.activities_table)
-                self.cursor.execute(sql, (activity.commute, activity.id))
+        old_activity = self.session.query(Activity).filter_by(id=activity.id).first()
+        if old_activity is not None:
+            old_activity.name = activity.name
+            old_activity.gear_id = activity.gear_id
+            old_activity.commute = activity.commute
             if activity.total_elevation_gain is not None:
                 elevation = "%0.0f" % stravalib.unithelper.meters(activity.total_elevation_gain).get_num()
-                if entry['elevation'] != elevation:
-                    sql = "UPDATE {} SET elevation=%s where id=%s".format(self.activities_table)
-                    self.cursor.execute(sql, (elevation, activity.id))
-            self.connection.commit()
+                old_activity.elevation = elevation
+            self.session.commit()
             print("Activity '{}' was already in the local db. Updated.".format(activity.name.encode('utf-8')))
             return
 
-        if (activity.type not in self.activityTypes.ACTIVITY_TYPES):
+        if (activity.type not in ActivityTypes.ACTIVITY_TYPES):
             print("Activity '%s' is not a ride nor a run" % (activity.name.encode('utf-8')))
             return
 
@@ -248,19 +172,16 @@ class StravaView:
         suffer_score = 0
         red_points = 0
         calories = 0
-        location = None
-        description = None
 
         # Get the real values
-        name = activity.name
         athlete_id = activity.athlete.id
         if activity.distance is not None:
             distance = "%0.2f" % stravalib.unithelper.kilometers(activity.distance).get_num()
         if activity.total_elevation_gain is not None:
             elevation = "%0.0f" % stravalib.unithelper.meters(activity.total_elevation_gain).get_num()
         date = activity.start_date_local
-        moving_time = format_timedelta(activity.moving_time)
-        elapsed_time = format_timedelta(activity.elapsed_time)
+        moving_time = activity.moving_time
+        elapsed_time = activity.elapsed_time
         gear_id = activity.gear_id
         if activity.average_speed is not None:
             average_speed = "%0.1f" % stravalib.unithelper.kilometers_per_hour(activity.average_speed).get_num()
@@ -274,15 +195,9 @@ class StravaView:
         commute = int(activity.commute)
         activity_type = activity.type
 
-        sql = """INSERT INTO {} (id, athlete, name, distance, elevation, date, location, moving_time,
-        elapsed_time, gear_id, average_speed, average_heartrate, max_heartrate, suffer_score,
-        description, commute, type, red_points, calories) VALUES (%s, %s, %s, %s, %s, %s,
-        %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)
-        """.format(self.activities_table)
-        self.cursor.execute(sql, (activity.id, athlete_id, name, distance, elevation, date, location,
-                                  moving_time, elapsed_time, gear_id, average_speed, average_heartrate, max_heartrate,
-                                  suffer_score, description, commute, activity_type, red_points, calories))
-        self.connection.commit()
+        new_activity = Activity(id=activity.id, athlete=athlete_id, name=activity.name, distance=distance, elevation=elevation, date=date, moving_time=moving_time, elapsed_time=elapsed_time, gear_id=gear_id, average_speed=average_speed, average_heartrate=average_heartrate, max_heartrate=max_heartrate, suffer_score=suffer_score, commute=commute, type=activity_type, red_points=red_points, calories=calories)
+        self.session.add(new_activity)
+        self.session.commit()
 
     def update_activity_extra_fields(self, activity, stravaRequest):
         """
@@ -292,29 +207,22 @@ class StravaView:
 
         :param stravaRequest: an instance of StravaRequest to send requests to the Strava API
         """
-        sql = "SELECT location, description, red_points, suffer_score FROM {} WHERE id=%s".format(self.activities_table)
-        self.cursor.execute(sql, activity.id)
-        self.connection.commit()
-        entry = self.cursor.fetchone()
-        # Drop activities which are not rides or runs.
-        if entry is None:
+        old_activity = self.session.query(Activity).filter_by(id=activity.id).first()
+        # Drop activity if they are not already in DB
+        if old_activity is None:
             return
-        location = entry.get('location')
-        red_points = entry.get('red_points')
-        suffer_score = entry.get('suffer_score')
-        description = entry.get('description')
-        new_location = location
-        new_description = description
-        new_red_points = red_points
+        red_points = old_activity.red_points
+        suffer_score = old_activity.suffer_score
         # if location is None or location == "":
-        new_location = get_location(activity.start_latlng)
+        location = get_location(activity.start_latlng)
         if red_points == 0 and suffer_score > 0:
-            new_red_points = stravaRequest.get_points(activity)
-        new_description = stravaRequest.get_description(activity)
-        if (new_location != location or new_description != description or new_red_points != red_points):
-            sql = "UPDATE {} SET location=%s, description=%s, red_points=%s where id=%s".format(self.activities_table)
-            self.cursor.execute(sql, (new_location, new_description, new_red_points, activity.id))
-            self.connection.commit()
+            red_points = stravaRequest.get_points(activity)
+        description = stravaRequest.get_description(activity)
+
+        old_activity.red_points = red_points
+        old_activity.location = location
+        old_activity.description = description
+        self.session.commit()
         print("Update the description, points and location of activity {} ".format(activity.id))
 
     def update_activity(self, activity, stravaRequest):
@@ -338,9 +246,8 @@ class StravaView:
         """
         if activity_id is None:
             return
-        sql = "DELETE FROM {} WHERE id=%s".format(self.activities_table)
-        self.cursor.execute(sql, activity_id)
-        self.connection.commit()
+        self.session.query(Activity).filter_by(id=activity_id).delete()
+        self.session.commit()
         print("Activity deleted")
 
     def update_activities(self, stravaRequest):
@@ -350,11 +257,12 @@ class StravaView:
         :param stravaRequest: an instance of StravaRequest to send requests to the Strava API
         """
         # Get the most recent activity
-        sql = "SELECT date FROM {} WHERE athlete = %s ORDER BY date DESC LIMIT 1".format(self.activities_table)
-        if (self.cursor.execute(sql, (self.athlete_id)) == 0):
-            after = None
+        last_activity = self.session.query(Activity.date).filter_by(athlete=self.athlete_id)\
+            .order_by(Activity.date.desc()).first()
+        if last_activity is not None:
+            after = last_activity.date
         else:
-            after = self.cursor.fetchone()['date']
+            after = None
         new_activities = stravaRequest.client.get_activities(after=after)
         list_ids = []
         for activity in new_activities:
@@ -379,24 +287,8 @@ class StravaView:
         for activity in all_activities:
             self.update_activity_extra_fields(activity, stravaRequest)
 
-    def print_row(self, row):
-        """
-        Print a row retrieved from the activities table
 
-        :param row: a result from a SQL fetch function
-        :type row: a dictionnary
-        """
-        name = row['name'].encode('utf-8')
-        identifier = row['id']
-        date = row['date']
-        distance = row['distance']
-        elevation = row['elevation']
-        elapsed_time = row['elapsed_time']
-        moving_time = row['moving_time']
-        bike_type = row['bike_type']
-        print("{7}: {1} | {2} | {3} | {4} | {5} | {6} | https://www.strava.com/activities/{0}".format(identifier, name, date, distance, elevation, moving_time, elapsed_time, bike_type))
-
-    def get_activities(self, before=None, after=None, name=None, activity_type=None, json_output=False):
+    def get_activities(self, before=None, after=None, name=None, activity_type=None, list_ids=None):
         """
         Get all the activities matching the criterions
 
@@ -412,100 +304,46 @@ class StravaView:
         :param activity_type: the type of activity. Can be 'Walk', 'Run', 'Ride', 'Road', 'MTB', 'CX', 'TT'.
         :type activity_type: str
 
-        :param json_output: do we return a JSON encoded result of the query
-        :type json_output: bool
+        :param list_ids: a list of activities ids
+        :type list_ids: a list or an integer
         """
-        # Return if activity table does not exist
-        sql = "SHOW TABLES LIKE %s"
-        if (self.cursor.execute(sql, self.activities_table) == 0):
-            return json.dumps([])
-
-        before_sql = ""
-        after_sql = ""
-        name_sql = ""
-        conds = list()
-        conds.append("athlete = '%s'" % self.athlete_id)
+        query = self.session.query(Activity, Gear.name, Gear.type) \
+            .outerjoin(Gear, Gear.id == Activity.gear_id) \
+            .filter(Activity.athlete == self.athlete_id)
         if before is not None:
-            before_sql = "a.date <= '%s'" % before
-            conds.append(before_sql)
-
+            query = query.filter(Activity.date <= before)
         if after is not None:
-            after_sql = "a.date >= '%s'" % after
-            conds.append(after_sql)
-
+            query = query.filter(Activity.date >= after)
         if name is not None:
-            name_sql = "a.name LIKE '%%%s%%'" % name
-            conds.append(name_sql)
-
+            query = query.filter(Activity.name.contains(name))
         if activity_type is not None:
             # We consider FRAME_TYPES as activities on their owns.
-            if not (activity_type in self.activityTypes.ACTIVITY_TYPES):
-                print("{0} is not a valid activity. Use {1}".format(activity_type, ", ".join(self.activityTypes.ACTIVITY_TYPES)))
+            if not (activity_type in ActivityTypes.ACTIVITY_TYPES):
+                print("{0} is not a valid activity. Use {1}"\
+                    .format(activity_type, ", ".join(ActivityTypes.ACTIVITY_TYPES)))
                 activity_type = None
             else:
-                if activity_type in (self.activityTypes.HIKE, self.activityTypes.RUN, self.activityTypes.RIDE):
-                    activity_type_sql = "a.type = '%s'" % activity_type
+                if activity_type in (ActivityTypes.HIKE, ActivityTypes.RUN, ActivityTypes.RIDE):
+                    query = query.filter(Activity.type == activity_type)
                 else:
-                    activity_type_sql = "b.type = '%s'" % activity_type
-                conds.append(activity_type_sql)
-
-        sql = """SELECT a.id, a.name, a.location, DATE(a.date) AS date, a.distance, a.elevation,
-        a.average_speed, a.elapsed_time, a.moving_time, a.suffer_score, a.red_points, a.calories,
-        a.max_heartrate, a.average_heartrate, a.description, a.commute, a.type as activity_type,
-        IF(a.type='Ride', b.type, NULL) bike_type, b.name AS gear_name
-        FROM %s AS a LEFT JOIN %s AS b ON a.gear_id = b.id
-        """ % (self.activities_table, self.gears_table)
-        if conds:
-            where = " AND ".join(conds)
-            sql = sql + " WHERE " + where
-        sql = sql + " ORDER BY date DESC"
-        # print(sql + "\n")
-        self.cursor.execute(sql)
-        if json_output:
-            return json.dumps(self.cursor.fetchall(), cls=ExtendedEncoder)
-        else:
-            for row in self.cursor.fetchall():
-                self.print_row(row)
-
-    def get_list_activities(self, list_ids):
-        """
-        Return the jsonified data corresponding to the activities with ids in list_ids
-
-        :param list_ids: a list of activities ids
-        """
-        # Return if activity table does not exist
-        sql = "SHOW TABLES LIKE %s"
-        if (self.cursor.execute(sql, self.activities_table) == 0):
-            return json.dumps([])
-        # Make sure we have a list of ids
-        if isinstance(list_ids, int):
+                    query = query.filter(Gear.type == activity_type)
+        if list_ids is not None and isinstance(list_ids, int):
             list_ids = [list_ids]
-        if not list_ids:
-            return json.dumps([])
+        if list_ids is not None:
+            query = query.filter(Activity.id.in_(list_ids))
+        out = []
+        for row in query.order_by(Activity.date.desc()).all():
+            ans = row[0].to_json()
+            ans['gear_name'] = row[1]
+            ans['bike_type'] = row[2] if ans['activity_type'] == ActivityTypes.RIDE else ''
+            out.append(ans)
+        return out
 
-        sql = """SELECT a.id, a.name, a.location, DATE(a.date) AS date, a.distance, a.elevation,
-        a.average_speed, a.elapsed_time, a.moving_time, a.suffer_score, a.red_points, a.calories,
-        a.max_heartrate, a.average_heartrate, a.description, a.commute, a.type as activity_type,
-        IF(a.type='Ride', b.type, NULL) AS bike_type, b.name AS gear_name
-        FROM %s AS a LEFT JOIN %s AS b ON a.gear_id = b.id
-        """ % (self.activities_table, self.gears_table)
-
-        in_ph = ', '.join(itertools.repeat('%s', len(list_ids)))
-        sql = sql + " WHERE a.athlete=%s AND a.id IN (" + in_ph + ")"
-        sql_args = []
-        sql_args.append(self.athlete_id)
-        sql_args.extend(list_ids)
-        self.cursor.execute(sql, sql_args)
-        return json.dumps(self.cursor.fetchall(), cls=ExtendedEncoder)
 
     def get_gears(self):
         """
         Return the jsonified list of gears
         """
-        # Return if gear table does not exist
-        sql = "SHOW TABLES LIKE %s"
-        if (self.cursor.execute(sql, self.gears_table) == 0):
-            return json.dumps([])
-        sql = """SELECT name, type FROM %s""" % (self.gears_table)
-        self.cursor.execute(sql)
-        return json.dumps(self.cursor.fetchall(), cls=ExtendedEncoder)
+        gears = self.session.query(Gear).all()
+        return [g.to_json() for g in gears]
+

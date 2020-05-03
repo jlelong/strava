@@ -6,18 +6,14 @@ except ImportError:
 import sys
 
 
-def read_config(inifile):
+def read_config(infile):
     """
     Read the content of the init file and return it as dictionnary with keys
-    mysql_base: the name of a MYSQL database
-    mysql_bikes_table: the name of a table inside mysql_base to store the different bikes
-    mysql_activities_table: the name of a table inside mysql_base to store the activities
-    mysql_user: a user authorized to access mysql_base
-    mysql_password: the password associated to the user mysql_user
-    strava_token: the access token to access Strava API
+
+    See the comments inside setup.ini.dist for explanations on the different fields
     """
     parser = configparser.RawConfigParser()
-    parser.read(inifile)
+    parser.read(infile)
     config = {}
     try:
         config['mysql_user'] = parser.get('mysql', 'user')
@@ -80,7 +76,6 @@ def read_config(inifile):
     except configparser.NoOptionError:
         config['proxy_base'] = None
         print("No proxy defined")
-
 
     try:
         config['athlete_whitelist'] = [int(x) for x in parser.get('server', 'athlete_whitelist').split('\n')]

@@ -1,14 +1,13 @@
 # -*- coding: utf-8 -*-
 import os
 import os.path
-import json
 import time
 import cherrypy
 import stravalib
 import requests
 
-from backend.stravadb import StravaRequest
-from backend.stravadb import StravaView
+from backend.stravadb import StravaRequest, StravaView
+
 
 class StravaUI(object):
     COOKIE_NAME = "MyStrava_AthleteID"
@@ -93,6 +92,7 @@ class StravaUI(object):
         return open(os.path.join(self.rootdir, 'index.html'))
 
     @cherrypy.expose
+    @cherrypy.tools.json_out()
     def getRuns(self):
         """
         Ajax query /getRuns to extract data from the database
@@ -101,17 +101,15 @@ class StravaUI(object):
         cherrypy.session[self.DUMMY] = 'MyStravaGetRuns'
         athlete_id = cherrypy.session.get(self.ATHLETE_ID)
         if athlete_id is None or not self.isAuthorized(athlete_id):
-            activities = json.dumps("")
+            activities = ""
         else:
             view = StravaView(self.config, cherrypy.session.get(self.ATHLETE_ID))
-            activities = view.get_activities(json_output=True)
+            activities = view.get_activities()
             view.close()
-        # Cherrypy has a decorator to return a JSON object but as the get_activities method
-        # already return a JSON object, we cannot rely on it.
-        cherrypy.response.headers["Content-Type"] = "application/json"
-        return activities.encode('utf8')
+        return activities
 
     @cherrypy.expose
+    @cherrypy.tools.json_out()
     def getGears(self):
         """
         Ajax query /getGears to extract gears from the database
@@ -120,15 +118,12 @@ class StravaUI(object):
         cherrypy.session[self.DUMMY] = 'MyStravaGetGears'
         athlete_id = cherrypy.session.get(self.ATHLETE_ID)
         if athlete_id is None or not self.isAuthorized(athlete_id):
-            activities = json.dumps("")
+            gears = ""
         else:
             view = StravaView(self.config, cherrypy.session.get(self.ATHLETE_ID))
-            activities = view.get_gears()
+            gears = view.get_gears()
             view.close()
-        # Cherrypy has a decorator to return a JSON object but as the get_activities method
-        # already return a JSON object, we cannot rely on it.
-        cherrypy.response.headers["Content-Type"] = "application/json"
-        return activities.encode('utf8')
+        return gears
 
 
     @cherrypy.expose
@@ -143,6 +138,7 @@ class StravaUI(object):
         return profile
 
     @cherrypy.expose
+    @cherrypy.tools.json_out()
     def updateactivities(self):
         """
         Ajax query /updateactivities to update the activities database
@@ -150,12 +146,11 @@ class StravaUI(object):
         cherrypy.session[self.DUMMY] = 'MyStravaUpdateActivities'
         view = StravaView(self.config, cherrypy.session.get(self.ATHLETE_ID))
         stravaRequest = StravaRequest(self.config, self._getOrRefreshToken())
-        view.create_activities_table()
+        # view.create_activities_table()
         list_ids = view.update_activities(stravaRequest)
-        activities = view.get_list_activities(list_ids)
+        activities = view.get_activities(list_ids=list_ids)
         view.close()
-        cherrypy.response.headers["Content-Type"] = "application/json"
-        return activities.encode('utf8')
+        return activities
 
     @cherrypy.expose
     def updategears(self):
@@ -164,9 +159,7 @@ class StravaUI(object):
         """
         view = StravaView(self.config, cherrypy.session.get(self.ATHLETE_ID))
         stravaRequest = StravaRequest(self.config, self._getOrRefreshToken())
-        view.create_gears_table()
-        view.update_bikes(stravaRequest)
-        view.update_shoes(stravaRequest)
+        view.update_gears(stravaRequest)
         view.close()
 
     @cherrypy.expose
@@ -176,12 +169,11 @@ class StravaUI(object):
         """
         view = StravaView(self.config, cherrypy.session.get(self.ATHLETE_ID))
         stravaRequest = StravaRequest(self.config, self._getOrRefreshToken())
-        view.create_activities_table()
         view.rebuild_activities(stravaRequest)
         view.close()
 
     @cherrypy.expose
-    def updateactivity(self, id):
+    def updateactivity(self, activity_id):
         """
         Ajax query /updateactivity to update a single activity from its id
         """
@@ -189,9 +181,9 @@ class StravaUI(object):
         view = StravaView(self.config, cherrypy.session.get(self.ATHLETE_ID))
         stravaRequest = StravaRequest(self.config, self._getOrRefreshToken())
         try:
-            activity = stravaRequest.client.get_activity(id)
+            activity = stravaRequest.client.get_activity(activity_id)
             view.update_activity(activity, stravaRequest)
-            activity = view.get_list_activities((id,))
+            activity = view.get_activities(list_ids=activity_id)
         except requests.exceptions.HTTPError:
             # Page not found. Probably a deleted activity.
             activity = ""
@@ -200,13 +192,13 @@ class StravaUI(object):
         return activity
 
     @cherrypy.expose
-    def deleteactivity(self, id):
+    def deleteactivity(self, activity_id):
         """
         Ajax query /deleteactivity to delete a single activity using its id
         """
         cherrypy.session[self.DUMMY] = 'MyStravaDeleteActivity'
         view = StravaView(self.config, cherrypy.session.get(self.ATHLETE_ID))
-        view.delete_activity(id)
+        view.delete_activity(activity_id)
         view.close()
         cherrypy.response.headers["Content-Type"] = "text/html"
         return "Activity deleted"
