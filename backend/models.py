@@ -5,7 +5,7 @@ from backend.constants import ActivityTypes
 
 Base = declarative_base()
 
-def CreateGearsTable(tablename):
+def make_gear_model(tablename):
     class Gear(Base):
         __tablename__ = tablename
         id = db.Column(db.String(45), primary_key=True)
@@ -23,7 +23,7 @@ def CreateGearsTable(tablename):
 
     return Gear
 
-def CreateActivitiesTable(tablename):
+def make_activity_model(tablename):
     class Activity(Base):
         __tablename__ = tablename
         id = db.Column(db.BigInteger, primary_key=True)
@@ -45,7 +45,6 @@ def CreateActivitiesTable(tablename):
         commute = db.Column(db.Boolean, default=False)
         calories = db.Column(db.Float, default=0)
         type = db.Column(db.Enum(ActivityTypes.RIDE, ActivityTypes.RUN, ActivityTypes.HIKE, ActivityTypes.NORDICSKI), default='')
-        # ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_bin""".format(self.activities_table)
 
         def to_json(self):
             return {

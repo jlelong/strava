@@ -7,7 +7,7 @@ import stravalib
 import requests
 
 from backend.stravadb import StravaRequest, StravaView
-from backend.models import CreateActivitiesTable, CreateGearsTable
+from backend.models import make_activity_model, make_gear_model
 
 
 class StravaUI(object):
@@ -23,8 +23,8 @@ class StravaUI(object):
         self.rootdir = rootdir
         self.config = config
         self.athlete_whitelist = config['athlete_whitelist']
-        self.Gear = CreateGearsTable(config['mysql_bikes_table'])
-        self.Activity = CreateActivitiesTable(config['mysql_activities_table'])
+        self.Gear = make_gear_model(config['mysql_bikes_table'])
+        self.Activity = make_activity_model(config['mysql_activities_table'])
 
     def isAuthorized(self, athlete_id):
         """
