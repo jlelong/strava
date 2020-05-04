@@ -150,7 +150,7 @@ function StravaController($cookies, $scope, $window, $http, $timeout) {
     }
 
     // Load all data and compute the totals
-    Promise.all([getActivities(), getGears()]).then(computeGearTotals)
+    Promise.all([getActivities(), getGears()]).then(() => updateGearTotals(vm.activities))
 
     function connectOrDisconnect() {
         if (!vm.isConnected())
@@ -203,6 +203,7 @@ function StravaController($cookies, $scope, $window, $http, $timeout) {
         $http.get('updateactivities').then(function (response) {
             vm.updateResponse = "Database successfully updated.";
             addPacetoActivities(response.data);
+            updateGearTotals(response.data);
             vm.activities.push.apply(vm.activities, response.data);
             vm.nTotalItems = vm.activities.length;
         });
@@ -253,13 +254,16 @@ function StravaController($cookies, $scope, $window, $http, $timeout) {
         vm.updateResponse = "Update in progress...";
         $http.get('updateactivity', { params: { activity_id: id } }).then(function (response) {
             vm.updateResponse = "Database successfully updated.";
-            addPacetoActivities(response.data);
+            const activitiesToRemove = []
             for (var i = 0; i < vm.activities.length; i++) {
                 if (vm.activities[i].id == id) {
+                    activitiesToRemove.push(vm.activities[i])
                     vm.activities[i] = response.data[0];
                     break;
                 }
             }
+            addPacetoActivities(response.data);
+            updateGearTotals(response.data, activitiesToRemove)
         });
     }
     //
@@ -314,13 +318,21 @@ function StravaController($cookies, $scope, $window, $http, $timeout) {
         });
     }
 
-    function computeGearTotals() {
-        angular.forEach(vm.activities, activity => {
+    function updateGearTotals(activitiesToAdd, activitiesToRemove=undefined) {
+        angular.forEach(activitiesToAdd, activity => {
             if (activity.gear_id in vm.gearsDict) {
                 vm.gearsDict[activity.gear_id]['distance'] += activity.distance;
                 vm.gearsDict[activity.gear_id]['elevation'] += activity.elevation;
             }
         });
+        if (activitiesToRemove) {
+            angular.forEach(activitiesToRemove, activity => {
+                if (activity.gear_id in vm.gearsDict) {
+                    vm.gearsDict[activity.gear_id]['distance'] -= activity.distance;
+                    vm.gearsDict[activity.gear_id]['elevation'] -= activity.elevation;
+                }
+            });
+        }
         var gears = [];
         angular.forEach(Object.keys(vm.gearsDict), id => {
             const gear = vm.gearsDict[id];
