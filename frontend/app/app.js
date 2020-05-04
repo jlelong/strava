@@ -89,6 +89,7 @@ function StravaController($cookies, $scope, $window, $http, $timeout) {
     vm.updateResponse = "";
     vm.activities = [];
     vm.gears = [];
+    vm.gearsDict = {};
     vm.nTotalItems = -1; // This is a convention to highlight that we have not yet requested the db.
     vm.reverse = false;
     vm.updateInProgress = false;
@@ -125,7 +126,7 @@ function StravaController($cookies, $scope, $window, $http, $timeout) {
     vm.updateActivity = updateActivity;
     vm.deleteActivity = deleteActivity;
     vm.rebuildActivities = rebuildActivities;
-    vm.totals = totals;
+    vm.computeActivityTotals = computeActivityTotals;
     vm.narrowSearch = narrowSearch;
     vm.setSort = setSort;
     vm.sortable = sortable;
@@ -148,8 +149,8 @@ function StravaController($cookies, $scope, $window, $http, $timeout) {
         vm.isPremium = ($cookies.get('is_premium') == 1);
     }
 
-    getActivities();
-    getGears();
+    // Load all data and compute the totals
+    Promise.all([getActivities(), getGears()]).then(computeGearTotals)
 
     function connectOrDisconnect() {
         if (!vm.isConnected())
@@ -297,7 +298,7 @@ function StravaController($cookies, $scope, $window, $http, $timeout) {
 
     // Get the list of activities.
     function getActivities() {
-        $http.get('getRuns').then(function (response) {
+        return $http.get('getRuns').then((response) => {
             addPacetoActivities(response.data);
             vm.activities = response.data;
             vm.nTotalItems = vm.activities.length;
@@ -306,32 +307,31 @@ function StravaController($cookies, $scope, $window, $http, $timeout) {
 
     // Get the list of gears
     function getGears() {
-        // Make we already the activities list
-        if (vm.nTotalItems === -1) {
-            getActivities();
-        }
-        $http.get('getGears').then(function (response) {
-            var stats = {};
+        return $http.get('getGears').then((response) => {
             angular.forEach(response.data, g => {
-                stats[g.name] = {'type': g.type, 'distance': 0, 'elevation': 0};
+                vm.gearsDict[g.id] = {'name': g.name, 'type': g.type, 'distance': 0, 'elevation': 0};
             });
-            angular.forEach(vm.activities, activity => {
-                if (activity.gear_name in stats) {
-                    stats[activity.gear_name]['distance'] += activity.distance;
-                    stats[activity.gear_name]['elevation'] += activity.elevation;
-                }
-            });
-            var gears = [];
-            angular.forEach(Object.keys(stats), g => {
-                gears.push({'name': g, 'activity_type': stats[g]['type'],'distance': Math.round(stats[g]['distance']), 'elevation': stats[g]['elevation']});
-            });
-            vm.gears = gears;
         });
+    }
+
+    function computeGearTotals() {
+        angular.forEach(vm.activities, activity => {
+            if (activity.gear_id in vm.gearsDict) {
+                vm.gearsDict[activity.gear_id]['distance'] += activity.distance;
+                vm.gearsDict[activity.gear_id]['elevation'] += activity.elevation;
+            }
+        });
+        var gears = [];
+        angular.forEach(Object.keys(vm.gearsDict), id => {
+            const gear = vm.gearsDict[id];
+            gears.push({'name': gear['name'], 'activity_type': gear['type'],'distance': Math.round(gear['distance']), 'elevation': gear['elevation']});
+        });
+        vm.gears = gears;
     }
 
     // Compute the total distance and elevation.
     // To be called on the filtered list
-    function totals(items) {
+    function computeActivityTotals(items) {
         var elevation = 0.0;
         var distance = 0.0;
         angular.forEach(items, obj => {
