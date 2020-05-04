@@ -279,6 +279,7 @@ function StravaController($cookies, $scope, $window, $http, $timeout) {
                 vm.updateResponse = "Activity successfully deleted.";
                 for (var i = 0; i < vm.activities.length; i++) {
                     if (vm.activities[i].id == id) {
+                        updateGearTotals([], [vm.activities[i]])
                         vm.activities.splice(i, 1);
                         break;
                     }
