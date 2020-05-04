@@ -84,17 +84,17 @@ function StravaController($cookies, $scope, $window, $http, $timeout) {
     var vm = this;
 
     // Attributes
-    vm.is_premium = false;
+    vm.isPremium = false;
     vm.connectLabel = "Connect to Strava";
-    vm.update_response = "";
+    vm.updateResponse = "";
     vm.activities = [];
     vm.gears = [];
     vm.nTotalItems = -1; // This is a convention to highlight that we have not yet requested the db.
     vm.reverse = false;
-    vm.update_in_progress = false;
+    vm.updateInProgress = false;
     vm.searchField = "";
     vm.searchRegex = null;
-    vm.profile_picture = "";
+    vm.profilePicture = "";
     // Default order is by decreasing dates
     vm.predicate = 'date';
     vm.reverse = true;
@@ -114,17 +114,17 @@ function StravaController($cookies, $scope, $window, $http, $timeout) {
     vm.activityType = vm.activityTypes[0];
     vm.GEARS = 'Gears'
     vm.ACTIVITIES = 'Activities'
-    vm.gears_or_activities = vm.GEARS;
+    vm.gearsOrActivities = vm.GEARS;
 
     // Methods
     vm.isConnected = function () { return ($cookies.get('connected') !== undefined); };
     vm.connectOrDisconnect = connectOrDisconnect;
-    vm.update_activities = update_activities;
-    vm.update_gears = update_gears;
+    vm.updateActivities = updateActivities;
+    vm.updateGears = updateGears;
     vm.firstUpdate = firstUpdate;
-    vm.update_activity = update_activity;
-    vm.delete_activity = delete_activity;
-    vm.rebuild_activities = rebuild_activities;
+    vm.updateActivity = updateActivity;
+    vm.deleteActivity = deleteActivity;
+    vm.rebuildActivities = rebuildActivities;
     vm.totals = totals;
     vm.narrowSearch = narrowSearch;
     vm.setSort = setSort;
@@ -134,22 +134,22 @@ function StravaController($cookies, $scope, $window, $http, $timeout) {
     vm.getSpeed = function(data) { return data.average_speed; }
     vm.getPace = function(data) { return data.average_pace; }
     vm.getSpeedOrPace = vm.getSpeed;
-    vm.alternate_tab = alternate_tab;
+    vm.alternateTab = alternateTab;
 
 
     if (!vm.isConnected()) {
         vm.connectLabel = "Connect to Strava";
-        vm.profile_picture = "";
+        vm.profilePicture = "";
     } else {
         vm.connectLabel = "Disconnect";
         $http.get('getAthleteProfile').then(function (response) {
-            vm.profile_picture = response.data;
+            vm.profilePicture = response.data;
         });
-        vm.is_premium = ($cookies.get('is_premium') == 1);
+        vm.isPremium = ($cookies.get('is_premium') == 1);
     }
 
-    get_activities();
-    get_gears();
+    getActivities();
+    getGears();
 
     function connectOrDisconnect() {
         if (!vm.isConnected())
@@ -192,15 +192,15 @@ function StravaController($cookies, $scope, $window, $http, $timeout) {
     }
 
     // Update the activities database
-    function update_activities() {
-        vm.update_response = "";
+    function updateActivities() {
+        vm.updateResponse = "";
         if (!vm.isConnected()) {
             alert("Connect to Strava to update the local DB.");
             return;
         }
-        vm.update_response = "Update in progress...";
+        vm.updateResponse = "Update in progress...";
         $http.get('updateactivities').then(function (response) {
-            vm.update_response = "Database successfully updated.";
+            vm.updateResponse = "Database successfully updated.";
             addPacetoActivities(response.data);
             vm.activities.push.apply(vm.activities, response.data);
             vm.nTotalItems = vm.activities.length;
@@ -208,48 +208,50 @@ function StravaController($cookies, $scope, $window, $http, $timeout) {
     }
 
     // Update the gears database
-    function update_gears() {
-        vm.update_response = "";
+    function updateGears() {
+        vm.updateResponse = "";
         if (!vm.isConnected()) {
             alert("Connect to Strava to update the local DB.");
             return;
         }
         vm.update_response = "Update in progress...";
         $http.get('updategears').then(function (response) {
-            vm.update_response = "Database successfully updated.";
+            vm.updateResponse = "Database successfully updated.";
+            getActivities();
+            getGears();
         });
     }
 
     function firstUpdate() {
-        vm.update_response = "";
+        vm.updateResponse = "";
         if (!vm.isConnected()) {
             alert("Connect to Strava to update the local DB.");
             return;
         }
         vm.nTotalItems = -1;
-        vm.update_in_progress = true;
+        vm.updateInProgress = true;
         $http.get('updategears').then(function (response) { });
         $http.get('updateactivities').then(function (response) {
-            vm.update_response = "Database successfully updated.";
+            vm.updateResponse = "Database successfully updated.";
             addPacetoActivities(response.data);
             vm.activities =  response.data;
             vm.nTotalItems = vm.activities.length;
-            vm.update_in_progress = false;
+            vm.updateInProgress = false;
         }, function () {
-            vm.update_in_progress = false;
+            vm.updateInProgress = false;
         });
     }
 
     // Update the local database
-    function update_activity(id) {
-        vm.update_response = "";
+    function updateActivity(id) {
+        vm.updateResponse = "";
         if (!vm.isConnected()) {
             alert("Connect to Strava to update the local DB.");
             return;
         }
-        vm.update_response = "Update in progress...";
+        vm.updateResponse = "Update in progress...";
         $http.get('updateactivity', { params: { activity_id: id } }).then(function (response) {
-            vm.update_response = "Database successfully updated.";
+            vm.updateResponse = "Database successfully updated.";
             addPacetoActivities(response.data);
             for (var i = 0; i < vm.activities.length; i++) {
                 if (vm.activities[i].id == id) {
@@ -261,15 +263,15 @@ function StravaController($cookies, $scope, $window, $http, $timeout) {
     }
     //
     // Update the local database
-    function delete_activity(id) {
-        vm.update_response = "";
+    function deleteActivity(id) {
+        vm.updateResponse = "";
         if (!vm.isConnected()) {
             alert("Connect to Strava to update the local DB.");
             return;
         }
         if (confirm("Are you sure?")) {
             $http.get('deleteactivity', { params: { activity_id: id } }).then(function (response) {
-                vm.update_response = "Activity successfully deleted.";
+                vm.updateResponse = "Activity successfully deleted.";
                 for (var i = 0; i < vm.activities.length; i++) {
                     if (vm.activities[i].id == id) {
                         vm.activities.splice(i, 1);
@@ -281,20 +283,20 @@ function StravaController($cookies, $scope, $window, $http, $timeout) {
     }
 
     // Upgrade the local database
-    function rebuild_activities() {
-        vm.update_response = "";
+    function rebuildActivities() {
+        vm.updateResponse = "";
         if (!vm.isConnected()) {
             alert("Connect to Strava to upgrade the local DB.");
             return;
         }
         $http.get('rebuildactivities').then(function (response) {
-            vm.update_response = "Database successfully rebuilt.";
-            get_activities($http);
+            vm.updateResponse = "Database successfully rebuilt.";
+            getActivities($http);
         });
     }
 
     // Get the list of activities.
-    function get_activities() {
+    function getActivities() {
         $http.get('getRuns').then(function (response) {
             addPacetoActivities(response.data);
             vm.activities = response.data;
@@ -303,10 +305,10 @@ function StravaController($cookies, $scope, $window, $http, $timeout) {
     }
 
     // Get the list of gears
-    function get_gears() {
+    function getGears() {
         // Make we already the activities list
         if (vm.nTotalItems === -1) {
-            get_activities();
+            getActivities();
         }
         $http.get('getGears').then(function (response) {
             var stats = {};
@@ -326,6 +328,7 @@ function StravaController($cookies, $scope, $window, $http, $timeout) {
             vm.gears = gears;
         });
     }
+
     // Compute the total distance and elevation.
     // To be called on the filtered list
     function totals(items) {
@@ -353,9 +356,9 @@ function StravaController($cookies, $scope, $window, $http, $timeout) {
     // We use this getterSetter to compute the regex filter only once and not for every line of the table.
     function getterSetterSearchField(value) {
         if (arguments.length) {
-            var folded_value = removeAccents(value);
-            vm.searchField = folded_value;
-            vm.searchRegex = createRegex(folded_value);
+            var foldedValue = removeAccents(value);
+            vm.searchField = foldedValue;
+            vm.searchRegex = createRegex(foldedValue);
         } else {
             return vm.searchField;
         }
@@ -436,11 +439,11 @@ function StravaController($cookies, $scope, $window, $http, $timeout) {
         return reg;
     }
 
-    function alternate_tab() {
-        if (vm.gears_or_activities === vm.GEARS) {
-            vm.gears_or_activities = vm.ACTIVITIES
+    function alternateTab() {
+        if (vm.gearsOrActivities === vm.GEARS) {
+            vm.gearsOrActivities = vm.ACTIVITIES
         } else {
-            vm.gears_or_activities = vm.GEARS
+            vm.gearsOrActivities = vm.GEARS
         }
     }
 }

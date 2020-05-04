@@ -6,7 +6,7 @@
     <link href="css/scrollable-table.css" rel="stylesheet">
     <link href="css/perso.css" rel="stylesheet">
     <script src="js/jquery-3.5.0.min.js"></script>
-    <script src="js/angular.js"></script>
+    <script src="js/angular.min.js"></script>
     <script src="js/angular-cookies.js"></script>
     <script src="js/moment.js"></script>
     <script src="js/angular-scrollable-table.js"></script>
@@ -24,7 +24,7 @@
                     <a href="#">MyStrava</a> 
                 </div>
                 <div class="col-md-4 right">
-                    <img class="img-circle" ng-src="{{vm.profile_picture}}" alt="">
+                    <img class="img-circle" ng-src="{{vm.profilePicture}}" alt="">
                     <button type="button" ng-click="vm.connectOrDisconnect()" class="btn btn-default myconnectbutton">{{vm.connectLabel}}</button>
                 </div>
             </div>

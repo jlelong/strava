@@ -25,19 +25,19 @@
             <div class="row">
                 <div class="col-md-4">
                     <h1><a href="#">Strava Viewer</a>
-                    <toggle ng-model="toggleValue" ng-change="vm.alternate_tab()" off-class="btn-primary" on-class="btn-default" off="{{vm.ACTIVITIES}}" on="{{vm.GEARS}}" size="btn-xs"></toggle>
+                    <toggle ng-model="toggleValue" ng-change="vm.alternateTab()" off-class="btn-primary" on-class="btn-default" off="{{vm.ACTIVITIES}}" on="{{vm.GEARS}}" size="btn-xs"></toggle>
                     </h1>
                 </div>
                 <div class="col-md-4 h3">
                 </div>
                 <div class="col-md-4 right">
-                    <img class="img-circle" ng-src="{{vm.profile_picture}}" alt="">
+                    <img class="img-circle" ng-src="{{vm.profilePicture}}" alt="">
                     <button type="button" ng-click="vm.connectOrDisconnect()" class="btn btn-default myconnectbutton">{{vm.connectLabel}}</button>
                 </div>
             </div>
         </div>
     </div>
-    <div class="container" ng-show="vm.gears_or_activities != vm.ACTIVITIES"><div class="panel panel-default">
+    <div class="container" ng-show="vm.gearsOrActivities != vm.ACTIVITIES"><div class="panel panel-default">
         <div class="panel-body">
             <div class="row">
                 <div class="col-md-2">Activity type:
@@ -66,13 +66,13 @@
                             <span class="caret"></span>
                         </button>
                         <ul class="dropdown-menu" uib-dropdown-menu role="menu">
-                            <li ng-click="vm.update_activities()">
+                            <li ng-click="vm.updateActivities()">
                                 <a class="mylink" href="">Update activities</a>
                             </li>
-                            <li ng-click="vm.update_gears()">
+                            <li ng-click="vm.updateGears()">
                                 <a class="mylink" href="">Update gears</a>
                             </li>
-                            <li ng-click="vm.rebuild_activities()">
+                            <li ng-click="vm.rebuildActivities()">
                                 <a class="mylink" href="">Rebuild Activities</a>
                             </li>
                         </ul>
@@ -83,9 +83,9 @@
             </div>
         </div>
         <div class="row" ng-show="vm.nTotalItems > 0">
-            {{vm.tots = vm.totals(vm.filteredItems); ""}}
+            {{vm.tots = vm.computeActivityTotals(vm.filteredItems); ""}}
             <h5>
-                <div class="col-md-5"> Filtered {{vm.filteredItems.length}} of {{vm.nTotalItems}} total activities. <span class="text-success">{{vm.update_response}}</span> </div>
+                <div class="col-md-5"> Filtered {{vm.filteredItems.length}} of {{vm.nTotalItems}} total activities. <span class="text-success">{{vm.updateResponse}}</span> </div>
                 <div class="col-md-3 right totals">Total elevation: {{vm.tots.elevation }} m</div>
                 <div class="col-md-3 right totals">Total distance: {{vm.tots.distance }} km</div>
             </h5>
@@ -100,7 +100,7 @@
                 </div>
                 <center><button type="button" ng-click="vm.firstUpdate()" class="btn btn-default myconnectbutton">First Update</button></center>
             </div>
-            <div ng-show="vm.update_in_progress" class="alert alert-info h4" role="alert">
+            <div ng-show="vm.updateInProgress" class="alert alert-info h4" role="alert">
                 Update in progress...
             </div>
             <div class="col-md-12" ng-show="vm.filteredItems.length > 0">
@@ -116,7 +116,7 @@
                                 <th ng-click="vm.setSort('elevation');" class="c-int"><div class="c6">D+</div></th>
                                 <th ng-click="vm.setSort('moving_time');" class="c-time"><div class="c7">Time</div></th>
                                 <th ng-click="vm.setSort('average_speed');" ng-switch="vm.activityType.label" class="c-speed">{{vm.speedOrPace}}</th>
-                                <th ng-show="vm.is_premium" ng-click="vm.setSort('suffer_score');" class="c-int"><div class="c12">Score</div></th>
+                                <th ng-show="vm.isPremium" ng-click="vm.setSort('suffer_score');" class="c-int"><div class="c12">Score</div></th>
                                 <th ng-click="vm.setSort('average_heartrate');" class="c-int"><div class="c11">HR</div></th>
                             </tr>
                         </thead>
@@ -137,7 +137,7 @@
                                     <div ng-switch-default>{{data.average_speed}}</div> -->
                                     {{vm.getSpeedOrPace(data)}}
                                 </td>
-                                <td ng-show="vm.is_premium">{{data.suffer_score}}</td>
+                                <td ng-show="vm.isPremium">{{data.suffer_score}}</td>
                                 <td>{{data.average_heartrate}}</td>
                             </tr>
                             <tr ng-repeat-end ng-show="expanded" class="row-details">
@@ -148,8 +148,8 @@
                                     <div class="max-hr" ng-show="data.max_heartrate"> Max HR: {{data.max_heartrate}}</div>
                                     <div class="red-points" ng-show="data.red_points"> Red points: {{data.red_points}}</div>
                                     <div class="right">
-                                        <button type="button" ng-click="vm.delete_activity(data.id)" class="btn btn-default mybutton btn-xs">Delete</button>
-                                        <button type="button" ng-click="vm.update_activity(data.id)" class="btn btn-default mybutton btn-xs">Update</button>
+                                        <button type="button" ng-click="vm.deleteActivity(data.id)" class="btn btn-default mybutton btn-xs">Delete</button>
+                                        <button type="button" ng-click="vm.updateActivity(data.id)" class="btn btn-default mybutton btn-xs">Update</button>
                                     </div>
                                 </td>
                             </tr>
@@ -165,7 +165,7 @@
         </div>
     </div>
 
-    <div class="container" ng-show="vm.gears_or_activities != vm.GEARS">
+    <div class="container" ng-show="vm.gearsOrActivities != vm.GEARS">
         <div class="row">
             <div class="col-md-5">
                 <input type="text" ng-model="vm.search.field" ng-model-options=" {getterSetter: true, debounce: 200 }" placeholder="Filter"
