@@ -183,6 +183,7 @@
                             <th ng-click="vm.setSort('activity_type');" class="c-rtype"><div class="c4">Activity</div></th>
                             <th ng-click="vm.setSort('distance');" class="c-int"><div class="c5">Km</div></th>
                             <th ng-click="vm.setSort('elevation');" class="c-int"><div class="c6">D+</div></th>
+                            <th class="c-int"><div class="c6">D+/km</div></th>
                         </tr>
                     </thead>
                     <tbody>
@@ -191,6 +192,7 @@
                             <td>{{data.activity_type}}</td>
                             <td>{{data.distance}}</td>
                             <td>{{data.elevation}}</td>
+                            <td>{{data.elevation / data.distance | number:2}}</td>
                         </tr>
                     </tbody>
                 </table>
