@@ -146,13 +146,13 @@ class StravaUI(object):
         cherrypy.session[self.DUMMY] = 'MyStravaUpdateActivities'
         view = StravaView(self.config, cherrypy.session.get(self.ATHLETE_ID))
         stravaRequest = StravaRequest(self.config, self._getOrRefreshToken())
-        # view.create_activities_table()
         list_ids = view.update_activities(stravaRequest)
         activities = view.get_activities(list_ids=list_ids)
         view.close()
         return activities
 
     @cherrypy.expose
+    @cherrypy.tools.json_out()
     def updategears(self):
         """
         Ajax query /updatelocaldb to update the database
@@ -160,7 +160,9 @@ class StravaUI(object):
         view = StravaView(self.config, cherrypy.session.get(self.ATHLETE_ID))
         stravaRequest = StravaRequest(self.config, self._getOrRefreshToken())
         view.update_gears(stravaRequest)
+        gears = view.get_gears()
         view.close()
+        return gears
 
     @cherrypy.expose
     def rebuildactivities(self):
@@ -173,6 +175,7 @@ class StravaUI(object):
         view.close()
 
     @cherrypy.expose
+    @cherrypy.tools.json_out()
     def updateactivity(self, activity_id):
         """
         Ajax query /updateactivity to update a single activity from its id
@@ -180,15 +183,16 @@ class StravaUI(object):
         cherrypy.session[self.DUMMY] = 'MyStravaUpdateActivity'
         view = StravaView(self.config, cherrypy.session.get(self.ATHLETE_ID))
         stravaRequest = StravaRequest(self.config, self._getOrRefreshToken())
+        if isinstance(activity_id, str):
+            activity_id = int(activity_id)
         try:
             activity = stravaRequest.client.get_activity(activity_id)
             view.update_activity(activity, stravaRequest)
             activity = view.get_activities(list_ids=activity_id)
         except requests.exceptions.HTTPError:
             # Page not found. Probably a deleted activity.
-            activity = ""
+            activity = []
         view.close()
-        cherrypy.response.headers["Content-Type"] = "application/json"
         return activity
 
     @cherrypy.expose

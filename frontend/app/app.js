@@ -89,6 +89,7 @@ function StravaController($cookies, $scope, $window, $http, $timeout) {
     vm.updateResponse = "";
     vm.activities = [];
     vm.gears = [];
+    vm.gearsDict = {};
     vm.nTotalItems = -1; // This is a convention to highlight that we have not yet requested the db.
     vm.reverse = false;
     vm.updateInProgress = false;
@@ -125,7 +126,7 @@ function StravaController($cookies, $scope, $window, $http, $timeout) {
     vm.updateActivity = updateActivity;
     vm.deleteActivity = deleteActivity;
     vm.rebuildActivities = rebuildActivities;
-    vm.totals = totals;
+    vm.computeActivityTotals = computeActivityTotals;
     vm.narrowSearch = narrowSearch;
     vm.setSort = setSort;
     vm.sortable = sortable;
@@ -148,8 +149,11 @@ function StravaController($cookies, $scope, $window, $http, $timeout) {
         vm.isPremium = ($cookies.get('is_premium') == 1);
     }
 
-    getActivities();
-    getGears();
+    // Load all data and compute the totals
+    Promise.all([getActivities(), getGears()]).then(() => {
+        updateGearTotals(vm.activities);
+        setGearsNamesForActivities(vm.activities);
+    });
 
     function connectOrDisconnect() {
         if (!vm.isConnected())
@@ -167,7 +171,7 @@ function StravaController($cookies, $scope, $window, $http, $timeout) {
     // Return the value of the predicate column
     function sortable(predicate) {
         return function (obj) {
-            if (predicate == 'moving_time') 
+            if (predicate == 'moving_time')
                 return moment.duration(obj[predicate]);
             return obj[predicate];
         };
@@ -177,18 +181,32 @@ function StravaController($cookies, $scope, $window, $http, $timeout) {
     /// The argument is modified inside the function.
     /// @param activities is an array of activities
     function addPacetoActivities(activities) {
-        angular.forEach(activities, function (obj) {
-            if (obj.activity_type == 'Run' | obj.activity_type == 'Hike' | obj.activity_type == 'NordicSki') {
-                if (obj.average_speed > 0) {
-                    var pace = 60.0 / obj.average_speed; // pace in minutes
+        angular.forEach(activities, (activity) => {
+            if (activity.activity_type == 'Run' | activity.activity_type == 'Hike' | activity.activity_type == 'NordicSki') {
+                if (activity.average_speed > 0) {
+                    var pace = 60.0 / activity.average_speed; // pace in minutes
                     var minutes = Math.floor(pace);
                     var seconds = parseInt((pace - minutes) * 60);
-                    obj.average_pace = minutes + ":" + ("0" + seconds).slice(-2);
+                    activity.average_pace = minutes + ":" + ("0" + seconds).slice(-2);
                 }
                 else
-                    obj.average_pace = 0;
+                    activity.average_pace = 0;
             }
         });
+    }
+
+    function setGearsNamesForActivities(activities) {
+        angular.forEach(activities, (activity) => {
+            const gear_id = activity['gear_id'];
+            activity['gear_name'] = '';
+            activity['bike_type'] = '';
+            if (gear_id in vm.gearsDict) {
+                activity['gear_name'] = vm.gearsDict[gear_id]['name'];
+                if (activity['activity_type'] === 'Ride') {
+                    activity['bike_type'] = vm.gearsDict[gear_id]['type']
+                }
+            }
+        })
     }
 
     // Update the activities database
@@ -199,9 +217,11 @@ function StravaController($cookies, $scope, $window, $http, $timeout) {
             return;
         }
         vm.updateResponse = "Update in progress...";
-        $http.get('updateactivities').then(function (response) {
+        $http.get('updateactivities').then((response) => {
             vm.updateResponse = "Database successfully updated.";
             addPacetoActivities(response.data);
+            updateGearTotals(response.data);
+            setGearsNamesForActivities(response.data);
             vm.activities.push.apply(vm.activities, response.data);
             vm.nTotalItems = vm.activities.length;
         });
@@ -215,10 +235,11 @@ function StravaController($cookies, $scope, $window, $http, $timeout) {
             return;
         }
         vm.update_response = "Update in progress...";
-        $http.get('updategears').then(function (response) {
+        $http.get('updategears').then((response) => {
             vm.updateResponse = "Database successfully updated.";
-            getActivities();
-            getGears();
+            initGearsDict(response.data);
+            updateGearTotals(vm.activities);
+            setGearsNamesForActivities(vm.activities);
         });
     }
 
@@ -230,17 +251,21 @@ function StravaController($cookies, $scope, $window, $http, $timeout) {
         }
         vm.nTotalItems = -1;
         vm.updateInProgress = true;
-        $http.get('updategears').then(function (response) { });
-        $http.get('updateactivities').then(function (response) {
+        Promise.all([$http.get('updategears'), $http.get('updateactivities')]).then((response) => {
+            const gears_response = response[0];
+            const activities_response = response[1];
             vm.updateResponse = "Database successfully updated.";
-            addPacetoActivities(response.data);
+            initGearsDict(gears_response.data);
+            addPacetoActivities(activities_response.data);
+            updateGearTotals(activities_response.data);
+            setGearsNamesForActivities(activities_response.data);
             vm.activities =  response.data;
             vm.nTotalItems = vm.activities.length;
             vm.updateInProgress = false;
-        }, function () {
-            vm.updateInProgress = false;
-        });
+
+        }, () => {vm.updateInProgress = false;});
     }
+
 
     // Update the local database
     function updateActivity(id) {
@@ -253,12 +278,16 @@ function StravaController($cookies, $scope, $window, $http, $timeout) {
         $http.get('updateactivity', { params: { activity_id: id } }).then(function (response) {
             vm.updateResponse = "Database successfully updated.";
             addPacetoActivities(response.data);
+            setGearsNamesForActivities(response.data);
+            const activitiesToRemove = []
             for (var i = 0; i < vm.activities.length; i++) {
                 if (vm.activities[i].id == id) {
+                    activitiesToRemove.push(vm.activities[i])
                     vm.activities[i] = response.data[0];
                     break;
                 }
             }
+            updateGearTotals(response.data, activitiesToRemove);
         });
     }
     //
@@ -274,6 +303,7 @@ function StravaController($cookies, $scope, $window, $http, $timeout) {
                 vm.updateResponse = "Activity successfully deleted.";
                 for (var i = 0; i < vm.activities.length; i++) {
                     if (vm.activities[i].id == id) {
+                        updateGearTotals([], [vm.activities[i]])
                         vm.activities.splice(i, 1);
                         break;
                     }
@@ -289,49 +319,64 @@ function StravaController($cookies, $scope, $window, $http, $timeout) {
             alert("Connect to Strava to upgrade the local DB.");
             return;
         }
-        $http.get('rebuildactivities').then(function (response) {
+        $http.get('rebuildactivities').then((response) => {
             vm.updateResponse = "Database successfully rebuilt.";
-            getActivities($http);
+            Promise.all([getActivities(), getGears()]).then(() => {
+                updateGearTotals(vm.activities);
+                setGearsNamesForActivities(vm.activities);
+            });
         });
     }
 
     // Get the list of activities.
     function getActivities() {
-        $http.get('getRuns').then(function (response) {
+        return $http.get('getRuns').then((response) => {
             addPacetoActivities(response.data);
             vm.activities = response.data;
             vm.nTotalItems = vm.activities.length;
         });
     }
 
+    // Initialize gear dictionary
+    function initGearsDict(gearArray) {
+        vm.gearsDict = {};
+        angular.forEach(gearArray, g => {
+            vm.gearsDict[g.id] = {'name': g.name, 'type': g.type, 'distance': 0, 'elevation': 0};
+        });
+    }
     // Get the list of gears
     function getGears() {
-        // Make we already the activities list
-        if (vm.nTotalItems === -1) {
-            getActivities();
-        }
-        $http.get('getGears').then(function (response) {
-            var stats = {};
-            angular.forEach(response.data, g => {
-                stats[g.name] = {'type': g.type, 'distance': 0, 'elevation': 0};
-            });
-            angular.forEach(vm.activities, activity => {
-                if (activity.gear_name in stats) {
-                    stats[activity.gear_name]['distance'] += activity.distance;
-                    stats[activity.gear_name]['elevation'] += activity.elevation;
+        return $http.get('getGears').then((response) => {
+            initGearsDict(response.data);
+        });
+    }
+
+    function updateGearTotals(activitiesToAdd, activitiesToRemove=undefined) {
+        angular.forEach(activitiesToAdd, activity => {
+            if (activity.gear_id in vm.gearsDict) {
+                vm.gearsDict[activity.gear_id]['distance'] += activity.distance;
+                vm.gearsDict[activity.gear_id]['elevation'] += activity.elevation;
+            }
+        });
+        if (activitiesToRemove) {
+            angular.forEach(activitiesToRemove, activity => {
+                if (activity.gear_id in vm.gearsDict) {
+                    vm.gearsDict[activity.gear_id]['distance'] -= activity.distance;
+                    vm.gearsDict[activity.gear_id]['elevation'] -= activity.elevation;
                 }
             });
-            var gears = [];
-            angular.forEach(Object.keys(stats), g => {
-                gears.push({'name': g, 'activity_type': stats[g]['type'],'distance': Math.round(stats[g]['distance']), 'elevation': stats[g]['elevation']});
-            });
-            vm.gears = gears;
+        }
+        var gears = [];
+        angular.forEach(Object.keys(vm.gearsDict), id => {
+            const gear = vm.gearsDict[id];
+            gears.push({'name': gear['name'], 'activity_type': gear['type'],'distance': Math.round(gear['distance']), 'elevation': gear['elevation']});
         });
+        vm.gears = gears;
     }
 
     // Compute the total distance and elevation.
     // To be called on the filtered list
-    function totals(items) {
+    function computeActivityTotals(items) {
         var elevation = 0.0;
         var distance = 0.0;
         angular.forEach(items, obj => {
