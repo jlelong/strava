@@ -334,8 +334,8 @@ class StravaView:
         out = []
         for row in query.order_by(Activity.date.desc()).all():
             ans = row[0].to_json()
-            ans['gear_name'] = row[1]
-            ans['bike_type'] = row[2] if ans['activity_type'] == ActivityTypes.RIDE else ''
+            # ans['gear_name'] = row[1]
+            # ans['bike_type'] = row[2] if ans['activity_type'] == ActivityTypes.RIDE else ''
             out.append(ans)
         return out
 
