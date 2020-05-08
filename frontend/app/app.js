@@ -218,7 +218,7 @@ function StravaController($cookies, $scope, $window, $http, $timeout) {
         }
         vm.updateResponse = "Update in progress...";
         $http.get('updateactivities').then((response) => {
-            vm.updateResponse = "Database successfully updated.";
+        vm.updateResponse = "Activities successfully updated.";
             addPacetoActivities(response.data);
             updateGearTotals(response.data);
             setGearsNamesForActivities(response.data);
@@ -236,7 +236,7 @@ function StravaController($cookies, $scope, $window, $http, $timeout) {
         }
         vm.update_response = "Update in progress...";
         $http.get('updategears').then((response) => {
-            vm.updateResponse = "Database successfully updated.";
+            vm.updateResponse = "Gears successfully updated.";
             initGearsDict(response.data);
             updateGearTotals(vm.activities);
             setGearsNamesForActivities(vm.activities);
@@ -254,7 +254,7 @@ function StravaController($cookies, $scope, $window, $http, $timeout) {
         Promise.all([$http.get('updategears'), $http.get('updateactivities')]).then((response) => {
             const gears_response = response[0];
             const activities_response = response[1];
-            vm.updateResponse = "Database successfully updated.";
+            vm.updateResponse = "Gears and activities successfully updated.";
             initGearsDict(gears_response.data);
             addPacetoActivities(activities_response.data);
             updateGearTotals(activities_response.data);
@@ -276,7 +276,7 @@ function StravaController($cookies, $scope, $window, $http, $timeout) {
         }
         vm.updateResponse = "Update in progress...";
         $http.get('updateactivity', { params: { activity_id: id } }).then(function (response) {
-            vm.updateResponse = "Database successfully updated.";
+            vm.updateResponse = "Activity successfully updated.";
             addPacetoActivities(response.data);
             setGearsNamesForActivities(response.data);
             const activitiesToRemove = []
@@ -320,7 +320,7 @@ function StravaController($cookies, $scope, $window, $http, $timeout) {
             return;
         }
         $http.get('rebuildactivities').then((response) => {
-            vm.updateResponse = "Database successfully rebuilt.";
+            vm.updateResponse = "Activities list successfully rebuilt.";
             Promise.all([getActivities(), getGears()]).then(() => {
                 updateGearTotals(vm.activities);
                 setGearsNamesForActivities(vm.activities);
