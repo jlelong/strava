@@ -150,7 +150,7 @@ function StravaController($cookies, $scope, $window, $http, $timeout) {
     }
 
     // Load all data and compute the totals
-    Promise.all([getActivities(), getGears()]).then(() => {
+    Promise.all([getActivities(), updateGears()]).then(() => {
         updateGearTotals(vm.activities);
         setGearsNamesForActivities(vm.activities);
     });
