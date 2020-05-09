@@ -150,10 +150,17 @@ function StravaController($cookies, $scope, $window, $http, $timeout) {
     }
 
     // Load all data and compute the totals
-    Promise.all([getActivities(), updateGears()]).then(() => {
-        updateGearTotals(vm.activities);
-        setGearsNamesForActivities(vm.activities);
-    });
+    if (vm.isConnected()) {
+        Promise.all([getActivities(), updateGears()]).then(() => {
+            updateGearTotals(vm.activities);
+            setGearsNamesForActivities(vm.activities);
+        });
+    } else {
+        Promise.all([getActivities(), getGears()]).then(() => {
+            updateGearTotals(vm.activities);
+            setGearsNamesForActivities(vm.activities);
+        });
+    }
 
     function connectOrDisconnect() {
         if (!vm.isConnected())
