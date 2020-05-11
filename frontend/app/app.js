@@ -115,7 +115,7 @@ function StravaController($cookies, $scope, $window, $http, $timeout) {
     vm.activityType = vm.activityTypes[0];
     vm.GEARS = 'Gears'
     vm.ACTIVITIES = 'Activities'
-    vm.gearsOrActivities = vm.GEARS;
+    vm.gearsOrActivities = vm.ACTIVITIES;
 
     // Methods
     vm.isConnected = function () { return ($cookies.get('connected') !== undefined); };
@@ -135,7 +135,6 @@ function StravaController($cookies, $scope, $window, $http, $timeout) {
     vm.getSpeed = function(data) { return data.average_speed; }
     vm.getPace = function(data) { return data.average_pace; }
     vm.getSpeedOrPace = vm.getSpeed;
-    vm.alternateTab = alternateTab;
 
 
     if (!vm.isConnected()) {
@@ -489,13 +488,5 @@ function StravaController($cookies, $scope, $window, $http, $timeout) {
         var reg = new RegExp(tokensLogic.join("|"), 'gi');
         console.log(reg);
         return reg;
-    }
-
-    function alternateTab() {
-        if (vm.gearsOrActivities === vm.GEARS) {
-            vm.gearsOrActivities = vm.ACTIVITIES
-        } else {
-            vm.gearsOrActivities = vm.GEARS
-        }
     }
 }

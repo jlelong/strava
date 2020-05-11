@@ -23,9 +23,12 @@
     <div class="navbar navbar-default" id="navbar">
         <div class="container h1">
             <div class="row">
-                <div class="col-md-4">
+                <div class="col-md-6">
                     <h1><a href="#">Strava Viewer</a>
-                    <toggle ng-model="toggleValue" ng-change="vm.alternateTab()" off-class="btn-primary" on-class="btn-default" off="{{vm.ACTIVITIES}}" on="{{vm.GEARS}}" size="btn-xs"></toggle>
+                        <div class="btn-group">
+                            <label class="btn btn-primary" ng-model="vm.gearsOrActivities" uib-btn-radio="'{{vm.ACTIVITIES}}'">Activities</label>
+                            <label class="btn btn-primary" ng-model="vm.gearsOrActivities" uib-btn-radio="'{{vm.GEARS}}'">Gears</label>
+                        </div>
                     </h1>
                 </div>
                 <div class="col-md-4 h3">
@@ -37,7 +40,7 @@
             </div>
         </div>
     </div>
-    <div class="container" ng-show="vm.gearsOrActivities != vm.ACTIVITIES"><div class="panel panel-default">
+    <div class="container" ng-show="vm.gearsOrActivities == vm.ACTIVITIES"><div class="panel panel-default">
         <div class="panel-body">
             <div class="row">
                 <div class="col-md-2">Activity type:
@@ -165,7 +168,7 @@
         </div>
     </div>
 
-    <div class="container" ng-show="vm.gearsOrActivities != vm.GEARS">
+    <div class="container" ng-show="vm.gearsOrActivities == vm.GEARS">
         <div class="row">
             <div class="col-md-5">
                 <input type="text" ng-model="vm.search.field" ng-model-options=" {getterSetter: true, debounce: 200 }" placeholder="Filter"
