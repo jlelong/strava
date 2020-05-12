@@ -34,6 +34,11 @@ body {
     background-color: #7989D6;
 }
 
+.btn-primary.active {
+    background-color: #7989D6;
+    border-color: #7989D6;
+}
+
 .totals {
     color: #7989D6;
     font-weight: bold;
