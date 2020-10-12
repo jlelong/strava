@@ -30,6 +30,10 @@ def read_config(infile):
     except configparser.NoOptionError:
         print("No name provided for the mysql base")
         sys.exit()
+    try:
+        config['mysql_sock'] = parser.get('mysql', 'sock')
+    except configparser.NoOptionError:
+        config['mysql_sock'] = ""
 
     try:
         config['mysql_bikes_table'] = parser.get('mysql', 'bikes_table')

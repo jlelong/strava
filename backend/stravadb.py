@@ -96,8 +96,8 @@ class StravaView:
         :param athlete: the strava id of the athlete logged in
         """
         self.athlete_id = athlete_id
-        self.db_uri = 'mysql+pymysql://{user}:{passwd}@localhost/{base}?charset=utf8mb4'\
-            .format(user=config['mysql_user'], passwd=config['mysql_password'], base=config['mysql_base'])
+        self.db_uri = 'mysql+pymysql://{user}:{passwd}@localhost/{base}?unix_socket={sock}?charset=utf8mb4'\
+            .format(user=config['mysql_user'], passwd=config['mysql_password'], base=config['mysql_base'],sock=config['mysql_sock'])
         db_engine = sqlalchemy.create_engine(self.db_uri)
         # Create the table if they do not exist
         Base.metadata.create_all(db_engine)
