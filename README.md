@@ -20,6 +20,7 @@ est une application Web client/serveur nécessitant
         * `base` : le nom de la base
         * `user` : un utilisateur MySQL ayant à la base déclarée au dessus
         * `password` : le mot de passe de l'utilisateur `user`, peut être vide
+        * `sock`: le chemin vers le socket unix de connexion. Utile pour choisir entre plusieurs versions de serveur de BD. (optionel)
     * Strava
         * `client_id`
         * `client_secret`
