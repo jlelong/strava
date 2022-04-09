@@ -61,7 +61,7 @@ class StravaUI(object):
         athlete_id = cherrypy.session.get(self.ATHLETE_ID)
         if athlete_id is not None and cherrypy.session.get(self.ACCESS_TOKEN) is not None:
             if not self.isAuthorized(athlete_id):
-                return open(os.path.join(self.rootdir, 'forbid.html'))
+                return open(os.path.join(self.rootdir, 'forbid.html'), encoding='utf8')
             cookie = cherrypy.response.cookie
             athlete_is_premium = cherrypy.session.get(self.ATHLETE_IS_PREMIUM)
             if athlete_is_premium is None:
@@ -76,7 +76,7 @@ class StravaUI(object):
         #print("ACCESS TOKEN : {}".format(cherrypy.session.get(self.ACCESS_TOKEN)))
         #print("REFRESH TOKEN : {}".format(cherrypy.session.get(self.REFRESH_TOKEN)))
         #print("EXPIRES_AT : {}".format(time.strftime('%Y-%m-%d %H:%M:%S', time.localtime(cherrypy.session.get(self.EXPIRES_AT)))))
-        return open(os.path.join(self.rootdir, 'index.html'))
+        return open(os.path.join(self.rootdir, 'index.html'), encoding='utf8')
 
     @cherrypy.expose
     def disconnect(self):
@@ -89,7 +89,7 @@ class StravaUI(object):
         cookie['session_id']['expires'] = 0
         cookie['is_premium'] = 0
         cookie['is_premium']['expires'] = 0
-        return open(os.path.join(self.rootdir, 'index.html'))
+        return open(os.path.join(self.rootdir, 'index.html'), encoding='utf8')
 
     @cherrypy.expose
     @cherrypy.tools.json_out()
@@ -225,9 +225,9 @@ class StravaUI(object):
         raise cherrypy.HTTPRedirect(authentification_url)
 
     @cherrypy.expose
-    def authorized(self, scope=None, state=None, code=None):
+    def authorized(self, _scope=None, _state=None, code=None):
         """
-        Echange code for a token and set token and athlete_id in the current session
+        Exchange code for a token and set token and athlete_id in the current session
 
         :param scope: the scope variable passed to Strava authentification url and returned here.
         We do not use it, so it is always None but we have to keep it in the argument list
