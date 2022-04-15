@@ -225,7 +225,7 @@ class StravaUI(object):
         raise cherrypy.HTTPRedirect(authentification_url)
 
     @cherrypy.expose
-    def authorized(self, _scope=None, _state=None, code=None):
+    def authorized(self, scope=None, state=None, code=None):
         """
         Exchange code for a token and set token and athlete_id in the current session
 
