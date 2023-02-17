@@ -303,7 +303,7 @@ class StravaView:
         :param name: a substring of the activity name
         :type name: str
 
-        :param activity_type: the type of activity. Can be 'Walk', 'Run', 'Ride', 'Road', 'MTB', 'CX', 'TT'.
+        :param activity_type: the type of activity. Can be 'Walk', 'Run', 'Ride', 'Road', 'Gravel', 'MTB', 'CX', 'TT'.
         :type activity_type: str
 
         :param list_ids: a list of activities ids
