@@ -1,0 +1,25 @@
+{
+  "name": "jl",
+  "version": "1.0.0",
+  "description": "",
+  "main": "index.js",
+  "directories": {
+    "doc": "doc"
+  },
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "author": "",
+  "license": "ISC",
+  "devDependencies": {
+    "@types/angular": "^1.7.0",
+    "@types/angularjs": "^1.5.14-alpha",
+    "eslint-config-google": "^0.9.1"
+  },
+  "dependencies": {
+    "bootstrap": "^3.4.1",
+    "eslint": "^6.8.0",
+    "jquery": "^3.6.3",
+    "moment": "^2.29.4"
+  }
+}
