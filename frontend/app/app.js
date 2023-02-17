@@ -57,6 +57,7 @@ var ALL_ACTIVITIES = 1;
 var ALL_RIDES = 2;
 var MTB_RIDES = 3;
 var ROAD_RIDES = 4;
+var GRAVEL_RIDES = 5;
 var RUNS = 5;
 var HIKES = 6;
 var NORDICSKI = 7;
@@ -108,6 +109,7 @@ function StravaController($cookies, $scope, $window, $http, $timeout) {
         { 'id': ALL_RIDES, 'label': 'Ride' },
         { 'id': MTB_RIDES, 'label': 'MTB' },
         { 'id': ROAD_RIDES, 'label': 'Road' },
+        { 'id': GRAVEL_RIDES, 'label': 'Gravel' },
         { 'id': HIKES, 'label': 'Hike' },
         { 'id': RUNS, 'label': 'Run' },
         { 'id': NORDICSKI, 'label': 'NordicSki' },

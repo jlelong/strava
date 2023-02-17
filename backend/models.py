@@ -10,7 +10,7 @@ def make_gear_model(tablename):
         __tablename__ = tablename
         id = db.Column(db.String(45), primary_key=True)
         name = db.Column(db.String(256), nullable=True)
-        type = db.Column(db.Enum(ActivityTypes.HIKE, ActivityTypes.RUN, ActivityTypes.ROAD, ActivityTypes.MTB, ActivityTypes.CX, ActivityTypes.TT), nullable=True)
+        type = db.Column(db.Enum(ActivityTypes.HIKE, ActivityTypes.RUN, ActivityTypes.ROAD, ActivityTypes.MTB, ActivityTypes.CX, ActivityTypes.TT, ActivityTypes.GRAVEL), nullable=True)
         frame_type = db.Column(db.Integer, default=0)
         athlete = db.Column(db.Integer, default=0)
 
