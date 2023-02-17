@@ -155,7 +155,7 @@ class StravaView:
             old_activity.gear_id = activity.gear_id
             old_activity.commute = activity.commute
             if activity.total_elevation_gain is not None:
-                elevation = "%0.0f" % stravalib.unithelper.meters(activity.total_elevation_gain).get_num()
+                elevation = "%0.0f" % stravalib.unithelper.meters(activity.total_elevation_gain).num
                 old_activity.elevation = elevation
             self.session.commit()
             print("Activity '{}' was already in the local db. Updated.".format(activity.name.encode('utf-8')))
@@ -178,15 +178,15 @@ class StravaView:
         # Get the real values
         athlete_id = activity.athlete.id
         if activity.distance is not None:
-            distance = "%0.2f" % stravalib.unithelper.kilometers(activity.distance).get_num()
+            distance = "%0.2f" % stravalib.unithelper.kilometers(activity.distance).num
         if activity.total_elevation_gain is not None:
-            elevation = "%0.0f" % stravalib.unithelper.meters(activity.total_elevation_gain).get_num()
+            elevation = "%0.0f" % stravalib.unithelper.meters(activity.total_elevation_gain).num
         date = activity.start_date_local
         moving_time = activity.moving_time
         elapsed_time = activity.elapsed_time
         gear_id = activity.gear_id
         if activity.average_speed is not None:
-            average_speed = "%0.1f" % stravalib.unithelper.kilometers_per_hour(activity.average_speed).get_num()
+            average_speed = "%0.1f" % stravalib.unithelper.kilometers_per_hour(activity.average_speed).num
         if activity.average_heartrate is not None:
             average_heartrate = "%0.0f" % activity.average_heartrate
             max_heartrate = activity.max_heartrate
