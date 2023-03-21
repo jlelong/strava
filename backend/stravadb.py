@@ -115,8 +115,8 @@ class StravaView:
 
         :param stravaRequest: an instance of StravaRequest to send requests to the Strava API
         """
-        gears = list(stravaRequest.athlete.bikes)
-        gears.extend(list(stravaRequest.athlete.shoes))
+        onlineGears = list(stravaRequest.athlete.bikes)
+        onlineGears.extend(list(stravaRequest.athlete.shoes))
 
         for bike in stravaRequest.athlete.bikes:
             desc = stravaRequest.client.get_gear(bike.id)
@@ -126,6 +126,7 @@ class StravaView:
                 old_bike.name = desc.name
                 old_bike.frame_type = desc.frame_type
                 old_bike.type = ActivityTypes.FRAME_TYPES[desc.frame_type]
+                old_bike.retired = False
             else:
                 self.session.add(new_bike)
             self.session.commit()
@@ -137,9 +138,19 @@ class StravaView:
             if old_shoe is not None:
                 old_shoe.name = desc.name
                 old_shoe.type = ActivityTypes.RUN
+                old_shoe.retire = False
             else:
                 self.session.add(new_shoe)
             self.session.commit()
+
+        activeGearIds = [gear.id for gear in onlineGears]
+        self.session.query(Gear).filter(Gear.athlete == self.athlete_id).filter(Gear.id.notin_(activeGearIds)).update({Gear.retired: True})
+        # for localGear in localGears:
+        #     if localGear.id in activeGearIds:
+        #         localGear.retired = False
+        #     else:
+        #         localGear.retired = True
+        self.session.commit()
 
 
     def push_activity(self, activity):

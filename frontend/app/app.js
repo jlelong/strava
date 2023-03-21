@@ -13,6 +13,7 @@ var app = angular.module('StravaViewer', ['ui.bootstrap', 'scrollable-table', 'n
 app.controller('StravaController', StravaController);
 app.filter('selectActivityTypeFilter', selectActivityTypeFilter);
 app.filter('dateRangeFilter', dateRangeFilter);
+app.filter('selectGearFilter', selectGearFilter);
 
 function dateRangeFilter() {
     // Function called for filtering dates
@@ -78,6 +79,15 @@ function selectActivityTypeFilter() {
         });
         return retArray;
     };
+}
+
+function selectGearFilter() {
+    return function (items, withRetiredGear) {
+        if (withRetiredGear) {
+            return items
+        }
+        return items.filter(gear => !gear.retired)
+    }
 }
 
 
@@ -342,7 +352,7 @@ function StravaController($cookies, $scope, $window, $http, $timeout) {
     function initGearsDict(gearArray) {
         vm.gearsDict = {};
         angular.forEach(gearArray, g => {
-            vm.gearsDict[g.id] = {'name': g.name, 'type': g.type, 'distance': 0, 'elevation': 0};
+            vm.gearsDict[g.id] = {'name': g.name, 'type': g.type, 'distance': 0, 'elevation': 0, 'retired': g.retired};
         });
     }
     // Get the list of gears
@@ -370,7 +380,7 @@ function StravaController($cookies, $scope, $window, $http, $timeout) {
         var gears = [];
         angular.forEach(Object.keys(vm.gearsDict), id => {
             const gear = vm.gearsDict[id];
-            gears.push({'name': gear['name'], 'activity_type': gear['type'],'distance': Math.round(gear['distance']), 'elevation': gear['elevation']});
+            gears.push({'name': gear['name'], 'activity_type': gear['type'],'distance': Math.round(gear['distance']), 'elevation': gear['elevation'], 'retired': gear['retired']});
         });
         vm.gears = gears;
     }
