@@ -171,8 +171,8 @@
     <div class="container" ng-show="vm.gearsOrActivities == vm.GEARS">
         <div class="row">
             <div class="col-md-5">
-                <input type="text" ng-model="vm.search.field" ng-model-options=" {getterSetter: true, debounce: 200 }" placeholder="Filter"
-                    title='To match a string with whitespaces enclose it into "...". Use AND to indicate you want to match all clauses.'
+                <input type="text" ng-model="vm.searchGear" placeholder="Filter"
+                    title='Select gear.'
                     class="form-control" />
             </div>
             <div class="col-md-3">
@@ -193,7 +193,7 @@
                         </tr>
                     </thead>
                     <tbody>
-                        <tr ng-repeat="data in gears = (vm.gears | filter:vm.narrowSearch(vm.searchRegex) | selectGearFilter: vm.withRetiredGear | orderBy : vm.sortable(vm.predicate) : vm.reverse)">
+                        <tr ng-repeat="data in gears = (vm.gears | filter:vm.searchGear | selectGearFilter: vm.withRetiredGear | orderBy : vm.sortable(vm.predicate) : vm.reverse)">
                             <td>{{data.name}}</td>
                             <td>{{data.activity_type}}</td>
                             <td>{{data.distance}}</td>
