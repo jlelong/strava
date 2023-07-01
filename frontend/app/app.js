@@ -59,9 +59,9 @@ var ALL_RIDES = 2;
 var MTB_RIDES = 3;
 var ROAD_RIDES = 4;
 var GRAVEL_RIDES = 5;
-var RUNS = 5;
-var HIKES = 6;
-var NORDICSKI = 7;
+var RUNS = 6;
+var HIKES = 7;
+var NORDICSKI = 8;
 
 
 // This filter handles both the activity type and the commute selector
