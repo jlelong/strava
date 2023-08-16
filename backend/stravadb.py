@@ -120,7 +120,6 @@ class StravaView:
 
         for bike in stravaRequest.athlete.bikes:
             desc = stravaRequest.client.get_gear(bike.id)
-            new_bike = Gear(name=desc.name, id=desc.id, type=ActivityTypes.FRAME_TYPES[desc.frame_type], frame_type=desc.frame_type, athlete=self.athlete_id)
             old_bike = self.session.query(Gear).filter_by(id=bike.id).first()
             if old_bike is not None:
                 old_bike.name = desc.name
@@ -128,18 +127,19 @@ class StravaView:
                 old_bike.type = ActivityTypes.FRAME_TYPES[desc.frame_type]
                 old_bike.retired = False
             else:
+                new_bike = Gear(name=desc.name, id=desc.id, type=ActivityTypes.FRAME_TYPES[desc.frame_type], frame_type=desc.frame_type, athlete=self.athlete_id)
                 self.session.add(new_bike)
             self.session.commit()
 
         for shoe in stravaRequest.athlete.shoes:
             desc = stravaRequest.client.get_gear(shoe.id)
-            new_shoe = Gear(name=desc.name, id=desc.id, type=ActivityTypes.RUN, athlete=self.athlete_id)
             old_shoe = self.session.query(Gear).filter_by(id=shoe.id).first()
             if old_shoe is not None:
                 old_shoe.name = desc.name
                 old_shoe.type = ActivityTypes.RUN
-                old_shoe.retire = False
+                old_shoe.retired = False
             else:
+                new_shoe = Gear(name=desc.name, id=desc.id, type=ActivityTypes.RUN, athlete=self.athlete_id)
                 self.session.add(new_shoe)
             self.session.commit()
 
