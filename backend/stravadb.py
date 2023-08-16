@@ -131,16 +131,16 @@ class StravaView:
                 self.session.add(new_bike)
             self.session.commit()
 
-        for shoe in stravaRequest.athlete.shoes:
-            desc = stravaRequest.client.get_gear(shoe.id)
-            old_shoe = self.session.query(Gear).filter_by(id=shoe.id).first()
-            if old_shoe is not None:
-                old_shoe.name = desc.name
-                old_shoe.type = ActivityTypes.RUN
-                old_shoe.retired = False
+        for shoes in stravaRequest.athlete.shoes:
+            desc = stravaRequest.client.get_gear(shoes.id)
+            old_shoes = self.session.query(Gear).filter_by(id=shoes.id).first()
+            if old_shoes is not None:
+                old_shoes.name = desc.name
+                old_shoes.type = ActivityTypes.RUN
+                old_shoes.retired = False
             else:
-                new_shoe = Gear(name=desc.name, id=desc.id, type=ActivityTypes.RUN, athlete=self.athlete_id)
-                self.session.add(new_shoe)
+                new_shoes = Gear(name=desc.name, id=desc.id, type=ActivityTypes.RUN, athlete=self.athlete_id)
+                self.session.add(new_shoes)
             self.session.commit()
 
         activeGearIds = [gear.id for gear in onlineGears]
