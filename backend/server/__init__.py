@@ -23,8 +23,8 @@ def app():
             'tools.staticdir.root': frontend_dir,
             'tools.staticdir.dir': '',
             'tools.response_headers.on': True,
-            'log.access_file': "{0}/log/access.log".format(app_dir),
-            'log.error_file': "{0}/log/error.log".format(app_dir),
+            'log.access_file': f"{app_dir}/log/access.log",
+            'log.error_file': f"{app_dir}/log/error.log."
         },
     }
     if config['proxy_base']:

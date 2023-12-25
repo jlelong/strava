@@ -17,7 +17,7 @@ def get_location(cords):
     while True:
         try:
             # location = geolocator.reverse(cords)
-            location = geocoder.osm("{lat},{lon}".format(lat=cords.lat, lon=cords.lon))
+            location = geocoder.osm(f"{cords.lat},{cords.lon}.")
             if location.json is None:
                 return None
             location_dict = location.json

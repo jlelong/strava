@@ -169,11 +169,11 @@ class StravaView:
                 elevation = "%0.0f" % stravalib.unithelper.meters(activity.total_elevation_gain).num
                 old_activity.elevation = elevation
             self.session.commit()
-            print("Activity '{}' was already in the local db. Updated.".format(activity.name.encode('utf-8')))
+            print(f"Activity {activity.name.encode('utf-8')} was already in the local db. Updated.")
             return
 
         if (activity.type not in ActivityTypes.ACTIVITY_TYPES):
-            print("Activity '%s' is not a ride nor a run" % (activity.name.encode('utf-8')))
+            print(f"Activity {activity.name.encode('utf-8')} is not a ride nor a run.")
             return
 
         # Default values
@@ -236,7 +236,7 @@ class StravaView:
         old_activity.location = location
         old_activity.description = description
         self.session.commit()
-        print("Update the description, points and location of activity {} ".format(activity.id))
+        print(f"Update the description, points and location of activity {activity.id}.")
 
     def update_activity(self, activity, stravaRequest):
         """
@@ -280,7 +280,7 @@ class StravaView:
         list_ids = []
         for activity in new_activities:
             self.push_activity(activity)
-            print("{} - {}".format(activity.id, activity.name.encode('utf-8')))
+            print(f"{activity.id} - {activity.name.encode('utf-8')}")
             list_ids.append(activity.id)
         for activity in new_activities:
             self.update_activity_extra_fields(activity, stravaRequest)
@@ -296,7 +296,7 @@ class StravaView:
         all_activities = stravaRequest.client.get_activities()
         for activity in all_activities:
             self.push_activity(activity)
-            print("{} - {}".format(activity.id, activity.name.encode('utf-8')))
+            print(f"{activity.id} - {activity.name.encode('utf-8')}")
         for activity in all_activities:
             self.update_activity_extra_fields(activity, stravaRequest)
 
@@ -332,8 +332,7 @@ class StravaView:
         if activity_type is not None:
             # We consider FRAME_TYPES as activities on their owns.
             if not (activity_type in ActivityTypes.ACTIVITY_TYPES):
-                print("{0} is not a valid activity. Use {1}"\
-                    .format(activity_type, ", ".join(ActivityTypes.ACTIVITY_TYPES)))
+                print(f'{activity_type} is not a valid activity. Use {", ".join(ActivityTypes.ACTIVITY_TYPES)}.')
                 activity_type = None
             else:
                 if activity_type in (ActivityTypes.HIKE, ActivityTypes.RUN, ActivityTypes.RIDE):

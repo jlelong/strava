@@ -213,7 +213,7 @@ class StravaUI(object):
         Connect to Strava and grant authentification.
         """
         # Keep session alive
-        print("Connect - Session ID : {}".format(cherrypy.session.id))
+        print(f"Connect - Session ID : {cherrypy.session.id}")
         cherrypy.session[self.DUMMY] = 'MyStravaConnect'
         client = stravalib.Client()
         redirect_url = cherrypy.url(path='/authorized', script_name='')
@@ -221,11 +221,11 @@ class StravaUI(object):
         authentification_url = client.authorization_url(
             client_id=self.config['client_id'], scope=["read_all", "activity:read_all", "profile:read_all"], approval_prompt='auto',
             redirect_uri=redirect_url)
-        print("Authentification_URL : {}".format(authentification_url))
+        print(f"Authentification_URL : {authentification_url}")
         raise cherrypy.HTTPRedirect(authentification_url)
 
     @cherrypy.expose
-    def authorized(self, scope=None, state=None, code=None):
+    def authorized(self, _scope=None, _state=None, code=None):
         """
         Exchange code for a token and set token and athlete_id in the current session
 
@@ -241,7 +241,7 @@ class StravaUI(object):
         further exchanged for a token.
         """
         print(cherrypy.request.cookie['session_id'])
-        print("authorization - {}".format(cherrypy.session.id))
+        print(f"authorization - {cherrypy.session.id}")
         # Keep session alive
         cherrypy.session[self.DUMMY] = 'MyStravaAuthorized'
         client = stravalib.Client()
@@ -260,12 +260,12 @@ class StravaUI(object):
         cherrypy.session[self.ATHLETE_IS_PREMIUM] = athlete.premium
 
         print("-------")
-        print("athlete: {}".format(cherrypy.session.get(self.ATHLETE_ID)))
-        print("token: {}".format(cherrypy.session.get(self.ACCESS_TOKEN)))
-        print("refresh token: {}".format(cherrypy.session.get(self.REFRESH_TOKEN)))
-        print("expires at: {}".format(time.strftime('%Y-%m-%d %H:%M:%S', time.localtime(cherrypy.session.get(self.EXPIRES_AT)))))
-        print("Session ID : {}".format(cherrypy.session.id))
-        print("Access code : {}".format(code))
+        print(f"athlete: {cherrypy.session.get(self.ATHLETE_ID)}")
+        print(f"token: {cherrypy.session.get(self.ACCESS_TOKEN)}")
+        print(f"refresh token: {cherrypy.session.get(self.REFRESH_TOKEN)}")
+        print(f"expires at: {time.strftime('%Y-%m-%d %H:%M:%S', time.localtime(cherrypy.session.get(self.EXPIRES_AT)))}")
+        print(f"Session ID : {cherrypy.session.id}")
+        print(f"Access code : {code}")
         print("-------")
 
         raise cherrypy.HTTPRedirect(cherrypy.url(path='/', script_name=''))
