@@ -25,7 +25,7 @@ class StravaRequest:
 
         Create a connection to the mysql server and prepare the dialog with the Strava api
 
-        :param config: a dictionnary as returned by readconfig.read_config
+        :param config: a dictionary as returned by readconfig.read_config
 
         :param token: an access token returned by Strava, must be at list view_private.
         """

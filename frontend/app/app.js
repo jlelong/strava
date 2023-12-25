@@ -390,11 +390,15 @@ function StravaController($cookies, $scope, $window, $http, $timeout) {
     function computeActivityTotals(items) {
         var elevation = 0.0;
         var distance = 0.0;
+        var duration = 0.0;
         angular.forEach(items, obj => {
             elevation += obj.elevation;
             distance += obj.distance;
+            // moving_time is a string "HH:MM"
+            var [hours, minutes] = obj.moving_time.split(':');
+            duration += parseInt(hours) + parseInt(minutes) / 60.0;
         });
-        return { 'elevation': elevation, 'distance': distance.toFixed(2) };
+        return { 'duration': duration.toFixed(0), 'elevation': elevation, 'distance': distance.toFixed(2) };
     }
 
 

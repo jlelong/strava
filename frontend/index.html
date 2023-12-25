@@ -89,8 +89,9 @@
             {{vm.tots = vm.computeActivityTotals(vm.filteredItems); ""}}
             <h5>
                 <div class="col-md-5"> Filtered {{vm.filteredItems.length}} of {{vm.nTotalItems}} total activities. <span class="text-success">{{vm.updateResponse}}</span> </div>
-                <div class="col-md-3 right totals">Total elevation: {{vm.tots.elevation }} m</div>
-                <div class="col-md-3 right totals">Total distance: {{vm.tots.distance }} km</div>
+                <div class="col-md-2 right totals">Duration: {{vm.tots.duration }} h</div>
+                <div class="col-md-2 right totals">Elevation: {{vm.tots.elevation }} m</div>
+                <div class="col-md-2 right totals">Distance: {{vm.tots.distance }} km</div>
             </h5>
         </div>
         <br/>
