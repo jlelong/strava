@@ -8,7 +8,7 @@ import sys
 
 def read_config(infile):
     """
-    Read the content of the init file and return it as dictionnary with keys
+    Read the content of the init file and return it as dictionary with keys
 
     See the comments inside setup.ini.dist for explanations on the different fields
     """
