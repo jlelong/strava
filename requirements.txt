@@ -1,6 +1,6 @@
 configparser
-geopy
+geopy==2.4.1
 sqlalchemy
 pymysql
-stravalib
-cherrypy
+stravalib==1.5
+cherrypy==18.9.0

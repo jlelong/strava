@@ -16,7 +16,7 @@ def get_location(cords):
     geolocator = Nominatim(user_agent="StravaView")
     while True:
         try:
-            location = geolocator.reverse(cords)
+            location = geolocator.reverse((cords.lat, cords.lon))
             if location.raw is None:
                 return None
             location_dict = location.raw['address']
