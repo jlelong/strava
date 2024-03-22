@@ -4,3 +4,4 @@ sqlalchemy
 pymysql
 stravalib==1.5
 cherrypy==18.9.0
+certifi

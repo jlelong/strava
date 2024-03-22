@@ -1,4 +1,6 @@
-from geopy.geocoders import Nominatim
+import ssl
+import certifi
+from geopy.geocoders import Nominatim, options as geooptions
 from geopy.exc import GeopyError
 
 def get_location(cords):
@@ -13,6 +15,8 @@ def get_location(cords):
         return None
     max_attempts = 4
     attempts = 0
+    ctx = ssl.create_default_context(cafile=certifi.where())
+    geooptions.default_ssl_context = ctx
     geolocator = Nominatim(user_agent="StravaView")
     while True:
         try:
@@ -33,4 +37,4 @@ def get_location(cords):
             attempts += 1
             if attempts > max_attempts:
                 print(f"Error getting reverse location for {cords.lat},{cords.lon}", e)
-                break
+                return ""
