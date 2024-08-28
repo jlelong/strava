@@ -1,5 +1,3 @@
-// vim: set sw=4 ts=4 sts=4:
-
 // Make the table height responsive
 $(function() {
     $(window).on('resize', function() {
@@ -63,18 +61,108 @@ var RUNS = 6;
 var HIKES = 7;
 var NORDICSKI = 8;
 
+// Sport_type selector
+var sportTypes = [
+    "All",
+    "AllRides",
+    "AllFootSports",
+    "AlpineSki",
+    "BackcountrySki",
+    "Badminton",
+    "Canoeing",
+    "Crossfit",
+    "EBikeRide",
+    "Elliptical",
+    "EMountainBikeRide",
+    "Golf",
+    "GravelRide",
+    "Handcycle",
+    "HighIntensityIntervalTraining",
+    "Hike",
+    "IceSkate",
+    "InlineSkate",
+    "Kayaking",
+    "Kitesurf",
+    "MountainBikeRide",
+    "NordicSki",
+    "Pickleball",
+    "Pilates",
+    "Racquetball",
+    "Ride",
+    "RockClimbing",
+    "RollerSki",
+    "Rowing",
+    "Run",
+    "Sail",
+    "Skateboard",
+    "Snowboard",
+    "Snowshoe",
+    "Soccer",
+    "Squash",
+    "StairStepper",
+    "StandUpPaddling",
+    "Surfing",
+    "Swim",
+    "TableTennis",
+    "Tennis",
+    "TrailRun",
+    "Velomobile",
+    "VirtualRide",
+    "VirtualRow",
+    "VirtualRun",
+    "Walk",
+    "WeightTraining",
+    "Wheelchair",
+    "Windsurf",
+    "Workout",
+    "Yoga"
+];
+
+var allRides = [
+    "EBikeRide",
+    "EMountainBikeRide",
+    "GravelRide",
+    "MountainBikeRide",
+    "Ride",
+    "VirtualRide"
+];
+
+var allFootSports = [
+    "Hike",
+    "Ride",
+    "Run",
+    "TrailRun",
+    "VirtualRun",
+    "Walk"
+];
+
+var allSportWithPace = allFootSports.concat(['NordicSki'])
+
 
 // This filter handles both the activity type and the commute selector
 function selectActivityTypeFilter() {
-    return function (items, activityTypeId, withCommutes) {
+    return function (items, activityType, withCommutes) {
         var retArray = [];
-        if (activityTypeId.id == ALL_ACTIVITIES && withCommutes) {
+        if (activityType.id == 'All' && withCommutes) {
             return items;
         }
         angular.forEach(items, function (obj) {
-            // activityTypeId can either be an activity type or a bike type because we use a flat selector
-            if (((activityTypeId.id == ALL_ACTIVITIES) || (obj.bike_type == activityTypeId.label || obj.activity_type == activityTypeId.label)) && (withCommutes || !obj.commute)) {
-                retArray.push(obj);
+            if (activityType.id == 'All') {
+                if (withCommutes || !obj.commute) {
+                    retArray.push(obj);
+                }
+            } else if (activityType.id == 'AllRides') {
+                if (allRides.includes(obj.sport_type) && (withCommutes || !obj.commute)) {
+                    retArray.push(obj);
+                }
+            } else if (activityType.id == 'AllFootSports') {
+                if (allFootSports.includes(obj.sport_type) && (withCommutes || !obj.commute)) {
+                    retArray.push(obj);
+                }
+            } else {
+                if (obj.sport_type == activityType.id && (withCommutes || !obj.commute)) {
+                    retArray.push(obj);
+                }
             }
         });
         return retArray;
@@ -113,18 +201,11 @@ function StravaController($cookies, $scope, $window, $http, $timeout) {
     vm.speedOrPace = "Speed";
     vm.alternate_tab = null;
 
-    // The labels must match the ones used in stravadb.ActivityTypes
-    vm.activityTypes = [
-        { 'id': ALL_ACTIVITIES, 'label': 'All' },
-        { 'id': ALL_RIDES, 'label': 'Ride' },
-        { 'id': MTB_RIDES, 'label': 'MTB' },
-        { 'id': ROAD_RIDES, 'label': 'Road' },
-        { 'id': GRAVEL_RIDES, 'label': 'Gravel' },
-        { 'id': HIKES, 'label': 'Hike' },
-        { 'id': RUNS, 'label': 'Run' },
-        { 'id': NORDICSKI, 'label': 'NordicSki' },
-    ];
-    vm.activityType = vm.activityTypes[0];
+    // The labels must match the ones used in ActivityType.SPORT_TYPES
+    vm.activityTypes = sportTypes.map(value => {
+        return {'id': value, 'label': value}
+    })
+    vm.activityType = vm.activityTypes[0]; // All activities
     vm.GEARS = 'Gears'
     vm.ACTIVITIES = 'Activities'
     vm.gearsOrActivities = vm.ACTIVITIES;
@@ -193,7 +274,7 @@ function StravaController($cookies, $scope, $window, $http, $timeout) {
     /// @param activities is an array of activities
     function addPacetoActivities(activities) {
         angular.forEach(activities, (activity) => {
-            if (activity.activity_type == 'Run' | activity.activity_type == 'Hike' | activity.activity_type == 'NordicSki') {
+            if (allSportWithPace.includes(activity.sport_type)) {
                 if (activity.average_speed > 0) {
                     var pace = 60.0 / activity.average_speed; // pace in minutes
                     var minutes = Math.floor(pace);
@@ -403,7 +484,7 @@ function StravaController($cookies, $scope, $window, $http, $timeout) {
 
 
     function updateSelectedActivityType() {
-        if (vm.activityType.id == HIKES || vm.activityType.id == RUNS || vm.activityType.id == NORDICSKI) {
+        if (allSportWithPace.includes(vm.activityType.id)) {
             vm.speedOrPace = "Pace";
             vm.getSpeedOrPace = vm.getPace;
         } else {

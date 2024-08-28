@@ -115,7 +115,7 @@
                                 <th ng-click="vm.setSort('name');" class="c-name"><div class="c1">Name</div></th>
                                 <th ng-click="vm.setSort('location');" class="c-location"><div class="c2">Location</div></th>
                                 <th ng-click="vm.setSort('date');"  class="c-date"><div class="c3">Date</div></th>
-                                <th ng-click="vm.setSort('bike_type');" class="c-rtype"><div class="c4">Activity</div></th>
+                                <th ng-click="vm.setSort('sport_type');" class="c-rtype"><div class="c4">Activity</div></th>
                                 <th ng-click="vm.setSort('distance');" class="c-int"><div class="c5">Km</div></th>
                                 <th ng-click="vm.setSort('elevation');" class="c-int"><div class="c6">D+</div></th>
                                 <th ng-click="vm.setSort('moving_time');" class="c-time"><div class="c7">Time</div></th>
@@ -132,13 +132,11 @@
                                 </td>
                                 <td>{{data.location}}</td>
                                 <td>{{data.date}}</td>
-                                <td>{{data.bike_type || data.activity_type }}</td>
+                                <td>{{data.sport_type}}</td>
                                 <td>{{data.distance}}</td>
                                 <td>{{data.elevation}}</td>
                                 <td>{{data.moving_time}}</td>
                                 <td ng-switch=vm.activityType.label>
-                                    <!-- <div ng-switch-when="Run|Hike" ng-switch-when-separator="|">{{data.average_pace}}</div>
-                                    <div ng-switch-default>{{data.average_speed}}</div> -->
                                     {{vm.getSpeedOrPace(data)}}
                                 </td>
                                 <td ng-show="vm.isPremium">{{data.suffer_score}}</td>
@@ -192,7 +190,7 @@
                     <thead>
                         <tr>
                             <th ng-click="vm.setSort('name');" class="c-name"><div class="c1">Name</div></th>
-                            <th ng-click="vm.setSort('activity_type');" class="c-rtype"><div class="c4">Activity</div></th>
+                            <th ng-click="vm.setSort('sport_type');" class="c-rtype"><div class="c4">Activity</div></th>
                             <th ng-click="vm.setSort('distance');" class="c-int"><div class="c5">Km</div></th>
                             <th ng-click="vm.setSort('elevation');" class="c-int"><div class="c6">D+</div></th>
                             <th class="c-int"><div class="c6">D+/km</div></th>
@@ -201,7 +199,7 @@
                     <tbody>
                         <tr ng-repeat="data in gears = (vm.gears | filter:vm.searchGear | selectGearFilter: vm.withRetiredGear | orderBy : vm.sortable(vm.predicate) : vm.reverse)">
                             <td>{{data.name}}</td>
-                            <td>{{data.activity_type}}</td>
+                            <td>{{data.sport_type}}</td>
                             <td>{{data.distance}}</td>
                             <td>{{data.elevation}}</td>
                             <td>{{data.elevation / data.distance | number:2}}</td>
