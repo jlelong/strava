@@ -153,11 +153,11 @@ class StravaView:
         self.session.commit()
 
 
-    def push_activity(self, activity):
+    def push_activity(self, activity: stravalib.model.DetailedActivity):
         """
         Add the activity `activity` to the activities table
 
-        :param activity: an object of class:`stravalib.model.Activity`
+        :param activity: an object of class:`stravalib.model.DetailedActivity`
         """
         # Check if activity is already in the table
         old_activity = self.session.query(Activity).filter_by(id=activity.id).first()
@@ -212,7 +212,7 @@ class StravaView:
         self.session.add(new_activity)
         self.session.commit()
 
-    def update_activity_extra_fields(self, activity, stravaRequest):
+    def update_activity_extra_fields(self, activity: stravalib.model.DetailedActivity, stravaRequest: StravaRequest):
         """
         Update a given activity already in the local db
 
@@ -238,7 +238,7 @@ class StravaView:
         self.session.commit()
         print(f"Update the description, points and location of activity {activity.id}.")
 
-    def update_activity(self, activity, stravaRequest):
+    def update_activity(self, activity: stravalib.model.DetailedActivity, stravaRequest: StravaRequest):
         """
         Update a given activity already in the local db
 
@@ -263,7 +263,7 @@ class StravaView:
         self.session.commit()
         print("Activity deleted")
 
-    def update_activities(self, stravaRequest):
+    def update_activities(self, stravaRequest: StravaRequest):
         """
         Fetch new activities and push into the local db.
 
@@ -286,7 +286,7 @@ class StravaView:
             self.update_activity_extra_fields(activity, stravaRequest)
         return list_ids
 
-    def rebuild_activities(self, stravaRequest):
+    def rebuild_activities(self, stravaRequest: StravaRequest):
         """
         Get the whole list of activities from Strava and updates the local db accordingly.
         The activities already in the local db are updated if needed.

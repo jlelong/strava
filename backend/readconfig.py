@@ -32,18 +32,6 @@ def read_config(infile):
         sys.exit()
 
     try:
-        config['mysql_bikes_table'] = parser.get('mysql', 'bikes_table')
-    except configparser.NoOptionError:
-        print("No name provided for the bikes table")
-        sys.exit()
-
-    try:
-        config['mysql_activities_table'] = parser.get('mysql', 'activities_table')
-    except configparser.NoOptionError:
-        print("No name provided for the activities table")
-        sys.exit()
-
-    try:
         config['client_id'] = parser.get('strava', 'client_id')
     except configparser.NoOptionError:
         print("No Strava client id provided")
