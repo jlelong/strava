@@ -271,7 +271,7 @@ class StravaUI:
         raise cherrypy.HTTPRedirect(cherrypy.url(path='/', script_name=''))
 
     @cherrypy.expose
-    def updatesporttype(self):
+    def updatesporttype(self,trail_seuil):
         stravaRequest = StravaRequest(self.config, self._getOrRefreshToken())
         view = StravaView(self.config, cherrypy.session.get(self.ATHLETE_ID))
-        view.fix_sport_type_all_activities(stravaRequest)
+        view.fix_sport_type_all_activities(stravaRequest, trail_seuil)

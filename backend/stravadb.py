@@ -23,10 +23,10 @@ def set_sport_type_for_ride(activity: type[Activity], gearType: str):
         activity.sport_type = 'Ride'
 
 
-def set_sport_type_for_run(activity: type[Activity]):
+def set_sport_type_for_run(activity: type[Activity], trailThreshold: int):
     if activity.sport_type is not None:
         return
-    if activity.elevation > 200:
+    if activity.elevation > trailThreshold:
         activity.sport_type = 'TrailRun'
 
 
@@ -317,13 +317,15 @@ class StravaView:
             self.update_activity_extra_fields(activity, stravaRequest)
 
 
-    def fix_sport_type_all_activities(self, stravaRequest: StravaRequest):
+    def fix_sport_type_all_activities(self, stravaRequest: StravaRequest, trailThreshold: int = 200):
         """
         Set sport_type for all activities in the local db.
 
         For a long time, only `type` was set by Strava. A few years ago, new types appeared 'TrailRun', 'GravelRide', 'MountainBikeRide', ... The new field `sport_type` supersets the old value `type`, which will be removed soon.
 
         :param stravaRequest: an instance of StravaRequest to send requests to the Strava API
+
+        :param trailThreshold: all run activities with more elevation than `trailThreshold` are considered as trail running.
         """
         all_strava_activities = stravaRequest.client.get_activities()
         for strava_activity in all_strava_activities:
@@ -334,7 +336,7 @@ class StravaView:
                 if strava_activity.sport_type.root == 'Ride':
                     set_sport_type_for_ride(local_activity[0], local_activity[1])
                 elif strava_activity.sport_type.root == 'Run':
-                    set_sport_type_for_run(local_activity[0])
+                    set_sport_type_for_run(local_activity[0], trailThreshold)
                 # set_sport_type_for_{ride,run} may not set sport_type, so we have to test local_activity[0].sport_type again
                 if local_activity[0].sport_type is None:
                     local_activity[0].sport_type = strava_activity.sport_type.root
