@@ -44,7 +44,7 @@ class Activity(Base):
     description = db.Column(db.Text, default='') # COLLATE utf8mb4_bin DEFAULT NULL,
     commute = db.Column(db.Boolean, default=False)
     calories = db.Column(db.Float, default=0)
-    type = db.Column(db.Enum(ActivityTypes.RIDE, ActivityTypes.RUN, ActivityTypes.HIKE, ActivityTypes.NORDICSKI), default='')
+    type = db.Column(db.Enum(*ActivityTypes.ACTIVITY_TYPES), default='')
     sport_type = db.Column(db.Enum(*ActivityTypes.SPORT_TYPES), default='')
 
     def to_json(self):
