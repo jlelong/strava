@@ -1,6 +1,3 @@
-#!/usr/bin/env python
-# -*- coding: utf-8 -*-
-
 from __future__ import print_function
 
 import stravalib.client
@@ -62,7 +59,7 @@ class StravaRequest:
             self.athlete_id = 0
             self.athlete_profile = ""
 
-    def get_points(self, activity):
+    def get_points(self, activity: stravalib.model.SummaryActivity):
         """
         Request the points for an activity
 
@@ -83,7 +80,7 @@ class StravaRequest:
             return 0
         return 0
 
-    def get_description(self, activity):
+    def get_description(self, activity: stravalib.model.SummaryActivity):
         """
         Request the description of an activity
 
@@ -170,7 +167,7 @@ class StravaView:
         self.session.commit()
 
 
-    def push_activity(self, activity: stravalib.model.DetailedActivity):
+    def push_activity(self, activity: stravalib.model.SummaryActivity):
         """
         Add the activity `activity` to the activities table
 
@@ -185,7 +182,7 @@ class StravaView:
             old_activity.type = activity.type
             old_activity.sport_type = activity.sport_type
             if activity.total_elevation_gain is not None:
-                elevation = "%0.0f" % stravalib.unit_helper.meters(activity.total_elevation_gain).num
+                elevation = f"{stravalib.unit_helper.meters(activity.total_elevation_gain).magnitude:.0f}"
                 old_activity.elevation = elevation
             self.session.commit()
             print(f"Activity {activity.name.encode('utf-8')} was already in the local db. Updated.")
@@ -204,17 +201,17 @@ class StravaView:
         # Get the real values
         athlete_id = activity.athlete.id
         if activity.distance is not None:
-            distance = "%0.2f" % stravalib.unit_helper.kilometers(activity.distance).num
+            distance = f"{stravalib.unit_helper.kilometers(activity.distance).magnitude:.2f}"
         if activity.total_elevation_gain is not None:
-            elevation = "%0.0f" % stravalib.unit_helper.meters(activity.total_elevation_gain).num
+            elevation = f"{stravalib.unit_helper.meters(activity.total_elevation_gain).magnitude:.0f}"
         date = activity.start_date_local
         moving_time = activity.moving_time
         elapsed_time = activity.elapsed_time
         gear_id = activity.gear_id
         if activity.average_speed is not None:
-            average_speed = "%0.1f" % stravalib.unit_helper.kilometers_per_hour(activity.average_speed).num
+            average_speed = f"{stravalib.unit_helper.kilometers_per_hour(activity.average_speed).magnitude:.1f}"
         if activity.average_heartrate is not None:
-            average_heartrate = "%0.0f" % activity.average_heartrate
+            average_heartrate = f"{activity.average_heartrate:.0f}"
             max_heartrate = activity.max_heartrate
             if activity.suffer_score is not None:
                 suffer_score = activity.suffer_score
@@ -228,7 +225,7 @@ class StravaView:
         self.session.add(new_activity)
         self.session.commit()
 
-    def update_activity_extra_fields(self, activity: stravalib.model.DetailedActivity, stravaRequest: StravaRequest):
+    def update_activity_extra_fields(self, activity: stravalib.model.SummaryActivity, stravaRequest: StravaRequest):
         """
         Update a given activity already in the local db
 
@@ -254,7 +251,7 @@ class StravaView:
         self.session.commit()
         print(f"Update the description, points and location of activity {activity.id}.")
 
-    def update_activity(self, activity: stravalib.model.DetailedActivity, stravaRequest: StravaRequest):
+    def update_activity(self, activity: stravalib.model.SummaryActivity, stravaRequest: StravaRequest):
         """
         Update a given activity already in the local db
 
