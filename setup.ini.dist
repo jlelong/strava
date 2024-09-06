@@ -5,11 +5,6 @@ base =
 user = 
 # The password associated to the above user
 password = 
-# The following two tables are created within the local database
-# A table to store the list of bikes
-bikes_table = 
-# A table to store all your activities
-activities_table = 
 
 [strava]
 # The id of the client from `My Account/My Apps`
@@ -19,9 +14,9 @@ client_secret =
 # Do you want to retrieve red points for every activity. It induces one
 # extra http request per activity. Use "yes" or "no"
 with_points = no
-# Do you want to retrieve the description for every activity. It induces one
+# Do you want to retrieve the details for every activity. It induces one
 # extra http request per activity. Use "yes" or "no"
-with_description = no
+with_details = no
 
 [server]
 session_dir = /tmp/MyStrava

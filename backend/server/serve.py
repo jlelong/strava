@@ -5,6 +5,7 @@ import time
 import cherrypy
 import stravalib
 import requests
+import stravalib.model
 
 from backend.stravadb import StravaRequest, StravaView
 
@@ -146,7 +147,7 @@ class StravaUI:
         cherrypy.session[self.DUMMY] = 'MyStravaUpdateActivities'
         view = StravaView(self.config, cherrypy.session.get(self.ATHLETE_ID))
         stravaRequest = StravaRequest(self.config, self._getOrRefreshToken())
-        list_ids = view.update_activities(stravaRequest)
+        list_ids = view.update_new_activities(stravaRequest)
         activities = view.get_activities(list_ids=list_ids)
         view.close()
         return activities
@@ -186,7 +187,7 @@ class StravaUI:
         if isinstance(activity_id, str):
             activity_id = int(activity_id)
         try:
-            activity = stravaRequest.client.get_activity(activity_id)
+            activity: stravalib.model.DetailedActivity = stravaRequest.client.get_activity(activity_id)
             view.update_activity(activity, stravaRequest)
             activity = view.get_activities(list_ids=activity_id)
         except requests.exceptions.HTTPError:
@@ -269,3 +270,9 @@ class StravaUI:
         print("-------")
 
         raise cherrypy.HTTPRedirect(cherrypy.url(path='/', script_name=''))
+
+    @cherrypy.expose
+    def updatesporttype(self,trail_seuil):
+        stravaRequest = StravaRequest(self.config, self._getOrRefreshToken())
+        view = StravaView(self.config, cherrypy.session.get(self.ATHLETE_ID))
+        view.fix_sport_type_all_activities(stravaRequest, trail_seuil)
