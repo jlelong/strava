@@ -146,7 +146,7 @@ class StravaUI:
         cherrypy.session[self.DUMMY] = 'MyStravaUpdateActivities'
         view = StravaView(self.config, cherrypy.session.get(self.ATHLETE_ID))
         stravaRequest = StravaRequest(self.config, self._getOrRefreshToken())
-        list_ids = view.update_activities(stravaRequest)
+        list_ids = view.update_new_activities(stravaRequest)
         activities = view.get_activities(list_ids=list_ids)
         view.close()
         return activities
@@ -187,7 +187,7 @@ class StravaUI:
             activity_id = int(activity_id)
         try:
             activity = stravaRequest.client.get_activity(activity_id)
-            view.update_activity(activity, stravaRequest)
+            view.update_new_activities(activity, stravaRequest)
             activity = view.get_activities(list_ids=activity_id)
         except requests.exceptions.HTTPError:
             # Page not found. Probably a deleted activity.

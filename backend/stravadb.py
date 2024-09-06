@@ -241,7 +241,8 @@ class StravaView:
         self.session.commit()
         print("Activity deleted")
 
-    def update_activities(self, stravaRequest: StravaRequest):
+
+    def update_new_activities(self, stravaRequest: StravaRequest):
         """
         Fetch new activities and push into the local db.
 
@@ -255,14 +256,8 @@ class StravaView:
         else:
             after = None
         new_activities = stravaRequest.client.get_activities(after=after)
-        list_ids = []
-        for activity in new_activities:
-            self.push_activity(activity)
-            print(f"{activity.id} - {activity.name.encode('utf-8')}")
-            list_ids.append(activity.id)
-        for activity in new_activities:
-            self.update_activity_extra_fields(activity, stravaRequest)
-        return list_ids
+        return self.insert_new_activities(new_activities, stravaRequest)
+
 
     def rebuild_activities(self, stravaRequest: StravaRequest):
         """
@@ -272,11 +267,24 @@ class StravaView:
         :param stravaRequest: an instance of StravaRequest to send requests to the Strava API
         """
         all_activities = stravaRequest.client.get_activities()
-        for activity in all_activities:
-            self.push_activity(activity)
+        self.insert_new_activities(all_activities, stravaRequest)
+
+
+    def insert_new_activities(self, activities_list: list[stravalib.model.SummaryActivity], stravaRequest: StravaRequest):
+        """
+        Push new Strava activities into the local db and return their ids
+
+        :param activities_list: a list of Strava activities
+
+        :param stravaRequest: an instance of StravaRequest to send requests to the Strava API
+        """
+        for activity in activities_list:
+            self.push_activity(activity, stravaRequest)
             print(f"{activity.id} - {activity.name.encode('utf-8')}")
-        for activity in all_activities:
-            self.update_activity_extra_fields(activity, stravaRequest)
+        for activity in activities_list:
+            detailed_activity = stravaRequest.client.get_activity(activity.id)
+            self.update_activity_detailed_fields(detailed_activity, stravaRequest)
+        return [activity.id for activity in activities_list]
 
 
     def fix_sport_type_all_activities(self, stravaRequest: StravaRequest, trailThreshold: int = 200):
