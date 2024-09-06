@@ -45,8 +45,7 @@ class StravaRequest:
         """
         self.token = token
         self.client = stravalib.Client(access_token=token)
-        self.with_points = config['with_points']
-        self.with_description = config['with_description']
+        self.with_details = config['with_details']
         self.client_id = config['client_id']
         self.client_secret = config['client_secret']
 
@@ -58,40 +57,6 @@ class StravaRequest:
             self.athlete = None
             self.athlete_id = 0
             self.athlete_profile = ""
-
-    def get_points(self, activity: stravalib.model.SummaryActivity):
-        """
-        Request the points for an activity
-
-        :param activity: a Strava activity
-        :type activity: Activity
-        """
-
-        if ((not self.with_points) or (activity.suffer_score is None)):
-            return 0
-        try:
-            zones = activity.zones
-            if not zones:
-                return 0
-            for z in zones:
-                if z.type == 'heartrate':
-                    return z.points
-        except:
-            return 0
-        return 0
-
-    def get_description(self, activity: stravalib.model.SummaryActivity):
-        """
-        Request the description of an activity
-
-        :param activity: a Strava activity
-        :type activity: Activity
-        """
-        if not self.with_description:
-            return None
-        detailed_activity = self.client.get_activity(activity.id)
-        description = detailed_activity.description
-        return description
 
 
 class StravaView:

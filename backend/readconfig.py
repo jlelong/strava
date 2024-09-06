@@ -44,14 +44,9 @@ def read_config(infile):
         sys.exit()
 
     try:
-        config['with_points'] = parser.getboolean('strava', 'with_points')
+        config['with_details'] = parser.getboolean('strava', 'with_details')
     except (configparser.NoOptionError, ValueError):
-        config['with_points'] = False
-
-    try:
-        config['with_description'] = parser.getboolean('strava', 'with_description')
-    except (configparser.NoOptionError, ValueError):
-        config['with_description'] = False
+        config['with_details'] = False
 
     try:
         config['session_dir'] = parser.get('server', 'session_dir')
