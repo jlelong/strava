@@ -5,6 +5,7 @@ import time
 import cherrypy
 import stravalib
 import requests
+import stravalib.model
 
 from backend.stravadb import StravaRequest, StravaView
 
@@ -186,8 +187,8 @@ class StravaUI:
         if isinstance(activity_id, str):
             activity_id = int(activity_id)
         try:
-            activity = stravaRequest.client.get_activity(activity_id)
-            view.update_new_activities(activity, stravaRequest)
+            activity: stravalib.model.DetailedActivity = stravaRequest.client.get_activity(activity_id)
+            view.update_activity(activity, stravaRequest)
             activity = view.get_activities(list_ids=activity_id)
         except requests.exceptions.HTTPError:
             # Page not found. Probably a deleted activity.

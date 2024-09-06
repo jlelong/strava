@@ -4,6 +4,7 @@ import stravalib.client
 import stravalib.model
 import stravalib.unit_helper
 import sqlalchemy
+from datetime import timedelta
 
 from backend.constants import ActivityTypes
 from backend.utils import get_location
@@ -141,16 +142,7 @@ class StravaView:
         # Check if activity is already in the table
         old_activity = self.session.query(Activity).filter_by(id=activity.id).first()
         if old_activity is not None:
-            old_activity.name = activity.name
-            old_activity.gear_id = activity.gear_id
-            old_activity.commute = activity.commute
-            old_activity.type = activity.type
-            old_activity.sport_type = activity.sport_type
-            if activity.total_elevation_gain is not None:
-                elevation = f"{stravalib.unit_helper.meters(activity.total_elevation_gain).magnitude:.0f}"
-                old_activity.elevation = elevation
-            self.session.commit()
-            print(f"Activity {activity.name.encode('utf-8')} was already in the local db. Updated.")
+            self.update_activity(activity)
             return
 
         # Default values
@@ -166,31 +158,28 @@ class StravaView:
         # Get the real values
         athlete_id = activity.athlete.id
         if activity.distance is not None:
-            distance = f"{stravalib.unit_helper.kilometers(activity.distance).magnitude:.2f}"
+            distance = round(stravalib.unit_helper.kilometers(activity.distance).magnitude, 2)
         if activity.total_elevation_gain is not None:
-            elevation = f"{stravalib.unit_helper.meters(activity.total_elevation_gain).magnitude:.0f}"
+            elevation = round(stravalib.unit_helper.meters(activity.total_elevation_gain).magnitude, 0)
         date = activity.start_date_local
-        moving_time = activity.moving_time
-        elapsed_time = activity.elapsed_time
+        moving_time = timedelta(seconds=activity.moving_time)
+        elapsed_time = timedelta(seconds=activity.elapsed_time)
         gear_id = activity.gear_id
-        if activity.average_speed is not None:
-            average_speed = f"{stravalib.unit_helper.kilometers_per_hour(activity.average_speed).magnitude:.1f}"
-        if activity.average_heartrate is not None:
-            average_heartrate = f"{activity.average_heartrate:.0f}"
-            max_heartrate = activity.max_heartrate
-            if activity.suffer_score is not None:
-                suffer_score = activity.suffer_score
-        if activity.calories is not None:
-            calories = activity.calories
-        commute = int(activity.commute)
-        activity_type = activity.type
-        sport_type = activity.sport_type
+        location = get_location(activity.start_latlng)
 
-        new_activity = Activity(id=activity.id, athlete=athlete_id, name=activity.name, distance=distance, elevation=elevation, date=date, moving_time=moving_time, elapsed_time=elapsed_time, gear_id=gear_id, average_speed=average_speed, average_heartrate=average_heartrate, max_heartrate=max_heartrate, suffer_score=suffer_score, commute=commute, type=activity_type, sport_type=sport_type, red_points=red_points, calories=calories)
+        if activity.average_speed is not None:
+            average_speed = round(stravalib.unit_helper.kilometers_per_hour(activity.average_speed).magnitude, 1)
+
+        commute = int(activity.commute)
+        activity_type = activity.type.root
+        sport_type = activity.sport_type.root
+
+        new_activity = Activity(id=activity.id, athlete=athlete_id, name=activity.name, distance=distance, elevation=elevation, date=date, moving_time=moving_time, elapsed_time=elapsed_time, gear_id=gear_id, average_speed=average_speed, average_heartrate=average_heartrate, max_heartrate=max_heartrate, suffer_score=suffer_score, commute=commute, type=activity_type, sport_type=sport_type, red_points=red_points, calories=calories, location=location)
         self.session.add(new_activity)
         self.session.commit()
 
-    def update_activity_extra_fields(self, activity: stravalib.model.SummaryActivity, stravaRequest: StravaRequest):
+
+    def update_activity_detailed_fields(self, activity: stravalib.model.DetailedActivity):
         """
         Update a given activity already in the local db
 
@@ -198,36 +187,54 @@ class StravaView:
 
         :param stravaRequest: an instance of StravaRequest to send requests to the Strava API
         """
-        old_activity = self.session.query(Activity).filter_by(id=activity.id).first()
-        # Drop activity if they are not already in DB
-        if old_activity is None:
+        local_activity: Activity = self.session.query(Activity).filter_by(id=activity.id).first()
+        if local_activity is None:
             return
-        red_points = old_activity.red_points
-        suffer_score = old_activity.suffer_score
-        # if location is None or location == "":
-        location = get_location(activity.start_latlng)
-        if red_points == 0 and suffer_score > 0:
-            red_points = stravaRequest.get_points(activity)
-        description = stravaRequest.get_description(activity)
+        if activity.suffer_score is not None:
+            local_activity.suffer_score = activity.suffer_score
+        local_activity.description = activity.description
+        if activity.average_heartrate is not None:
+            local_activity.average_heartrate = f"{activity.average_heartrate:.0f}"
+            local_activity.max_heartrate = activity.max_heartrate
+        if activity.calories is not None:
+            local_activity.calories = activity.calories
 
-        old_activity.red_points = red_points
-        old_activity.location = location
-        old_activity.description = description
         self.session.commit()
-        print(f"Update the description, points and location of activity {activity.id}.")
+        print(f"Update the detailed fields of activity {activity.id}.")
 
-    def update_activity(self, activity: stravalib.model.SummaryActivity, stravaRequest: StravaRequest):
+
+    def update_activity(self, activity: stravalib.model.SummaryActivity):
         """
         Update a given activity already in the local db
 
         :param activity: a Strava activity
 
         :param stravaRequest: an instance of StravaRequest to send requests to the Strava API
-
-        :param geolocator:
         """
-        self.push_activity(activity)
-        self.update_activity_extra_fields(activity, stravaRequest)
+        # Check if activity is already in the table
+        local_activity:Activity = self.session.query(Activity).filter_by(id=activity.id).first()
+        if local_activity is None:
+            print(f"Activity {activity.id} {activity.name.encode('utf-8')} does not exist in the local db.")
+            return
+
+        # Deal with the summary fields first.
+        local_activity.name = activity.name
+        local_activity.gear_id = activity.gear_id
+        local_activity.commute = activity.commute
+        local_activity.type = activity.type.root
+        local_activity.sport_type = activity.sport_type.root
+        if local_activity.location is None or local_activity.location == '':
+            local_activity.location = get_location(activity.start_latlng)
+        if activity.total_elevation_gain is not None:
+            elevation = round(stravalib.unit_helper.meters(activity.total_elevation_gain).magnitude, 0)
+            local_activity.elevation = elevation
+        self.session.commit()
+        print(f"Activity {activity.name.encode('utf-8')} was already in the local db. Updated.")
+
+        # Handle the detailed fields if we have a DetailedActivity
+        if isinstance(activity, stravalib.model.DetailedActivity):
+            self.update_activity_detailed_fields(activity)
+
 
     def delete_activity(self, activity_id):
         """
@@ -279,11 +286,11 @@ class StravaView:
         :param stravaRequest: an instance of StravaRequest to send requests to the Strava API
         """
         for activity in activities_list:
-            self.push_activity(activity, stravaRequest)
+            self.push_activity(activity)
             print(f"{activity.id} - {activity.name.encode('utf-8')}")
         for activity in activities_list:
             detailed_activity = stravaRequest.client.get_activity(activity.id)
-            self.update_activity_detailed_fields(detailed_activity, stravaRequest)
+            self.update_activity_detailed_fields(detailed_activity)
         return [activity.id for activity in activities_list]
 
 
@@ -291,7 +298,7 @@ class StravaView:
         """
         Set sport_type for all activities in the local db.
 
-        For a long time, only `type` was set by Strava. A few years ago, new types appeared 'TrailRun', 'GravelRide', 'MountainBikeRide', ... The new field `sport_type` supersets the old value `type`, which will be removed soon.
+        For a long time, only `type` was set by Strava. A few years ago, new types appeared 'TrailRun', 'GravelRide', 'MountainBikeRide', ... The new field `sport_type` superseeds the old value `type`, which will be removed soon.
 
         :param stravaRequest: an instance of StravaRequest to send requests to the Strava API
 

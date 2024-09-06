@@ -40,7 +40,7 @@ class Activity(Base):
     max_heartrate = db.Column(db.Integer, default=0)
     average_heartrate = db.Column(db.Float, default=0)
     suffer_score = db.Column(db.Integer, default=0)
-    red_points = db.Column(db.Integer, default=0)
+    red_points = db.Column(db.Integer, default=0) # Deprecated
     description = db.Column(db.Text, default='') # COLLATE utf8mb4_bin DEFAULT NULL,
     commute = db.Column(db.Boolean, default=False)
     calories = db.Column(db.Float, default=0)
