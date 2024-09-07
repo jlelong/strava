@@ -212,7 +212,7 @@ class StravaView:
         :param stravaRequest: an instance of StravaRequest to send requests to the Strava API
         """
         # Check if activity is already in the table
-        local_activity:Activity = self.session.query(Activity).filter_by(id=activity.id).first()
+        local_activity:Activity | None = self.session.query(Activity).filter_by(id=activity.id).first()
         if local_activity is None:
             print(f"Activity {activity.id} {activity.name.encode('utf-8')} does not exist in the local db.")
             return
@@ -229,7 +229,7 @@ class StravaView:
             elevation = round(stravalib.unit_helper.meters(activity.total_elevation_gain).magnitude, 0)
             local_activity.elevation = elevation
         self.session.commit()
-        print(f"Activity {activity.name.encode('utf-8')} was already in the local db. Updated.")
+        print(f"Updating activity {activity.name.encode('utf-8')}.")
 
         # Handle the detailed fields if we have a DetailedActivity
         if isinstance(activity, stravalib.model.DetailedActivity):

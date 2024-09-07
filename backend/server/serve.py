@@ -188,7 +188,7 @@ class StravaUI:
             activity_id = int(activity_id)
         try:
             activity: stravalib.model.DetailedActivity = stravaRequest.client.get_activity(activity_id)
-            view.update_activity(activity, stravaRequest)
+            view.update_activity(activity)
             activity = view.get_activities(list_ids=activity_id)
         except requests.exceptions.HTTPError:
             # Page not found. Probably a deleted activity.
@@ -226,17 +226,22 @@ class StravaUI:
         raise cherrypy.HTTPRedirect(authentification_url)
 
     @cherrypy.expose
-    def authorized(self, scope=None, state=None, code=None):
+    def authorized(
+        self,
+        scope=None, # pylint: disable=unused-argument.
+        state=None, # pylint: disable=unused-argument.
+        code=None
+    ):
         """
         Exchange code for a token and set token and athlete_id in the current session
 
         :param scope: the scope variable passed to Strava authentification url and returned here.
         We do not use it, so it is always None but we have to keep it in the argument list
-        as it is part of the url.
+        as it is part of the url. Required by Strava API.
 
         :param state: the state variable passed to Strava authentification url and returned here.
         We do not use it, so it is always None but we have to keep it in the argument list
-        as it is part of the url.
+        as it is part of the url. Required by Strava API.
 
         :param code: the code returned by Strava authentification to be
         further exchanged for a token.
