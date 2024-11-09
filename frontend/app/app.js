@@ -129,7 +129,6 @@ var allRides = [
 
 var allFootSports = [
     "Hike",
-    "Ride",
     "Run",
     "TrailRun",
     "VirtualRun",
