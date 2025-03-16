@@ -220,14 +220,21 @@ class StravaView:
         # Deal with the summary fields first.
         local_activity.name = activity.name
         local_activity.gear_id = activity.gear_id
-        local_activity.commute = activity.commute
+        local_activity.commute = int(activity.commute)
         local_activity.type = activity.type.root
+        local_activity.date = activity.start_date_local
+        local_activity.moving_time = timedelta(seconds=activity.moving_time)
+        local_activity.elapsed_time = timedelta(seconds=activity.elapsed_time)
         local_activity.sport_type = activity.sport_type.root
         if local_activity.location is None or local_activity.location == '':
             local_activity.location = get_location(activity.start_latlng)
         if activity.total_elevation_gain is not None:
             elevation = round(stravalib.unit_helper.meters(activity.total_elevation_gain).magnitude, 0)
             local_activity.elevation = elevation
+        if activity.average_speed is not None:
+            local_activity.average_speed = round(stravalib.unit_helper.kilometers_per_hour(activity.average_speed).magnitude, 1)
+        if activity.distance is not None:
+            local_activity.distance = round(stravalib.unit_helper.kilometers(activity.distance).magnitude, 2)
         self.session.commit()
         print(f"Updating activity {activity.name.encode('utf-8')}.")
 
