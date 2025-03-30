@@ -219,10 +219,13 @@ class StravaUI:
         client = stravalib.Client()
         redirect_url = cherrypy.url(path='/authorized', script_name='')
         #print(redirect_url)
-        authentification_url = client.authorization_url(
-            client_id=self.config['client_id'], scope=["read_all", "activity:read_all", "profile:read_all"], approval_prompt='auto',
-            redirect_uri=redirect_url)
+        access_scope=["read_all", "activity:read_all", "profile:read_all"]
+        if self.config['write_access']:
+            access_scope.append("activity:write")
+        authentification_url = client.authorization_url( client_id=self.config['client_id'], scope=access_scope, approval_prompt='auto', redirect_uri=redirect_url)
         print(f"Authentification_URL : {authentification_url}")
+        # Set access right in cookie
+        cherrypy.response.cookie['write_access'] = 1 if self.config['write_access'] else 0
         raise cherrypy.HTTPRedirect(authentification_url)
 
     @cherrypy.expose

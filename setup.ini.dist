@@ -17,6 +17,8 @@ with_points = no
 # Do you want to retrieve the details for every activity. It induces one
 # extra http request per activity. Use "yes" or "no"
 with_details = no
+# Allow activity write access. Use "yes" or "no"
+write_access = no
 
 [server]
 session_dir = /tmp/MyStrava
