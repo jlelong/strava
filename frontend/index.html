@@ -150,6 +150,7 @@
                                     <div class="max-hr" ng-show="data.max_heartrate"> Max HR: {{data.max_heartrate}}</div>
                                     <div class="red-points" ng-show="data.red_points"> Red points: {{data.red_points}}</div>
                                     <div class="right">
+                                        <button ng-show="vm.hasWriteAccess()" type="button" ng-click="vm.setCommute(data.id)" class="btn btn-default mybutton btn-xs">Set Commute</button>
                                         <button type="button" ng-click="vm.deleteActivity(data.id)" class="btn btn-default mybutton btn-xs">Delete</button>
                                         <button type="button" ng-click="vm.updateActivity(data.id)" class="btn btn-default mybutton btn-xs">Update</button>
                                     </div>

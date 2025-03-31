@@ -72,11 +72,6 @@ class StravaUI:
         else:
             self.disconnect()
 
-        #cookie = cherrypy.request.cookie
-        #print("SESSION ID : {}".format(cookie['session_id'].value))
-        #print("ACCESS TOKEN : {}".format(cherrypy.session.get(self.ACCESS_TOKEN)))
-        #print("REFRESH TOKEN : {}".format(cherrypy.session.get(self.REFRESH_TOKEN)))
-        #print("EXPIRES_AT : {}".format(time.strftime('%Y-%m-%d %H:%M:%S', time.localtime(cherrypy.session.get(self.EXPIRES_AT)))))
         return open(os.path.join(self.rootdir, 'index.html'), encoding='utf8')
 
     @cherrypy.expose
@@ -90,6 +85,8 @@ class StravaUI:
         cookie['session_id']['expires'] = 0
         cookie['is_premium'] = 0
         cookie['is_premium']['expires'] = 0
+        cookie['write_access'] = 0
+        cookie['write_access']['expires'] = 0
         return open(os.path.join(self.rootdir, 'index.html'), encoding='utf8')
 
     @cherrypy.expose
@@ -190,8 +187,33 @@ class StravaUI:
             activity: stravalib.model.DetailedActivity = stravaRequest.client.get_activity(activity_id)
             view.update_activity(activity)
             activity = view.get_activities(list_ids=activity_id)
-        except requests.exceptions.HTTPError:
+        except requests.exceptions.HTTPError as e:
             # Page not found. Probably a deleted activity.
+            print(f'Error updating activity {activity_id}: {e}')
+            activity = []
+        view.close()
+        return activity
+
+    @cherrypy.expose
+    @cherrypy.tools.json_out()
+    def setcommute(self, activity_id):
+        """
+        Ajax query /setcommute to set a single activity as commute both locally and remotely.
+        The return must be similar to /updateactivity
+        """
+        cherrypy.session[self.DUMMY] = 'MyStravaSetCommute'
+        view = StravaView(self.config, cherrypy.session.get(self.ATHLETE_ID))
+        stravaRequest = StravaRequest(self.config, self._getOrRefreshToken())
+        if isinstance(activity_id, str):
+            activity_id = int(activity_id)
+        try:
+            activity: stravalib.model.DetailedActivity = stravaRequest.client.update_activity(activity_id, commute=True)
+            print(f'Setting activity {activity_id} as commute on Strava')
+            view.update_activity(activity)
+            activity = view.get_activities(list_ids=activity_id)
+        except requests.exceptions.HTTPError as e:
+            # Page not found. Probably a deleted activity.
+            print(f'Error setting activity {activity_id} as commute on Strava: {e}')
             activity = []
         view.close()
         return activity
