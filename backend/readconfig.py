@@ -66,4 +66,9 @@ def read_config(infile):
         print('No athlete_whitelist provided.')
         config['athlete_whitelist'] = ()
 
+    try:
+        config['write_access'] = parser.getboolean('strava', 'write_access')
+    except configparser.NoOptionError:
+        config['write_access'] = False
+
     return config

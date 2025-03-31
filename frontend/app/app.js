@@ -211,10 +211,18 @@ function StravaController($cookies, $scope, $window, $http, $timeout) {
 
     // Methods
     vm.isConnected = function () { return ($cookies.get('connected') !== undefined); };
+    vm.hasWriteAccess = function () {
+        const write_access = $cookies.get('write_access');
+        if (write_access === undefined) {
+            return false;
+        }
+        return parseInt(write_access);
+    };
     vm.connectOrDisconnect = connectOrDisconnect;
     vm.updateActivities = updateActivities;
     vm.updateGears = updateGears;
     vm.firstUpdate = firstUpdate;
+    vm.setCommute = setCommute;
     vm.updateActivity = updateActivity;
     vm.deleteActivity = deleteActivity;
     vm.rebuildActivities = rebuildActivities;
@@ -357,8 +365,22 @@ function StravaController($cookies, $scope, $window, $http, $timeout) {
         }, () => {vm.updateInProgress = false;});
     }
 
+    // Update the data displayed in the table
+    function updateRendering(updatedActivities, id) {
+        addPacetoActivities(updatedActivities);
+        setGearsNamesForActivities(updatedActivities);
+        const activitiesToRemove = []
+        for (var i = 0; i < vm.activities.length; i++) {
+            if (vm.activities[i].id == id) {
+                activitiesToRemove.push(vm.activities[i])
+                vm.activities[i] = updatedActivities[0];
+                break;
+            }
+        }
+        updateGearTotals(updatedActivities, activitiesToRemove);
+    }
 
-    // Update the local database
+    // Update the local db for a single activity
     function updateActivity(id) {
         vm.updateResponse = "";
         if (!vm.isConnected()) {
@@ -368,21 +390,11 @@ function StravaController($cookies, $scope, $window, $http, $timeout) {
         vm.updateResponse = "Update in progress...";
         $http.get('updateactivity', { params: { activity_id: id } }).then(function (response) {
             vm.updateResponse = "Activity successfully updated.";
-            addPacetoActivities(response.data);
-            setGearsNamesForActivities(response.data);
-            const activitiesToRemove = []
-            for (var i = 0; i < vm.activities.length; i++) {
-                if (vm.activities[i].id == id) {
-                    activitiesToRemove.push(vm.activities[i])
-                    vm.activities[i] = response.data[0];
-                    break;
-                }
-            }
-            updateGearTotals(response.data, activitiesToRemove);
+            updateRendering(response.data, id);
         });
     }
-    //
-    // Update the local database
+
+    // Delete an activity from local db
     function deleteActivity(id) {
         vm.updateResponse = "";
         if (!vm.isConnected()) {
@@ -399,6 +411,21 @@ function StravaController($cookies, $scope, $window, $http, $timeout) {
                         break;
                     }
                 }
+            });
+        }
+    }
+
+    // Set the said activity as a commute
+    function setCommute(id) {
+        vm.updateResponse = "";
+        if (!vm.isConnected()) {
+            alert("Connect to Strava.");
+            return;
+        }
+        if (confirm("Are you sure?")) {
+            $http.get('setcommute', { params: { activity_id: id } }).then(function (response) {
+                vm.updateResponse = "Activity successfully set as commute.";
+                updateRendering(response.data, id);
             });
         }
     }
