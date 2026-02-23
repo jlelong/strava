@@ -13,7 +13,6 @@
   "license": "ISC",
   "devDependencies": {
     "@types/angular": "^1.7.0",
-    "@types/angularjs": "^1.5.14-alpha",
     "eslint-config-google": "^0.9.1"
   },
   "dependencies": {
