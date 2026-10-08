@@ -1,5 +1,5 @@
 configparser
-geopy==2.4.1
+geopy==2.5.0
 sqlalchemy
 pymysql
 stravalib==2.3
